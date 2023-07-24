@@ -1,0 +1,41 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block morehead %}
+<script type="text/javascript" src={% static "garhdony_app/jquery-latest.js" %}></script> 
+<script type="text/javascript" src={% static "garhdony_app/jquery.tablesorter.js" %}></script> 
+{% endblock %}
+
+{% block content %}
+<h1>{{game.name}} Characters</h1>
+
+<table class="tablesorter" id="characters_table">
+  <thead>
+  <tr>
+    {% for s in stats %}
+    <th>
+      {{s}}
+      <img src={% static "garhdony_app/sortable_arrow.gif" %} height=10>
+    </th>
+    {% endfor %}
+  </tr>
+  </thead>
+  <tbody>
+  {% for c in listized_characters %}
+  <tr>
+    {% for stat in c %}
+    <td>{{stat}}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<script>
+$(document).ready(function() 
+    { 
+        $("#characters_table").tablesorter({sortList:[[4,1],[1,0]]}); 
+    } ); 
+</script>
+{% endblock %}
+

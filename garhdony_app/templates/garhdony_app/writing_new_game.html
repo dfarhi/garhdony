@@ -1,0 +1,22 @@
+{% extends "garhdony_app/base_writer.html" %}
+{% load garhdony_tags %}
+
+{% block content %}
+<table border="1px solid"><tr>
+<td valign="top" style="width:350;"><h1>Create New Game</h1>
+<form method='post'>
+  {% csrf_token %}
+  <table>
+  {{ new_form.as_table }}
+  </table>
+  <input type="submit" value="Create" name="Create">
+</form>
+</td>
+<td valign="top"  style="width:350;"><h1>Clone Existing Game</h1>
+<form method='post'>
+  {% csrf_token %}
+  {{ clone_form.as_p }}
+  <input type="submit" name="Clone" value="Clone">
+</form>
+</td></tr></table>
+{% endblock %}

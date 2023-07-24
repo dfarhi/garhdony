@@ -1,0 +1,511 @@
+/* Text Styling */
+body {
+    background-color:#100e1e;
+    margin:0;
+    padding:0;
+}
+
+.warning{
+    background-color:#FCC;
+    border-radius:5px;
+    padding:2;
+    text-align:center;
+    margin:3;
+}
+
+.warning li{
+    list-style-type:none;
+}
+
+
+.big_button{
+    width:200;
+    height:60;
+    border-radius:5px;
+    vertical-align:middle;
+}
+
+.big_button:hover{
+    background-color:#DDD
+}
+
+.helptext{
+    font-size:10;
+}
+
+/* Layout */
+.wide {width:100%;}
+
+.blue {color: #0033BB;}
+.green {color: #009900;}
+
+#blackedges {
+	background-color: #000000;
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+
+#lightedges{
+	background-color: #C0C3CC;
+	width: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+
+
+#content-outer{
+	vertical-align:top;
+	width:60%;
+	background-color: #FFFFFF;
+	text-align:justify;
+	vertical-align:top;
+	padding:0;
+	margin:0;
+}
+
+#new-content {
+    padding:30 10% 100 10%;
+}
+
+#content {
+	vertical-align:top;
+	width:60%;
+	padding:3%;
+	background-color: #FFFFFF;
+	text-align:justify;
+}
+
+#sidecolumn {
+    padding:0% 1% 0% 1%;
+    width:15%;
+	vertical-align:top;
+	color: #000;
+}
+
+#sidecolumn a{
+    color:#119;
+}
+
+#sideformbox {
+    margin:2;
+    width:100%;
+    border:solid 1px;
+    border-color:#000000;
+    border-spacing:0;
+    border-radius:5px;
+    overflow:hidden;
+}
+
+#sideformbox ul li{
+    padding:0;
+    list-style-type:none;
+}
+
+
+#sideformbox th{
+    background-color:#888;
+}
+
+/* Floating Menu */
+
+.floater {
+    float:right;
+    text-align:center;
+    width:100;
+    max-width:100;
+    height:50;
+    margin:5;
+    border-radius:5px;
+    padding:2;
+}
+
+.floater ul {
+    display:none;
+    position:absolute;
+    max-width:inherit;
+    list-style-type:none;
+}
+
+
+.floater:hover > ul{
+    margin:3 0 0 0;
+    display:block;
+}
+
+.floater ul li {
+    padding:1;
+    width:100;
+}
+
+.floater ul li a {
+    display:block;
+    width:100%;
+    text-decoration: none;
+    border-radius:5px;
+}
+
+.green{
+    background-color:#e6ffd7;
+}
+
+.green ul li a{
+    background-color:#e6ffd7;
+    color:#63b504;
+}
+
+.green.clickable:hover{
+    background-color:#CEA;
+}
+
+.red{
+    background-color:#EBB;
+    color:#A33;
+}
+
+.red ul li a{
+    background-color:#EBB;
+    color:#A33;
+}
+
+.red.clickable:hover{
+    background-color:#C99;
+}
+
+
+/*
+.edit-tab{
+    float:left;
+    margin:0 10 0 10;
+}
+
+.edit-tab a{
+    border: 2px solid;
+    border-color:#555;
+    border-radius:0 0 5 5;
+    background-color:#DDD;
+    padding:0 2 0 2;
+    color:#000;
+    text-decoration:none;
+}
+
+.edit-tab a:hover{
+    background-color:#555;
+}
+
+.edit-tab #needs_exporting{
+    background-color:FAA;
+}
+
+.edit-tab #needs_exporting:hover{
+    background-color:#A55;
+}
+*/
+
+/*
+/* Editor Stuff 
+
+.triangle-pointer{
+    position:relative;
+}
+
+.triangle-pointer:after {
+    content: '';
+    display: block;
+    position: absolute;
+    z-index:-5;
+    left: 50%;
+    bottom: -5px;
+    margin-left: -8px;
+    width: 8px;
+    height: 8px;
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+    background: inherit;
+    box-shadow: 2px 2px 1px rgba(0,0,0,0.4);
+}
+
+.writers-bubble{
+    position:relative;
+    border-radius:3;
+}
+.writers-bubble:hover > .writers-bubble-inner{
+    display:initial;
+}
+.writers-bubble-inner{
+    display:none;
+    z-index:3;
+    position:absolute;
+    width:400;
+    padding:10;
+}
+
+.writers-bubble-inner .visible-part{
+    border-radius:5;
+}
+
+.writers-bubble-inner .table-cutoff{
+    border-radius:inherit;
+    overflow:hidden;
+}
+
+.writers-bubble-inner table{
+    position:relative;
+    border-radius:inherit;
+    border-collapse:collapse;
+    width:100%;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 0 2px rgba(255,255,255,0.2);
+}
+
+.writers-bubble-inner tr{
+    min-height:12;
+}
+
+.writers-bubble-inner th{
+    text-align:left;
+    white-space:nowrap;
+}
+
+
+.stnote{
+    background-color:#CFFFB3;
+    border:1px solid;
+    border-color:#AD9;
+}
+
+.stnote th{
+    background-color:#9D9;
+}
+
+
+.todo{
+    background-color:#EBB;
+    border:1px solid;
+    border-color:#C66;
+}
+
+.todo th{
+    background-color:#C66;
+}
+
+.hidden{
+    background-color:#EBE;
+    border:1px solid;
+    border-color:#C6C;
+}
+
+.hidden th{
+    background-color:#C6C;
+}
+*/
+
+/* Diff stuff 
+
+.diff {
+    border:1 solid;
+}
+
+.mine {
+    background-color:#FFA;
+}
+
+.theirs {
+    background-color:#CCC;
+}
+
+.removed-both {
+    text-decoration-color:#000;
+}
+*/
+
+/* Login Stuff */
+#loginbox {
+    background-color: #FFFFFF;
+}
+
+
+.login_widget {
+    margin: 0px;
+    padding: 0px;
+    width:100%;
+}
+
+/* Header */
+#header {
+	width:955px;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+#navbackground {
+	width:100%;
+	height:30px;
+	background-color:#555555;
+	color: #fff;
+	border-spacing:0;
+}
+
+
+#navbarright a {
+        color: #fff;
+}
+
+.navbuttons {
+        width:100%;
+        table-layout:fixed;
+	border-spacing:0;
+}
+
+.navbuttons a {
+	display: block;
+	padding: 3px 5px 0 5px;
+	text-decoration:none;
+	text-align: center;
+	color: #000;
+	border-radius:5px 5px 0px 0px;
+	background-color:#ddd;
+	border-bottom-style:solid;
+	border:1px solid;
+}
+
+.navbuttons a:active {
+	color: #002;
+	background: #aaa;
+}
+
+.navbuttons a:hover {
+	color: #000;
+	background: #fff;
+}
+
+.navbuttons .here {
+    background-color:#fff;
+    border-bottom-color:#fff;
+    }
+
+.navbuttons td {
+    padding:0;
+    vertical-align:bottom;
+    }
+
+#navbarright {
+    text-align:right;
+    width:25%;
+}
+
+#navbarleft {
+    width:25%;
+}
+
+#navbarcenter {
+    text-align:center;
+    width:50%;
+    padding:0;
+    vertical-align:bottom;
+}
+
+
+.male_obj{
+    background-color: #AAF
+}
+
+#female_obj{
+    background-color: #FFA
+}
+
+/* Multiple-Select widgets are in admin/css/widgets.css, but can be overridden here*/
+
+.selector h2{
+    font-size:15px;
+    background-color:#CCC
+}
+
+.selector {
+    width:500px;
+}
+
+/* Other editing tools */
+
+.edit_button{
+    display:inline;
+}
+
+/*Admin Sidebar*/
+
+.admin-sidebar{
+    border:1px solid;
+}
+
+.admin-sidebar h2{
+    text-decoration:underline;
+}
+
+/* Big Characters Table*/
+#characters_table{
+    border-collapse:collapse;
+    text-align:center;
+    border:1px solid;
+}
+
+#characters_table tr:nth-child(even) {
+    background-color: #EEE;
+}
+
+#characters_table th{
+    background-color:#CCC;
+
+}
+
+#characters_table td{
+}
+
+#characters_table th:hover{
+    background-color:#AAA;
+}
+
+.quiz li{
+    list-style-type: none;
+}
+
+.quiz .errorlist {
+    color:#F00;
+}
+
+.loading-box{
+    display:    none;
+    position:   fixed;
+    z-index:    1000;
+    top:        0;
+    left:       0;
+    height:     100%;
+    width:      100%;
+    background: rgba( 255, 255, 255, .8 )
+                url("/static/garhdony_app/ajax-loader.gif")
+                50% 30%
+                no-repeat;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 50;
+    padding: 20% 0 20% 0;
+}
+
+.loading .loading-box {
+    display:block;
+}
+
+body.loading {
+    overflow: hidden;
+}
+
+#username {
+    display: none;
+}
+
+@media print {
+  body, #new-content {
+    background-color: #FFFFFF;
+  }
+}

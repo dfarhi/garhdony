@@ -1,0 +1,81 @@
+{% extends "garhdony_app/base_character.html" %}
+{% load staticfiles %}
+{% load garhdony_tags %}
+
+{% block content %}
+<h1>{{character.name}}: Contacts</h1>
+{% writable_field "add" %}
+  {% edit_button "Add" %}
+  {% display %}
+{% end_writable_field %}
+
+{% writable_field "batch_edit" %}
+{% edit_button "Re-order" %}
+{% display %}
+  <center>
+    <table>
+      <tr class="no-page-break-inside">
+	{% for contact in character.contacts.all|dictsort:'order_number' %}
+	<td style="width:200;height:300;border:solid 1px;text-align:center">
+	  {% writable_field contact.pk%}
+	  {% edit_button %} 	
+	  {% display %}
+	  {% if writer and not editing %} <form action="delete" method="post">{% csrf_token %}<input type="hidden" name="contact_id" value="{{contact.id}}"><input type="submit" value="Delete"></form>{% endif %}
+	  <table style="text-align:center">
+	    <tr style="height:25"><td>
+		<b>{{contact.display_name}}</b>
+	    </td></tr>
+	    <tr style="height:200"><td>
+		<img src='{{contact.target.photo_url}}' style="max-width:200;max-height:200">
+	    </td></tr>
+	    <tr style="height:75"><td>
+		{{contact.description}}
+	    </td></tr>
+	  </table>
+	  {% edit %}
+	  <table style="text-align:center">
+	    <tr style="height:25"><td>
+		<b>{{edit_form.display_name.errors}}{{edit_form.display_name}}</b>
+	    </td></tr>
+	    
+	    {% if edit_form.non_field_errors %} <tr><td>{{ edit_form.non_field_errors}}</td></tr>{% endif %}
+	    
+	    <tr style="height:200"><td>
+		<img src='{{contact.target.photo_url}}' style="max-width:200;max-height:200">
+	    </td></tr>
+	    <tr style="height:75"><td>
+		{{edit_form.description.errors}}{{edit_form.description}}
+	    </td></tr>
+	  </table>
+	  {% end_writable_field %}
+
+	</td>
+	{% if forloop.counter|divisibleby:"4" %}
+      </tr><tr class="no-page-break-inside">
+	{% endif %}
+	{% endfor %}
+  </tr></table>  </center>
+{% edit %}
+  {{edit_form.non_form_errors}}
+  {{edit_form.management_form}}
+  <table>
+    <tr>
+      <th>Order</th><th></th>
+      <th>Person</th>
+      <th>Display Name</th>
+      <th>Description</th>
+      <th>Delete?</th>
+    </tr>
+  {% for form in edit_form.forms %}
+  <tr>
+    <td>{{form.order_number.errors}}{{form.order_number}}</td>
+    <td>{{form.non_field_errors}}{{form.id}}</td>
+    <td>{{form.instance.target}}</td>
+    <td>{{form.instance.display_name}}</td>
+    <td>{{form.instance.description.render}}</td>
+    <td>{{form.DELETE.errors}}{{form.DELETE}}</td>
+  </tr>
+  {% endfor %}
+  </table>
+{% end_writable_field %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% load garhdony_tags %}
+<ul>
+  {% for sheet in sheets %}
+  <li>
+    {% sheet_link character sheet writer %}
+  </li>
+  {% endfor %}
+</ul>

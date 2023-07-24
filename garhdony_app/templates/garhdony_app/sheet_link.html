@@ -1,0 +1,6 @@
+<a href="{% url 'character_sheet' character.game.name character.username sheet.name %}">
+	{{sheet.name}}
+      </a>
+    
+    {% if sheet.hidden %}*{% endif %}
+

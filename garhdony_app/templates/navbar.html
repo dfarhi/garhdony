@@ -1,0 +1,21 @@
+{% load garhdony_tags %}
+
+<table id="navbackground">
+  <tr class='wide'>
+    <td id='navbarleft'>
+    </td>
+    <td id='navbarcenter'>
+      <table class='navbuttons'><tr>
+	 {% for entry,url in entry_list %}
+	     <td><a href={{ url }} {% if here == entry %} class="here" {% endif %}>{{entry}}</a></td>
+	 {% endfor %}
+      </tr></table>
+    </td>
+    <td id='navbarright'>
+      {% if user.is_authenticated %}
+        {% logged_in_sidebar %}
+      {% endif %}
+    </td>
+  </tr>
+</table>
+

@@ -1,0 +1,17 @@
+{% extends "garhdony_app/base.html" %}
+{% load staticfiles %}
+
+{% block content%}
+      <h2> Before You Apply </h2>
+      <ul>
+        <li>To play in Dogmas you must be free from 3pm on Friday, April 25, 2014 until 10pm on Sunday April 27.</li>
+        <li>All players will receive a detailed history of their character's life so far; if you are not comfortable reading and internalizing over 100 pages of material beforehand, it's best not to apply (we think it's fun reading, of course!).</li>
+        <li>The world of Dogmas has gods that virtually every person will pray to and honor; if you play, you'd likely
+          participate in these ceremonies and prayer. Unfortunately, if you're not comfortable with that,
+          it is probably best not to play.</li>
+        <li>You apply to Dogmas by filling out the casting questionaire. This does not guarantee you a spot; we will finish casting by February and let you know then. Filling out the casting questionaire also does not commit you to playing if cast; we will ask for a commitment after we have cast everyone.
+      </ul>
+
+      <h2><a href={% url 'garhdony_app.views_public.app_page' %}>I'm ready to apply!</a></h2>
+
+{% endblock %}

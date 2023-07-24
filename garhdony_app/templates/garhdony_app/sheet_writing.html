@@ -1,0 +1,125 @@
+{% extends 'garhdony_app/base_sheet.html' %}
+
+{% load staticfiles %}
+
+{% block morehead %}
+    {% if not intervening_locks %}
+        {# Only do the caching stuff on the normal edit page. #}
+        {# Because we don't want o accidentally cache the half-merged thing #}
+        <script type="text/javascript" src="{% static 'garhdony_app/edit_caching.js'%}"></script>
+    {% endif %}
+    <script type="text/javascript" src="{% static 'garhdony_app/jquery.wysiwyg-resize.nonifrm.js' %}"></script>
+{% endblock %}
+
+{% block sheet_content %}
+<div style="text-align:center">
+
+<form id="main-form" action="" method="post">
+{% csrf_token %}
+{{form.edit_lock}}
+    {{form.recovered_edit_lock}}
+    {{form.edit_conflict_my_content}}
+
+
+{% if form.errors %}
+  <div class="warning">
+    {{form.non_field_errors}}
+    {{form.edit_lock.errors}}
+      {{form.recovered_edit_lock.errors}}
+    {{form.content.errors}}
+  </div>
+{% endif%}
+
+
+{% if intervening_locks %}
+  <br><br><table style="display:inline;padding:5px">
+    <tr>
+      <th>User</th>
+      <th>Lock Time</th>
+      <th>Status</th>
+    </tr>
+    {% for lock in intervening_locks %}
+    <tr>
+      <td>{{lock.author}}</td>
+      <td style="padding:0 20px 0 20px">{{lock.created_display}}</td>
+      <td>{{lock.status}}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <br><br><br>
+
+The difference between <span class="mine"> your changes </span> and the latest version by {{sheet.current_revision.author}} on <span class="theirs">{{sheet.current_revision.created}}</span> is below.
+
+When you save, things that are crossed out will be removed automatically, and then the raw text will be converted back to html.
+You can use the WYSIWIG features of the editor here <b> at your own peril</b>;
+it will try its best to unescape any html you put in and incorporate it correctly.
+
+{% endif %}
+
+  <table width="100%">
+    <tr>
+{#      <td>{{form.description.errors}}   Edit notes: {{form.description}}</td>#}
+      <td style="text-align:right">
+	{% if intervening_locks %}
+           {% if can_rebase %}
+              <button class="big_button" type="submit" name="action" value="Automerge">
+                Merge <b style="color:#900">Automagically</b>
+                {% if sheet.current_lock %}
+                  <br>
+                  (And break {{sheet.current_lock.author}}'s active lock.)
+                {% endif %}
+              </button>
+           {% else %}
+              <button class="big_button" style="background-color:#444" type="button">
+                [Cannot merge automagically]
+              </button>
+           {% endif %}
+           <button class="big_button" type="submit" name="action" value="MergeKeepMine">
+             Save <b style="color:#900">MY</b> version, ignoring all intervening edits.
+             {% if sheet.current_lock %}
+               <br>
+               (And break {{sheet.current_lock.author}}'s active lock.)
+             {% endif %}
+           </button>
+           <button class="big_button" type="submit" name="action" value="Override">
+             Save the version below which I've merged <b style="color:#900">Manually</b>.
+             {% if sheet.current_lock %}
+               <br>
+               (And break {{sheet.current_lock.author}}'s active lock.)
+             {% endif %}
+           </button>
+
+
+
+	   <button class="big_button" type="submit" name="action" value="Cancel">
+	     <b style="color:#900">Cancel</b> my edit completely, losing my unsaved data.
+	   </button>
+	{% else %}
+	   <button class="big_button" type="submit" name="action" value={% if save_override %} "Override"{% else %}"Save"{% endif%}>
+          Save changes
+          {% if save_override %}
+            <br>(Stealing the lock)
+          {% endif %}
+       </button>
+	   <button class="big_button" type="submit" name="action" value="Cancel">Cancel<span class="cancel-lose-unsaved-warning" style="display:None;"><br>(losing unsaved data)</span>
+       </button>
+	{% endif %}
+      </td>
+  </tr></table>
+
+
+  <div style="text-align:justify;height:100%;border:solid 2px">
+    {{form.content}}
+  </div>
+
+  {% if not intervening_locks %}
+  <div style="margin:5;text-align:right">
+  <button class="big_button" type="submit" name="action" value="Save">Save changes</button>
+  <button class="big_button" type="submit" name="action" value="Cancel">Cancel (losing unsaved data).</button>
+  </div>
+  {% endif %}
+
+</form> 
+{{form.media}}
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+{% load admin_urls %}
+{% load staticfiles %}
+
+{% block content %}
+
+<table style="text-align:center">
+<tr>
+  <td></td>
+  <th>Character</th>
+  <th>Homepage</th>
+  {% for task in tasks %}
+  <th>
+  <a href={% url "admin:garhdony_app_logisticaltask_change" task.id %}>{{task.name}}</a>
+  </th>{% endfor %}
+</tr>
+{% for player in players %}
+<tr>
+  <th><a href={% url "admin:garhdony_app_playerprofile_change" player.id %}>{{player.name}}</a></th>
+  {% if player.character %}
+  <td><a href={% url "admin:garhdony_app_playercharacter_change" player.character.id %}>{{player.character.first_name}}</a></td>
+  <td><a href = {% url "character_home" player.character.game.name player.character.username %}>Homepage</a></td>
+  {% else %}
+  <td></td><td></td>
+  {% endif %}
+  {% for task in tasks %}
+  <td> {% if task in player.done_tasks.all %} <img src="{% static 'garhdony_app/smallcheck.jpg' %}"/> {% else %} &mdash; {% endif %}</td>
+  {% endfor %}
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

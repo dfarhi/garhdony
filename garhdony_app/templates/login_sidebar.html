@@ -1,0 +1,14 @@
+<form method="post" action="{% url 'login_view' %}">
+{% csrf_token %}
+<table class="wide">
+<tr>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td>{{ form.password }}</td>
+</tr>
+</table>
+
+<input type="submit" value="Login" />
+<input type="hidden" name="next" value={% if next %} {{ next|urlencode }} {% else %} {% url "garhdony_app.views_users.user_redirect" %} {% endif %} />
+</form>

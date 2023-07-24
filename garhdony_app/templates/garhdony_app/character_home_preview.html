@@ -1,0 +1,27 @@
+{% extends "garhdony_app/character_home_base.html" %}
+{% load garhdony_tags %}
+
+{% block content %}
+<h1>{{character.full_name}} ({{character.PlayerProfile.name}})</h1>
+
+
+Welcome! This is where you'll find your character's sheets for {{game.name}}. Make sure to check out the <a href="{% url 'garhdony_app.views_players.character_logistics'  character.game.name character.username %}">logistics</a> in the other tab.
+
+Initially, you should have a costuming hint and a sheet with costuming suggestions. You'll receive further sheets in 2 installments:
+<ul>
+<li>Background Sheets: The setting and history.</li>
+<li>Character Sheets: Your character's story and all the materials that go with it.</li>
+</ul>
+
+<h2>Sheets</h2>
+
+{% for s in sheets %}
+
+<p><b><a href="{% url 'character_sheet' character.game.name character.username s.name %}">{{s.name}}</a>{% if s.hidden %}*{% endif %}</b>: {{s.preview_description.inline}}</p>
+
+{% endfor %}
+
+<p><b>Costuming Hint:</b> {{character.costuming_hint.inline}}</p>
+
+{% if writer %}*These sheets are hidden; players cannot see them. You can only see them due to your special powers.{% endif %}
+{% endblock %}

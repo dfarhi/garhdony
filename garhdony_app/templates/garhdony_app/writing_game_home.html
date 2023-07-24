@@ -1,0 +1,202 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block morehead %}
+<script type="text/javascript" src="/admin/jsi18n/"></script>
+<script type="text/javascript" src="{% static 'admin/js/core.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<h1>Game: {{game.name}}</h1>
+<table width="100%" border="solid 1px"><tr><td valign="top" width="50%">
+<h2>Characters</h2>
+
+ <table>
+   <tr><td>
+       <a href={% url "new_character" game.name %}>
+	 <img src="{% static 'garhdony_app/plus.jpeg'%}" height="20"></a>
+       &nbsp;
+       <a href={% url "delete_character" game.name %}>
+	 <img src="{% static 'garhdony_app/minus.jpeg'%}" height="20"></a>
+   </td></tr>   
+   {% for c in characters|dictsortreversed:"char_type" %}
+   <tr><td>
+     {% if c.char_type == "NPC"%}[NPC]{% endif %}
+     <a href={{ c.homepage_url}}>
+       {{c.full_name}}
+     </a>
+   </td></tr>
+   {% endfor %}
+ </table>
+
+</td>
+<td valign="top" width="100%">
+<h2>Sheets</h2>
+<table>
+   <tr><td>
+       <a href="{% url 'new_sheet' game.name %}">
+         <img src="{% static 'garhdony_app/plus.jpeg'%}" height="20"></a>
+       &nbsp;
+       <a href={% url 'delete_sheet' game.name %}>
+	 <img src="{% static 'garhdony_app/minus.jpeg'%}" height="20"></a>
+   </td></tr>
+
+   {% for s in sheets %}
+   <tr><td>
+     <a href="{% url 'writer_sheet' game.name s.filename%}">
+       {{s.filename}}
+     </a>
+       {% if s.current_lock %} {# TODO: don't run current_lock 3 times here? #}
+        [locked by {{s.current_lock.author}} ({{s.current_lock.created_display}})]
+       {% endif%}
+   </td></tr>
+   {% endfor %}
+ </table>
+
+</td></tr></table>
+{% endblock %}
+
+{% block rightcolumn %}
+
+{% writable_field "Metadata" %}
+<h2>Metadata {% edit_button %}</h2>
+{% display %}
+<table id="sideformbox">
+  <tr><th>Name</th></tr>
+  <tr><td>{{game.name}}</td></tr>
+</table>
+<table id="sideformbox">
+  <tr><th>Username Suffix</th></tr>
+  <tr><td>{{game.usernamesuffix}}</td></tr>
+</table>
+<table id="sideformbox">
+    <tr><th>Status</th></tr>
+    <tr><td>{% if game.preview_mode %} Preview {% elif game.complete %} Complete {% else %} Online {% endif %}</td></tr>
+</table>
+{% edit %}
+<table id="sideformbox">
+  <tr><th>Name</th></tr>
+  <tr><td>{{edit_form.name.errors}}{{edit_form.name}}</td></tr>
+</table>
+<table id="sideformbox">
+  <tr><th>Username Suffix</th></tr>
+  <tr><td>{{edit_form.usernamesuffix.errors}}{{edit_form.usernamesuffix}}</td></tr>
+</table>
+<table id="sideformbox">
+    <tr><th>Status</th></tr>
+    <tr><td>
+	Preview: {{edit_form.preview_mode.errors}}{{edit_form.preview_mode}}
+    </td></tr>
+    <tr><td>
+	Complete: {{edit_form.complete.errors}}{{edit_form.complete}}
+    </td></tr>
+</table>
+
+{% end_writable_field %}
+
+
+<h2>Character Stats</h2>
+<table id="sideformbox">
+{% writable_field "stats" %}
+<tr><th colspan="3">{% edit_button "Add/Edit" %}</th></tr>
+{% display %}
+  {% for s in game.character_stat_types.all %}
+  <tr><td>
+      {{s.name}}
+  </td></tr>
+  {% endfor %}
+</table>
+{% edit %}
+
+{{ edit_form.management_form}}
+{{ edit_form.non_form_errors.as_ul }}
+
+
+{% for form in edit_form.forms %}
+  {% if forloop.first %}
+  <tr>
+    {% for field in form.visible_fields %}
+    <th>{{ field.label|capfirst }}</th>
+    {% endfor %}
+  </tr>
+  {% endif %}
+  <tr>
+  {% for field in form.visible_fields %}
+    <td>
+    {# Include the hidden fields in the form #}
+    {% if forloop.first %}
+      {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+      {% endfor %}
+    {% endif %}
+      {{ field.errors.as_ul }}
+      {{ field }}
+    </td>
+  {% endfor %}
+  </tr>
+{% endfor %}
+
+
+</table>
+{% end_writable_field %}
+
+
+<h2>Game Links</h2>
+<table id="sideformbox">
+{% writable_field "info_links" %}
+<tr><th colspan="3">{% edit_button "Add/Edit" %}</th></tr>
+{% display %}
+  {% for il in game.info_links.all %}
+  <tr><td>
+      <a href="{{il.link_url}}">{{il.label}}</a>
+  </td></tr>
+  {% endfor %}
+</table>
+{% edit %}
+
+{{ edit_form.management_form}}
+{{ edit_form.non_form_errors.as_ul }}
+
+
+{% for form in edit_form.forms %}
+  {% if forloop.first %}
+  <tr>
+    {% for field in form.visible_fields %}
+    <th>{{ field.label|capfirst }}</th>
+    {% endfor %}
+  </tr>
+  {% endif %}
+  <tr>
+  {% for field in form.visible_fields %}
+    <td>
+    {# Include the hidden fields in the form #}
+    {% if forloop.first %}
+      {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+      {% endfor %}
+    {% endif %}
+      {{ field.errors.as_ul }}
+      {{ field }}
+    </td>
+  {% endfor %}
+  </tr>
+{% endfor %}
+
+
+</table>
+{% end_writable_field %}
+
+
+{% writable_field "Writers" %}
+<h2>Writers {% edit_button 'Add' %}</h2>
+{% display %}
+<table id="sideformbox">
+  <tr><th>username</th></tr>
+  {% for w in game.writers %}
+  <tr><td>{{w.username}}</td></tr>
+  {% endfor %}
+</table>
+{% end_writable_field %}
+
+{% endblock %}

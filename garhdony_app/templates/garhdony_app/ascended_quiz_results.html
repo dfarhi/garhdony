@@ -1,0 +1,100 @@
+{% extends "garhdony_app/base.html" %}
+{% load staticfiles %}
+
+{% block morehead %}
+<meta property="og:url"                content="http://www.garhdony.com/ascended_quiz/?result={{winner}}" />
+<meta property="og:type"               content="garhdony:quiz" />
+<meta property="og:title"              content="Who's your patron Ascended?" />
+<meta property="og:description"        content="I got {{ winner }}. Find out yours!" />
+<meta property="og:image"              content="{{ imgsrc }}" />
+<meta property="fb:app_id"             content="574838592693225" />
+
+<style type="text/css">
+    .btn {
+        display: block;
+        float: left;
+        padding: 3px 6px 5px 6px;
+        margin-left: 2px;
+        border:none;
+        background-color: #ececec;
+        text-decoration: none;
+        font-size: 11px;
+        color: #FFF;
+        border-radius: 3px;
+    }
+
+    .container {
+        float: left;
+    }
+
+    .fb {
+        background-color: #3b5998;
+    }
+
+</style>
+
+
+{% endblock %}
+
+{% block content%}
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=574838592693225";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+
+doShare = function() {
+    FB.ui({
+      method: 'feed',
+      link: 'http://www.garhdony.com/ascended_quiz/',
+      picture: '{{ imgsrc }}',
+      name: 'Who\'s your patron Ascended?',
+      description: 'I got {{ winner }}. Find out yours!',
+      app_id: 574838592693225,
+
+    }, function(response){});
+}
+
+</script>
+
+<table style="width:100%">
+    <tr>
+        <th>
+            <img src="{{ imgsrc }}" width="100">
+        </th>
+        <th>
+            <h2>{{winner}}</h2>
+        </th>
+        <th>
+            <img src="{{ imgsrc }}" width="100">
+        </th>
+    </tr>
+</table>
+<br>
+<br>
+
+
+
+{{text|safe}}
+
+<br /><br />
+<div style="text-align: center">
+
+    <div class="fb-wrapper container">
+        <div class="fb-like" data-href="http://www.garhdony.com/ascended_quiz/" data-layout="button_count" data-action="like" data-show-faces="true" data-share="false"></div>
+    </div>
+    <div class="container"><a class="btn fb" href="#" onclick="doShare()">Share</a></div>
+
+</div>
+<br><br>
+<p style="font-size:10">
+    Disclaimer: This quiz is provided for entertainment purposes only. The choice of patron Ascended is a deeply
+    personal decision which should only be made in consultation with your family, friends, and local priest after
+    sufficient prayer, meditation and sacrifice.
+</p>
+
+{% endblock%}

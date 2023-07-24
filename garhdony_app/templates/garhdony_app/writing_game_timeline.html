@@ -1,0 +1,47 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block morehead %}
+<script type="text/javascript" src={% static "garhdony_app/jquery-latest.js" %}></script>
+<script type="text/javascript" src={% static "garhdony_app/ajax.basics.js"%}></script>
+<script type="text/javascript" src={% static "garhdony_app/timeline.js"%}></script>
+{% endblock %}
+
+{% block content %}
+<h1>Game: {{game.name}}</h1>
+
+Mouse over a character to see their description of the event.
+<table style="border: 1px solid black; border-collapse: collapse;" id="timeline" border="1">
+<thead>
+  <tr>
+  <th>Year</th>
+  <th>Date</th>
+  <th>Name</th>
+  <th>Description</th>
+  <th>Characters</th>
+  </tr>
+</thead>
+
+<tbody>
+  {% for event in events|dictsort:'date'%}
+    <tr data-event={{event.id}}>
+        <td class="year"> {{event.date|date:"o"}} </td>
+        <td class="date"> {{event.date|date:"N j"}} </td>
+        <td class="name"> {{event.name}} </td>
+        <td class="default-description"> {{event.default_description}} </td>
+        <td class="characters">
+            {% for charlink in event.descriptions.all|dictsort:"character.first_name" %}
+                <a href="{% url 'character_home' game.name charlink.character.username%}" title={{charlink.description}} class="individual-character">
+                    {{charlink.character.first_name}}
+                </a>
+                &nbsp;&nbsp;
+            {% endfor %}
+        </td>
+    </tr>
+
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

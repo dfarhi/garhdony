@@ -1,0 +1,6 @@
+{% extends "garhdony_app/base.html" %}
+{% load garhdony_tags %}
+
+{% block navbar %}
+{% navbar here "Character Sheets" character|sheets_url "Logistics" character|logistics_url "All Sheets" character|all_sheets_url %}
+{% endblock %}

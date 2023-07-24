@@ -1,0 +1,12 @@
+{% extends 'garhdony_app/base_sheet.html' %}
+{% load i18n djiki_tags %}
+
+{% block sheet_content %}
+<p>{% blocktrans with from_revision.created as from_time and to_revision.created as to_time %}
+  Comparing content of the page between <span class="removed">{{ from_time }}</span> and <span class="added">{{ to_time }}</span>.{% endblocktrans %}
+</p>
+<div class="diff">
+  {{ diff|html_diff }}
+</div>
+
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+{% load admin_urls %}
+
+{% block content %}
+
+<table style="text-align:center">
+<tr>
+  <th></th>
+  <th>Player</th>
+  <th>Character</th>
+  <th>Phone</th>
+  <th>Departure Location</th>
+  <th>Departure Time</th>
+  <th>Car</th>
+  <th>Dinner</th>
+  <th>Other</th>
+</tr>
+{% for survey in surveys %}
+<tr>
+  <td><a href={% url "admin:garhdony_app_travelprofile_change" survey.id %}>Edit Survey</a></td>
+  <th><a href={% url "admin:garhdony_app_playerprofile_change" survey.player_profile.id %}>{{survey.player_profile.name}}</a></th>
+  <td><a href={% url "admin:garhdony_app_playercharacter_change" survey.player_profile.character.id %}>{{survey.player_profile.character.first_name}}</a></td>
+  <td>{{survey.phone}}</td>
+  <td>{{survey.departure_location}}</td>
+  <td>{{survey.departure_time}}</td>
+  <td>{{survey.car_status}}</td>
+  <td>{{survey.dinner_status}}</td>
+  <td>{{survey.other}}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

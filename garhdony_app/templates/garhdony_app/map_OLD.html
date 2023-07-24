@@ -1,0 +1,20 @@
+{% extends "garhdony_app/base.html" %}
+{% load staticfiles %}
+
+{% block morehead %}
+<script type="text/javascript" src="{% static 'garhdony_app/tjpzoom.js' %}"></script>
+<script type="text/javascript"> var TJPshadow='{% static 'garhdony_app/dropshadow/' %}'</script>
+{% endblock %}
+
+{% block mapbg %} class="here" {% endblock %}
+
+{% block content %}
+        <div><img src="{% static 'garhdony_app/smallmap.png' %}" width="100%" onmouseover="TJPzoom(this, 'static/garhdony_app/bigmap.png');"></img></div>
+	<div xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/" about="http://valid.tjp.hu/tjpzoom/">
+		<p>The map zoom tool is <span property="dct:title">TJPzoom</span>, 
+		by <a rel="cc:attributionURL" property="cc:attributionName" href="http://valid.tjp.hu/tjpzoom">Janos Pal Toth</a>,
+		licensed under <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC BY-NC_SA 3.0</a>.</p>
+	</div>
+	<p>Mouse over for a zoom window. Click and drag UP to zoom in or DOWN to zoom out. 
+	Click and drag LEFT to make the zoom window smaller or RIGHT to make it bigger.</p>
+{% endblock%}

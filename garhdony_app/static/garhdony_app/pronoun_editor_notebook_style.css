@@ -1,0 +1,308 @@
+.jquery-notebook.editor {
+    position: relative;
+    outline: none;
+    min-height: 50px;
+}
+
+.jquery-notebook.editor p {
+    z-index: 2;
+    position: relative;
+    min-height: 1px;
+}
+
+/* .jquery-notebook.editor p.placeholder {
+    position: absolute;
+    z-index: 1;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.jquery-notebook p:first-child, .jquery-notebook p.placeholder + p {
+    margin-top: 0;
+}*/
+
+.jquery-notebook.bubble {
+    position: absolute;
+    white-space:nowrap;
+    z-index: 5; /*Writers bubble inner popups are 3, and this needs to be higher.*/
+    opacity: 1;
+    height: 43px;
+    left: 0;
+    top: 0;
+    opacity: 0;/*Surely this is unnecessary given that it's set to 1 above?*/
+    border-radius: 5px;
+    border: 1px solid black;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.2), inset 0 0 2px rgba(255,255,255,0.2); /* Bubble Shadows */
+    background: rgb(55,55,53);
+        background: -moz-linear-gradient(top,  rgba(55,55,53,1) 0%, rgba(40,40,39,1) 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(55,55,53,1)), color-stop(100%,rgba(40,40,39,1)));
+        background: -webkit-linear-gradient(top,  rgba(55,55,53,1) 0%,rgba(40,40,39,1) 100%);
+        background: -o-linear-gradient(top,  rgba(55,55,53,1) 0%,rgba(40,40,39,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(55,55,53,1) 0%,rgba(40,40,39,1) 100%);
+	background: linear-gradient(to bottom,  rgba(55,55,53,1) 0%,rgba(40,40,39,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#373735', endColorstr='#282827',GradientType=0 );
+    transition: 0.15s ease-in-out;
+    -webkit-transition: 0.15s ease-in-out;
+}
+
+.jquery-notebook.bubble.gender {
+    height:60px;
+}
+
+.jquery-notebook.bubble.active {
+    opacity: 1;
+}
+
+.jquery-notebook.bubble.jump {
+    transition: opacity 0.15s;
+    -webkit-transition: opacity 0.15s;
+}
+
+/*.triangle-pointer:after {
+    content: '';
+    display: block;
+    position: absolute;
+    z-index:-1;
+    left: 50%;
+    bottom: -6px;
+    margin-left: -8px;
+    width: 8px;
+    height: 8px;
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+    background: inherit;
+    box-shadow: 2px 2px 1px rgba(0,0,0,0.4);
+}*/
+
+.jquery-notebook.bubble ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.jquery-notebook.bubble ul li {
+    display: inline;
+}
+
+.jquery-notebook.bubble button {
+    outline: none;
+    border: none;
+    background: transparent;
+    width: 41px;
+    height: 42px;
+    font-family: FontAwesome;
+    -webkit-font-smoothing: antialiased;
+    color: white;
+    font-size: 14pt;
+    cursor: pointer;
+}
+
+.jquery-notebook.bubble button.genderButton {
+    width:auto;
+    border:2px solid white;
+    height:auto;
+    border-radius: 5px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.jquery-notebook.bubble button.active {
+    color: #60D778;
+}
+
+.jquery-notebook.bubble button.stNote:after{
+    content:"ST";
+}
+
+.jquery-notebook.bubble button.toDo:after{
+    content:"TD";
+}
+
+.jquery-notebook.bubble button.hidden:after{
+    content:"hide";
+}
+
+.jquery-notebook.bubble button.bold:after {
+    content: "\f032";
+}
+
+.jquery-notebook.bubble button.removeFormat:after {
+    content: "Tx";
+}
+
+.jquery-notebook.bubble button.italic:after {
+    content: "\f033";
+}
+
+.jquery-notebook.bubble button.underline:after {
+    content: "\f0cd";
+}
+
+.jquery-notebook.bubble button.anchor:after {
+    content: "\f0c1";
+}
+
+.jquery-notebook.bubble button.paste:after {
+    content: "\f0ea";
+}
+
+.jquery-notebook.bubble button.h1:after {
+    font-family: inherit;
+    content: "h1";
+}
+
+.jquery-notebook.bubble button.h2:after {
+    font-family: inherit;
+    content: "h2";
+}
+
+.jquery-notebook.bubble button.h3:after {
+    font-family: inherit;
+    content: "h3";
+}
+
+.jquery-notebook.bubble button.gender:after {
+    font-family: inherit;
+    content: '\f182\f183';
+}
+
+.jquery-notebook.bubble button.ul:after {
+    font-family: inherit;
+    content: "\f0ca";
+}
+
+.jquery-notebook.bubble button.ol:after {
+    font-family: inherit;
+    content: "\f0cb";
+}
+
+.jquery-notebook.bubble button.left-align:after {
+    font-family: inherit;
+    content: "\f03b";
+}
+
+.jquery-notebook.bubble button.right-align:after {
+    font-family: inherit;
+    content: "\f03c";
+}
+
+.jquery-notebook.bubble button.center-align:after {
+    font-family: inherit;
+    content: "\f037";
+}
+
+.jquery-notebook.bubble button.inline-align:after {
+    font-family: inherit;
+    content: "\f039";
+}
+
+.jquery-notebook.bubble button.modify-image:after {
+    font-family: inherit;
+    content: "\f03e";
+}
+
+.jquery-notebook.bubble button.delete-image:after {
+    font-family: inherit;
+    content: "\f00d";
+}
+
+.jquery-notebook .link-area {
+    display: none;
+}
+
+.jquery-notebook .gender-area {
+    margin: 5px;
+    display: none;
+}
+
+.jquery-notebook .image-area {
+    margin: 5px;
+    display: none;
+}
+
+.jquery-notebook .link-area button {
+    float: left;
+}
+
+.jquery-notebook .link-area button:after {
+    content: "\f00d";
+}
+
+.jquery-notebook input[type=text] {
+    width: 220px;
+    height: 28px;
+    margin: 6px 0 0 10px;
+    background: none;
+    border: none;
+    outline: none;
+    color:#fff;
+    font-size: 14px;
+    float: left;
+}
+
+span.gender-switch
+{
+    color:blue;
+}
+
+span.alt-gender
+{
+    display:none;
+    color:green;
+}
+
+span.broken-gender-switch
+{
+    color:red;
+}
+
+span.small-text
+{
+    font-size: 10px;
+}
+
+span.gender-static
+{
+    color:grey;
+}
+
+span.current-gender-pronoun
+{
+    color:#fff;
+}
+
+.gender-area
+{
+    margin: 2 2;
+    color:#fff;
+}
+
+.gender-area select
+{
+    height:30px;
+    font-size: 14px;
+    background:#444;
+    color:inherit;
+    font-family: inherit;
+}
+
+.wide
+{
+    text-align: center;
+    width:100%;
+}
+
+img
+{
+    cursor:pointer;
+}
+
+.editor div.pagebreak:before
+{
+    display:block;
+    font-family: FontAwesome;
+    content: "\f0c5";
+}

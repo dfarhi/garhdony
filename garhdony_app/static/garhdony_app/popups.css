@@ -1,0 +1,55 @@
+input.popup-submit{
+	background-color:#DDD;
+	width:100;
+	height:20;
+}
+
+.thumbnail{
+    width:100;
+    text-align:center;
+    display:inline-block;
+    padding:5;
+    overflow:hidden;
+}
+
+.selected{
+    border:1px solid black;
+    background-color:#CCC;
+}
+
+#choicesouterbox{
+    display:inline-block;
+    width:78%;
+    padding:0 0 0 0%;
+    height:250;
+    text-align:center;
+}
+
+#choicesbox{
+    width:100%;
+    height:200;
+    margin: 5 0 0 0 ;
+    border:1px solid black;
+    overflow:scroll;
+}
+
+#sheetsbox{
+    border-top: 1px dashed black;
+    height:200;
+    overflow:scroll;
+}
+
+#sheetsboxouter{
+    display:inline-block;
+    width:20%;
+    padding:0 0% 0 0;
+    height:250;
+}
+
+#hidden-select{
+    display:none;
+}
+
+.sheets-list{
+    display:none;
+}

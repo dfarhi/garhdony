@@ -1,0 +1,75 @@
+{% extends 'garhdony_app/base_sheet.html' %}
+{% load garhdony_tags %}
+{% block title %}
+{{block.super}}: This sheet is locked!
+{% endblock %}
+
+{% block sheet_content %}
+<div style="text-align:center">
+  {% if self_conflict %}
+    <b>YOU</b> are editing this sheet in another tab!
+  {% else %}
+    Someone else is editing this sheet!
+  {% endif %}
+  <br><br>
+
+<table style="display:inline;">
+  <tr>
+    <th>
+      User
+    </th>
+    <th>
+      Time
+    </th>
+  </tr>
+
+  <tr>
+    <td>
+      {{prev_lock.author}}
+    </td>
+    <td style="padding:0 20px 0 20px">
+      {{prev_lock.created_display}}
+    </td>
+  </tr>
+</table>
+
+<br><br>
+
+<form method='post' action=''>
+  {% csrf_token %}
+  <button class='big_button' name="action" type="submit" value="Break">Break the edit lock.<br>{% if self_conflict %} You {% else %} prev_lock.author {% endif %} will be able to merge later.</button>
+  <a href="{{sheet|view_url}}">
+    <button class='big_button' type="button" value="Cancel">Cancel{% if not self_conflict %}, letting them save their work first.{% endif %}</button>
+  </a>
+</form>
+</div>
+
+
+<div style="background-color:#EEC;border-radius:10px;padding:10px">
+  <b> How do Edit Locks work?</b>
+  <p> Every time you click the "Write" tab, if no ne else is editing, the server makes a new Edit Lock and gives it to you.
+      Each lock can be on one of four states:
+  </p>
+    <ul>
+      <li><b>Active: </b> An active lock can be saved normally. A sheet can only have one active lock at a time. </li>
+      <li><b>Saved: </b> After you save, the lock is marked as Saved, and is mostly forgotten about.</li>
+      <li><b>Broken: </b> A broken lock is one that we don't expect to be saved, although it still could be (like a tab that the author has forgotten about). A lock is marked as broken if someone clicks the 'break' button above when it was Active, or the author clicks one of the 'Release/Cancel' buttons.</li>
+      <li><b>Deleted: </b> A lock that has been Deleted is one that we know for sure will never be saved. It is entirely gone with no record. This basically never happens.</li>
+    </ul>
+  <p>
+    When you clicked the "Write" button just now, the server tried to create a new Active lock for you.
+    But it found that there was already an Active lock, so it wants to know what to do:
+    either abort, or mark the other lock as Broken and make an Active one for you.
+  </p>
+
+  <p>
+    <b>Saving and Edit Conflicts: </b> When you click the 'Save' button from the write tab, the server checks the status of your lock:
+    <ul>
+      <li>If your lock is still <b>Active</b>, then it saves happily.</li>
+      <li>If your lock is <b>Broken</b>, then it knows there's a problem. Probably someone else broke your lock, and so it enters the edit-conflict interface.</li>
+      <li>Your lock cannot be <b>Saved</b> or <b>Deleted</b>, since you still had the tab open, so you can't have already pressed Save.</li>
+    </ul>
+  </p>
+</div>
+
+{% endblock %}

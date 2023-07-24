@@ -1,0 +1,18 @@
+{% extends "garhdony_app/base_game_public.html" %}
+
+{% block content%}
+
+
+{{ game.blurb|safe }}
+
+{% comment %}
+<div style="margin:0px 100px;">
+<table style="width:100%;text-align:center;"><tr>
+    <td><a href={% url "garhdony_app.views_public.about_page" %}><button type="button" style="width:80%;border-radius:8px;font-size:16px;">Learn More</button></a></td>
+    <td><a href={% url "garhdony_app.views_public.how_to_app_page" %}><button type="button" style="text-align:center;width:80%;border-radius:8px;font-size:16px;">Apply Now</button></a></td>
+</tr></table>
+</div>
+{% endcomment %}
+
+
+{% endblock %}

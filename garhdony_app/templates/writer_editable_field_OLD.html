@@ -1,0 +1,20 @@
+{% if writer and field_name == editing%}
+<form action="" method='post'>
+  {% csrf_token %}
+  {% if form.layout_location %}
+    {% include form.layout_location%}
+  {% else %}
+    {{form.as_p}}
+  {% endif %}
+  <input type="hidden" name="label" value="{{field_name}}">
+  <input type="submit" value="Save" name="Save">
+</form>
+{% else %}
+  {{display}}
+{% if writer and not editing%}
+<form action="" method='get' style="display:inline">
+  <input type="hidden" name="label" value="{{field_name}}">
+  <input type="submit" value="Edit" name="Edit">
+</form>
+{% endif %}
+{% endif %}

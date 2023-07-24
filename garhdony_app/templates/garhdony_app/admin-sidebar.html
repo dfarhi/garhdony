@@ -1,0 +1,25 @@
+{% load garhdony_tags %}
+
+<h2>Writing {{game.name}}</h2>
+
+<ul>
+    <li><a href="{% url 'game_writer_home' game.name %}">Game Homepage</a></li>
+    <li><a href="{% url 'game_writer_sheets_grid' game.name%}">Big Sheets Grid</a></li>
+    <li><a href="{% url 'game_writer_characters_table' game.name %}">Characters Grid</a></li>
+    <li><a href="{% url 'game_writer_logistics_table' game.name %}">Logistics Table</a></li>
+    <li><a href="{% url 'recent_changes' game.name %}">Recent Changes</a></li>
+    <li><a href="{% url 'search' game.name %}">Game Search</a></li>
+    <li><a href="https://docs.google.com/document/d/1_sr1uvFyoCepUP75uvFIwgrn-MYRptDUzCqunRUnq4o/edit">Website Bugs</a></li>
+</ul>
+
+<h2>Game Links</h2>
+<ul>
+    {% for i_l in game.info_links.all %}
+    <li>
+        <a href="{{i_l.link_url}}">
+            {{i_l.label}}
+        </a>
+    </li>
+    {% endfor %}
+
+</ul>

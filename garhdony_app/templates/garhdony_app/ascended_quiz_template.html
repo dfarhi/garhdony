@@ -1,0 +1,23 @@
+{% extends "garhdony_app/base.html" %}
+{% load staticfiles %}
+
+{% block morehead %}
+<meta property="og:url"                content="http://www.garhdony.com/ascended_quiz/" />
+<meta property="og:type"               content="garhdony:quiz" />
+<meta property="og:title"              content="Who's your patron Ascended?" />
+<meta property="og:description"        content="Find out yours!" />
+<meta property="og:image"              content="{{ imgsrc }}" />
+{% endblock %}
+
+
+{% block content%}
+
+<h1>Who is your patron Ascended?</h1>
+
+<form action="" method="post" class="quiz">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock%}

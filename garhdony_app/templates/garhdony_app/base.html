@@ -1,0 +1,142 @@
+{% load staticfiles %}
+{% load garhdony_tags %}
+
+<HTML>
+<HEAD> 
+<title>
+	{% if sheet and writer %}
+			{{sheet.filename}}
+	{% elif sheet %}
+			{{sheet.name}}
+	{% elif character and writer %}
+		{{character.full_name}}
+	{% elif game %}
+		{{game.name}}
+	{% else %}
+		Garhdony
+	{% endif %}
+</title>
+<link rel="icon" type="image/vnd.microsoft.icon" href="{% static 'garhdony_app/favicon.ico' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/basics.css' %}"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/layout.css' %}"/>
+<span id='username'>{{user.username}}</span>
+{% if writer %}
+<script type="text/javascript" src="{% static 'garhdony_app/pronoun_editor_lib.js' %}"></script>
+<script type="text/javascript" src="{% static 'garhdony_app/jquery.mb.browser.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'garhdony_app/pronoun_editor_storytellernotes.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/writer_markup.css' %}"/>
+{% endif %}
+<script>
+	{# Use this to display a loading wheel over the whole page #}
+	var LOADING_WHEEL_ON = function(text) {$("body").addClass("loading"); $(".loading-box").text(text);}
+	var LOADING_WHEEL_OFF = function() {$("body").removeClass("loading");}
+
+    {# Use this to get {% static %} function in javascript. #}
+    var STATIC_PATH = function(filename) {return "{% static "" %}"+filename;}
+</script>
+{% block morehead %}{% endblock %}
+</HEAD>
+<body>
+<div id="header">
+	<a href="{% url 'main' %}">
+		{% block topimage %}
+		{% if game.template.name == 'Dogmas of the Stormy Past' or game.name == 'Dogmas of the Stormy Past' %}
+			<img src="{% static 'garhdony_app/title.png' %}" alt="Dogmas of the Stormy Past" align="center">
+		{% elif game.template.name == 'Edge of the Desert' or game.name == 'Edge of the Desert'%}
+			<img src="{% static 'garhdony_app/edgeofthedesert.png' %}" alt="Dogmas of the Stormy Past" align="center">
+		{% else %}
+			<img src="{% static 'garhdony_app/Ascended Icons.png' %}" alt="Dogmas of the Stormy Past" align="center">
+		{% endif %}
+		{% endblock %}
+	</a>
+</div>
+
+{% block navbar %}
+    {% url "garhdony_app.views_public.main_page" as main_url %}
+    {% url "garhdony_app.views_public.about_page" as about_url %}
+    {% navbar here "Home" main_url  "About" about_url  %}
+{% endblock %}
+
+<div {% if writer %} id="lightedges" {% else %} id="blackedges" {% endif %}>
+  <table style="border-spacing:0;width:100%;height:100%;"><tr>
+  <td id="sidecolumn">
+      {% block leftcolumn %}
+      <div id="loginbox">
+         {% if not user.is_authenticated %}
+	    {% login_sidebar '' %}
+	 {% endif %}
+      </div>
+
+      {% if game and writer %}
+      {% admin_sidebar game %}
+      {% endif %}
+      {% if writer and user|edit_locks %}
+      <table id="sideformbox">
+	<tr>
+	  <th colspan="2">
+	    My Edit Locks
+	  </th>
+	</tr>
+	{% for e in user|edit_locks %}
+	<tr>
+	  <td>
+	    <a href = {{e.sheet|view_url}}>
+              {{e.sheet}}
+	    </a>
+	  </td>
+	  <td style="text-align:center;padding:15 0 0 0">
+	    {% if here == "Write" and sheet == e.sheet%}
+	       <button type="button" disabled>[Current]</button> 
+	    {% else %}
+  	      <form action={% url 'sheet_release' e.sheet.game e.sheet.filename%} method="post"> {% csrf_token %}
+	        <input type="hidden" name="next" value="{{request.path}}">
+	        <button type="submit" value="Release_all_locks" name="action">Release</button> 
+	      </form>
+	    {% endif %}
+	  </td>
+	</tr>
+	{% endfor %}
+      </table>
+      {% endif %}
+      
+
+      {% endblock %}
+    </td>
+
+    <td id="content-outer">
+      {% block floats %}
+      {% endblock %}
+     <div id="new-content">
+	  {% block warnings %}
+	     {% if request.user.is_staff %}
+	       <div class="warning">
+		 You are logged in as {{request.user.username}}. 
+		 <a href="{% url 'logout_then_login' request.path %}">
+		 Switch to a personal account
+		 </a>
+		 or 
+		 <a href="{% url 'new_writer' %}">
+		   make a new one
+		 </a>
+		 for better bookkeeping of which edits are whose.
+	       </div>
+	     {% endif %}
+	     {% for w in warnings %}
+	       <div class="warning">{{w}}</div>
+             {% endfor %}
+	  {% endblock %}
+	{% block content %}
+	{% endblock %}
+      </div>
+    </td>
+    <td id="sidecolumn">
+      {% block rightcolumn %}{% endblock%}
+    </td>
+
+    </tr></table>
+</div>
+<div class="loading-box">
+	LOADING
+</div>
+</body>
+</HTML>

@@ -1,0 +1,13 @@
+{% extends "garhdony_app/base_character.html" %}
+{% load garhdony_tags %}
+
+{% block content %}
+<h2>{{task.display_text}}</h2>
+{{ task.page_text|safe }}
+{% if not form == None %}
+<form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+<table style="text-align:left">{{ form.as_table }}</table>
+<input type="submit" value="Confirm" />
+</form>
+{% endif %}
+{% endblock %}

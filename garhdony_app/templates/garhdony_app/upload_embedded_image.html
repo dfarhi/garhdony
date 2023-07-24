@@ -1,0 +1,80 @@
+{% load staticfiles %}
+{% load garhdony_tags %}
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/basics.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/popups.css' %}"/>
+    <script type="text/javascript" src="{% static 'garhdony_app/pronoun_editor_lib.js' %}"></script>
+    <script type="text/javascript" src="{% static 'garhdony_app/popups.js' %}"></script>
+</head>
+<body style="margin:10;">
+<h1>Upload New Image</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ upload_form.non_field_errors }}
+    {{ upload_form.file.errors }} {{ upload_form.file }}
+    {{ upload_form.obfuscate_name.label }} {{ upload_form.obfuscate_name.errors }} {{ upload_form.obfuscate_name }}
+    {{ upload_form.game.errors }} {{ upload_form.game }}
+    {{ upload_form.sheets.errors }} {{ upload_form.sheets }}
+    <input type="submit" class="popup-submit" name="Upload" value="Upload" />
+</form>
+
+<h1>Use Existing Image</h1>
+
+<div id="sheetsboxouter">
+    <table>
+        <tr><td colspan="2" style="white-space:nowrap"><b>Filter by Sheets</b></td></tr>
+        <tr class="hides-with-sheets">
+            <td><input type="checkbox" name="all" id="all-checkbox"/> <b>All</b></td>
+            <td style="text-align:right"><input type="checkbox" name="none" id="none-checkbox"/> <b>None</b></td>
+        </tr>
+    </table>
+<div id="sheetsbox" class="hides-with-sheets">
+    <input type="checkbox" class="sheetCheck" value="Unused"/><b>Unused</b><br>
+    {% for listsheet in game.sheets.all|dictsort:'filename' %}
+        <input type="checkbox" class="sheetCheck" value="{{listsheet.filename}}" {% if sheet == listsheet %}checked="checked"{% endif %}/>{{listsheet.filename}}<br>
+    {% endfor %}
+</div>
+</div>
+<div id="choicesouterbox">
+<input type="text" placeholder="Filter by filename" id="textfilter"/>
+<div id="choicesbox">
+    {% for img in available_images|dictsort:'filename' %}
+    <div class="thumbnail" data-id="{{img.id}}" data-name="{{img.filename}}">
+        <img width=50 height=50 src="{{img.url}}"/>
+        <br>
+        {{img.filename}}
+        <ul class="sheets-list">
+            {% for sheet in image_sheet_dic|get_item:img.id %}
+            <li data-name="{{sheet.filename}}"></li>
+            {% endfor %}
+            {% if image_sheet_dic|get_item:img.id|length == 0 %} <li data-name="Unused"></li> {% endif %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>
+</div>
+<form action="" method="post">
+    {% csrf_token %}
+    <select name='image' id="hidden-select">
+        {% for img in available_images %}
+            <option value="{{img.id}}">
+                {{img.filename}}
+            </option>
+        {% endfor %}
+    </select>
+    {% if replace_or_new == 'replace' %}
+    <input type="radio" name="scope" value="single"> Change only this image
+    <br><input type="radio" name="scope" value="sheet" checked="checked"> Change all images in this sheet
+    <br><input type="radio" disabled="true" name="scope" value="all"> <span style="color:grey;"> Change all images on all sheets and obsolete the old version [Not Implemented].</span>
+    {% endif %}
+    <br><input type="submit" class="popup-submit" name="Select" value="Select" />
+</form>
+
+{% if possibly_unsaved_images %}
+<div style="width:100%;color:red">
+    Don't see your image? Newly uploaded images aren't added to this sheet until you save the page, so try showing Unused images.
+</div>
+{% endif %}
+</body>
+</html>

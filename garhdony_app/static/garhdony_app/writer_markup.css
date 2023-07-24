@@ -1,0 +1,143 @@
+/* Stuff for writers to see, not only in the editor (e.g. sotryteller notes) */
+
+.triangle-pointer{
+    position:relative;
+}
+
+.triangle-pointer:after {
+    content: '';
+    display: block;
+    position: absolute;
+    z-index:-5;
+    left: 50%;
+    bottom: -5px;
+    margin-left: -8px;
+    width: 8px;
+    height: 8px;
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+    background: inherit;
+    box-shadow: 2px 2px 1px rgba(0,0,0,0.4); /* Triangle shadow */
+}
+
+.writers-bubble{
+    /* Don't put position:relative here or the caret will hide behind the background. Obviously.*/
+    border-radius:3px;
+}
+
+/*
+.writers-bubble:hover > .writers-bubble-inner{
+    display:initial;
+}
+*/
+
+.writers-bubble-inner{
+    display:none;
+    z-index:3;
+    position:absolute;
+    width:400;
+    padding:10;
+}
+
+.writers-bubble-inner .visible-part{
+    /* Todo: make something use this */
+    border-radius:5px;
+}
+
+.writers-bubble-inner .table-cutoff{
+    border-radius:inherit;
+    overflow:hidden;
+}
+
+.writers-bubble-inner table{
+    position:relative;
+    border-radius:inherit;
+    border-collapse:collapse;
+    width:100%;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.4), inset 0 0 2px rgba(255,255,255,0.2);
+}
+
+.writers-bubble-inner tr{
+    min-height:12;
+}
+
+.writers-bubble-inner th{
+    text-align:left;
+    white-space:nowrap;
+}
+
+
+.stnote{
+    background-color:#CFFFB3;
+    border:1px solid;
+    border-color:#AD9;
+}
+
+.stnote > tbody > tr > th, .stnote > tr > th{
+    background-color:#9D9;
+}
+
+.todo{
+    background-color:#EBB;
+    border:1px solid;
+    border-color:#C66;
+}
+
+.todo > tbody > tr > th, .todo > tr > th{
+    background-color:#C66;
+}
+
+.gender{
+    background-color:#CCE;
+    border:1px solid;
+    border-color:#89D;
+}
+
+.gender > tbody > tr > th,.gender > tr > th{
+    background-color:#89D;
+}
+
+.complex-gender-character-select .character-dropdown{
+    /* This is the dropdown menu for choosing characters in a complex gender switch*/
+    background-color:#CCE;
+}
+
+.hidden{
+    background-color:#EBE;
+    border:1px solid;
+    border-color:#C6C;
+}
+
+.hidden > tbody > tr > th, .hidden > tr > th{
+    background-color:#C6C;
+}
+
+/* Diff stuff */                                                                                                      
+                                                                                                                      
+.diff {
+    border:1 solid;
+}
+
+.mine {
+    background-color:#FFA;
+}
+
+.theirs {
+    background-color:#CCC;
+}
+
+.removed-both {
+    text-decoration-color:#000;
+}
+
+.added {
+    background-color:#FFA;
+}
+
+.removed {
+    text-decoration: line-through;
+    background-color:#CCC;
+}

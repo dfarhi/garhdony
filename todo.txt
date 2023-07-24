@@ -1,0 +1,59 @@
+== Morally good things ==
+* split garhdony_app into separate pieces
+    * irl_app: PlayerProfile, Logistcal-whatever, login views, etc
+    * game_design_app: GameInstance, Character, PlayerCharacter, NonPlayerCharacter, Sheet, SheetType, SheetColor, GenderizedKeyword, GenderizedName, CharacterStatType, CharacterStat, Contact
+    * sheet_writing_app: SheetRevision, EditLock, javascript editor stuff
+* Set up unit tests
+* migrate to mysql
+
+== Editor ==
+Bugs:
+* Can't make linked words italic/bold/whatever.
+* When selecting between two characters with the same name, choose the GenderizedName object corresponding to the right one.
+
+Critical Features:
+* Notes that aren't attached to text.
+* Information about keyboard shortcuts (esp dashes)
+* Make undo recognize advanced stuff
+
+Non-critical features/improvements:
+* Switch fields in complex gender switch.
+* Super-complex gender switches
+* mark_unresolved_keywords might find a word that could be a keyword of either gender.
+* Half-wysiwyg mode
+* Make the *** thing an abstract tag whose appearance we can change later?
+* break edit lock on window.unload()?
+
+Dream features:
+* Best-guess gender assignments.
+* Images, Spells
+* Linked Conversations
+* ifiam
+
+
+== Non-editor ==
+Bugs:
+* Game cloning doesn't clone contacts, links, etc.
+* Non-WYSIWYG mode for merging, with mine, theirs, diff, and automerge as options for the base to work from.
+
+Relatively Cool Features:
+* Upload pdf/png sheets.
+* Recent Changes
+* Something like section edits.
+* Global game keywords (Kakuhfu, Irichi, etc)
+
+Unimportant Features:
+* PC Gender constraints.
+* Generate all PDFs
+* Autogenerate a character sheet with the character
+
+Dream Features
+* init script to generate directories and so on.
+* Kindle support
+* Timelines
+* Goals
+* Abilities
+* Item
+
+Performance:
+* Make editor faster when typing at end.

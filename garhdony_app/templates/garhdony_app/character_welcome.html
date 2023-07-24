@@ -1,0 +1,33 @@
+{% extends "garhdony_app/base_character.html" %}
+{% load garhdony_tags %}
+
+{% block navbar %}
+{% navbar here %}
+{% endblock %}
+
+{% block content %}
+<h2> Welcome, {{character.PlayerProfile.name}}</h2>
+<p>You've found the website! This is where you'll be able to see any logistical things you have to do and, of course,
+    download your character background. Before you begin reading, however, we need you to confirm that you will actually
+    play. Once you click the button below you'll have access to some character background material which is specific to
+    the role we have cast you in. If you confirm and then drop out later, it will be much less likely for us to cast you
+    in any future run of {{game.name}} because you will already have read some of the character-specific background.
+</p>
+
+<div style="margin:0px 100px;">
+<table style="width:100%;text-align:center;"><tr>
+    <td style="width:50%;">
+    <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+      <input type="hidden" name="which_button" value="confirm"/>
+      <input type="submit" style="width:80%;border-radius:8px;font-size:16px;" 
+	     value="I confirm my spot!"/>
+    </form></td>
+    <td style="width:50%;">
+    <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+      <input type="hidden" name="which_button" value="abdicate"/>
+      <input type="submit" style="width:80%;border-radius:8px;font-size:16px;" 
+	     value="I can't make it."/>
+    </form></td>
+</tr></table>
+</div>
+{% endblock %}

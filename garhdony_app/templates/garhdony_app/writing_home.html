@@ -1,0 +1,56 @@
+{% extends "garhdony_app/base_writer.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block content %}
+<h1>Writer: {{user.username}}</h1>
+<table width="100%" border="solid 1px"><tr><td valign="top" width="50%">
+      <h2>My Games</h2>
+      <ul>
+	{% for g in games %}
+	<li><a href={% url "game_writer_home" g.name %}>{{g.name}}</a></li>
+	{% endfor %}
+      </ul>
+      <a href={% url "writing_new_game" %}>
+  <img src="{% static 'garhdony_app/plus.jpeg'%}" height="20">
+      </a>
+    </td>
+    <td>
+      <h2>Recent Sheets</h2>
+      <ul>
+	{% for s in recent_sheets %}
+	<li><a href={{s|view_url}}>{{s.filename}}</a></li>
+	{% endfor %}
+      </ul>
+    </td>
+</tr></table>
+{% endblock %}
+
+{% block rightcolumn %}
+{% writable_field "Metadata" %}
+<h2>{% edit_button %}</h2>
+{% display %}
+<table id="sideformbox">
+  <tr>
+    <th>Metadata</th>
+  </tr>
+  <tr>
+    <td>
+      {{user.username}}
+    </td>
+  </tr>
+  <tr>
+    <td>
+    {{user.first_name}} {{user.last_name}}
+    </td>
+  </tr>
+  <tr>
+    <td>
+      {{user.email}}
+    </td>
+  </tr>
+</table>
+{% end_writable_field %}
+
+{% endblock %}
+

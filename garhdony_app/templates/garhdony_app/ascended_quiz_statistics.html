@@ -1,0 +1,16 @@
+{% extends "garhdony_app/base.html" %}
+{% load staticfiles %}
+
+
+{% block content%}
+
+<h1>Ascended Quiz Statistics</h1>
+
+<ul>
+{% for result,value in results %}
+<li>
+    {{result}}: {{value}}
+</li>
+{% endfor %}
+</ul>
+{% endblock%}

@@ -1,0 +1,107 @@
+{% extends "garhdony_app/character_home_base.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block morehead %}
+<script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/jquery.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/core.js'%}"></script>
+<script type="text/javascript" src="/admin/jsi18n/"></script>
+{% endblock %}
+
+{% block content %}
+<table><tr>
+    <td style="width:calc(100%-200px)">
+      <h1>{{character.full_name}} ({{character.PlayerProfile.name}})</h1>
+		{% for s in character.stats.all %}{% if s.value or not s.stat_type.optional %}
+
+		<b>{{s.stat_type.name}}:</b> {{s.value}}<br>
+
+    	{% endif %}{% endfor %}
+
+      <br>Welcome! Your sheets are below.
+
+      Make sure to check out the <a href="{% url 'garhdony_app.views_players.character_logistics'  character.game.name character.username %}">logistics</a> in the other tab.
+        {% writable_field "costuming_hint" %}
+          <p>{% edit_button %}{% display %}<b>Costuming Hint:</b> 
+            {{character.costuming_hint.inline}}
+	{% end_writable_field	%}
+      </p>
+    </td>
+    <td style="width:200;text-align:right">
+      <a href="{% url 'garhdony_app.views_players.character_logistics_task' character.game.name character.username 'photo'%}">
+        <img src='{{character.photo_url}}' style="max-width:200;max-height:200">
+      </a>
+    </td>
+</tr></table>
+
+
+{% writable_field "public_sheets" %}
+     <h2> Public Sheets {% edit_button %}</h2>
+     <i>Public Sheets are sheets that every player in the game gets.  They are the same for everyone, we promise.</i>
+     <br>
+{% display %}
+	 {% sheet_list character public_sheets writer %}
+     {# According to the internet, you need this next bit to make the multiple-select work #}
+{% comment "removable?" %}
+     <script type="text/javascript">
+       addEvent(window, "load", function(e) { SelectFilter.init("id_sheets", "sheets", 0, "static/admin/"); });
+     </script>
+{% endcomment %}
+{% end_writable_field %}
+
+{% writable_field "private_sheets" %}
+     <h2> Private Sheets {% edit_button %}</h2>
+
+     <i>Private Sheets are the bulk of the sheets we will give you. They tell you the story of your character, along with all the background knowledge that he or she has. Do not share these with anyone, even if you think that they probably know the same things; they might not. </i>
+
+     <br>
+     {% display %}
+         {% regroup sheets.all|dictsort:'sheet_type.sort_order' by sheet_type as type_list %}
+         <table style="width:100%">
+	   <tr>
+	     <td style="background:#CCCCCC" width="10%">
+	     </td>
+	     {% for color in all_colors|dictsort:'sort_order' %}
+	     <th style="background:#CCCCCC" width="30%">
+	       {{color.name}}s<sup><span style="color:#AA1111" title="{{color.description}}">?</span></sup>
+	     </th>
+	     {% endfor %}
+	   </tr>
+	   {% for t in type_list %}
+	   <tr>
+	     <th style="background:#CCCCCC">
+	       {{t.grouper.name}}<sup><span style="color:#AA1111" title="{{t.grouper.description}}">?</span></sup>
+	     </th>
+	     
+	     {% for color in all_colors|dictsort:'sort_order' %}
+	     <td style="background:#{{color.color}}; padding:5px;">
+   	         {% for item in t.list %}
+	         {% if item.color == color %}
+	         <p>
+			   {% sheet_link character item writer %}
+			 </p>
+		 {% endif %}
+		 {% endfor %}
+	     </td>
+	     {% endfor %}
+	   </tr>
+	   {% endfor %}
+	 </table>
+
+{% end_writable_field %}
+
+
+{% writable_field "in-game_documents" %}
+<h2>In-Game Documents {% edit_button %}</h2>
+
+<i>In-Game Documents are actual pieces of paper that your character has.</i>
+<br>
+{% display %}
+{% sheet_list character in_game_documents writer %}
+{% end_writable_field %}
+
+{% if writer %}* These sheets are hidden; players cannot see them. You can only see them due to your special powers.{% endif %}
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block content %}
+
+<h2>
+Create New Character
+</h2>
+
+<form method='post'>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {{ form.first_male.errors }}
+  {{ form.first_female.errors }}
+  {{ form.last_name.errors }}
+  {{ form.char_type.errors}}
+  <table>
+    <tr>
+      <td>
+	Type: 
+	{{form.char_type}}
+      </td>
+    </tr>
+    <tr>
+      <td>
+	<div class="fieldWrapper">
+	  {{ form.first_male }}
+	</div>
+      </td>
+      <td>/</td>
+      <td>
+	<div class="fieldWrapper">
+	  {{ form.first_female }}
+	</div>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="3">
+	<div class="fieldWrapper">
+	  {{ form.last_name }}
+	</div>
+      </td>
+    </tr>
+  </table>
+<input type='submit' value='Create Character'>
+</form>
+
+{% endblock %}

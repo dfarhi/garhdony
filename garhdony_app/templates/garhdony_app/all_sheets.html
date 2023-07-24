@@ -1,0 +1,91 @@
+{% extends "garhdony_app/base_character.html" %}
+{% load garhdony_tags %}
+
+
+{% block content %}
+<h1> All Sheets </h1>
+
+<h2> Public Sheets </h2>
+<i>Public Sheets are sheets that every player in the game gets.  They are the same for everyone, we promise. They are the rules, maps, and teaser story:</i>
+<br>
+<ul>
+  {% for item in public_sheets %}
+  <li>
+        {% if not item.hidden %}
+          <a href="{% url 'past_player_sheet' game.name character.username item.filename %}">
+          {{item.name}}
+            </a>
+          {% if item.filename.strip != item.name.strip %}
+              ({{item.filename}})
+          {% endif %}
+        {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+<h2> Private Sheets </h2>
+
+<i>Private Sheets are the bulk of the sheets we will give you. They tell you the story of your character, along with all the background knowledge that he or she has. Do not share these with anyone, even if you think that they probably know the same things; they might not. </i>
+
+<br>
+
+{% regroup sheets.all|dictsort:'sheet_type.sort_order' by sheet_type as type_list %}
+<table style="width:100%">
+  <tr>
+    <td style="background:#CCCCCC" width="10%">
+    </td>
+    {% for color in all_colors|dictsort:'sort_order' %}
+    <th style="background:#CCCCCC" width="30%">      
+      {{color.name}}s<sup><span style="color:#AA1111" title="{{color.description}}">?</span></sup>
+    </th>
+      {% endfor %}
+  </tr>
+  {% for t in type_list %}
+  <tr>
+    <th style="background:#CCCCCC">
+      {{t.grouper.name}}<sup><span style="color:#AA1111" title="{{t.grouper.description}}">?</span></sup>
+    </th>
+
+    {% for color in all_colors|dictsort:'sort_order' %}
+    <td style="background:#{{color.color}}; padding:5px;">
+      {% for item in t.list|dictsort:'name' %}
+      {% if item.color == color %}
+      <p>
+        {% if not item.hidden %}
+          <a href="{% url 'past_player_sheet' game.name character.username item.filename %}">
+          {{item.name}}
+            </a>
+          {% if item.filename.strip != item.name.strip %}
+              ({{item.filename}})
+          {% endif %}
+        {% endif %}
+      </p>
+      {% endif %}
+      {% endfor %}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>In-Game Documents</h2>
+
+<i>In-Game Documents are actual pieces of paper that your character has.</i>
+<br>
+
+<ul>
+  {% for item in in_game_documents|dictsort:'name' %}
+  <li>
+        {% if not item.hidden %}
+          <a href="{% url 'past_player_sheet' game.name character.username item.filename %}">
+          {{item.name}}
+            </a>
+          {% if item.filename.strip != item.name.strip %}
+              ({{item.filename}})
+          {% endif %}
+        {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block content %}
+<h1>Search all sheets in {{game.name}}</h1>
+<form action="" method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit" value="Search" />
+</form>
+
+{% if hit_sheets %}
+    <ul>
+    {% for s in hit_sheets %}
+        <li><a href="{% url 'writer_sheet' game.name s.filename%}">{{s.filename}}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+[No results]
+{% endif %}
+{% endblock %}

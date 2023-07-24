@@ -1,0 +1,90 @@
+{% load staticfiles %}
+
+{% csrf_token %}
+{{metadata_form.non_field_errors}}
+<div id="sideformbox">
+  <table>
+    <tr><td>Name:</td></tr>
+    <tr><td colspan="3"><div class="fieldWrapper">
+          {{form.title_obj.errors }}
+          {{form.title_obj }}
+      </div></td>
+      <td>
+        <a href="">
+          <img src="{% static 'garhdony_app/plus.jpeg'%}", height="20">
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><div class="fieldWrapper">
+          {{form.first_male.errors }}
+          {{form.first_male}}
+      </div></td>
+      <td>/</td>
+      <td><div class="fieldWrapper">
+          {{form.first_female.errors }}
+          {{form.first_female}}
+      </div></td>
+    </tr>
+    <tr><td colspan=3><div class="fieldWrapper">
+          {{form.last_name.errors }}
+          {{form.last_name}}
+    </div></td></tr>
+</table></div>
+<div id="sideformbox"><table>
+    <tr><td>
+        Character Stats
+    </td></tr>
+</table></div>
+<div id="sideformbox"><table>
+    <tr><td colspan="3">username/password</td></tr>
+    <tr>
+      <td><div class="fieldWrapper">
+          {{form.username.errors }}
+          {{form.username}}
+      </div></td>
+      <td>/</td>
+      <td><div class="fieldWrapper">
+          {{form.password.errors }}
+          {{form.password}}
+      </div></td>
+    </tr>
+</table></div>
+<div id="sideformbox">
+  <table>
+    <tr>
+      <td colspan="3">
+        Gendered Names:
+      </td>
+      <td>
+        Del
+      </td>
+    </tr>
+    {{form.names_formset.non_form_errors}}
+    {{form.names_formset.management_form}}
+    {% for name_form in form.names_formset %}
+    {% if name_form.non_field_errors %}
+    <tr><td>
+        {{name_form.non_field_errors}}
+    </td></tr>
+    {% endif %}
+    <tr>
+      {{name_form.category.errors}}{{name_form.category}}
+      {{name_form.character.errors}}{{name_form.character}}
+      {{name_form.genderizedkeyword_ptr.errors}}{{name_form.genderizedkeyword_ptr}}
+      <td><div class="fieldWrapper">
+          {{name_form.male.errors}}
+          {{name_form.male}}
+      </div></td>
+      <td>/</td>
+      <td><div class="fieldWrapper">
+          {{name_form.female.errors}}
+          {{name_form.female}}
+      </div></td>
+      <td><div class="fieldWrapper">
+          {{name_form.DELETE.errors}}{{name_form.DELETE}}
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>

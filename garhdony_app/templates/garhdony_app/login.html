@@ -1,0 +1,21 @@
+{% extends "garhdony_app/base.html" %}
+
+{% load garhdony_tags %}
+
+{% block rightcolumn %}{% endblock %}
+{% block leftcolumn %} {% endblock %}
+
+{% block content %}
+
+{% if form.errors %}
+<p>{{form.errors.all}}</p>
+<p>{{form.non_field_errors}}</p>
+{% else %}
+  {% if next %}
+    You don't seem to be logged in.  Please log in, and then we'll try to redirect you to {{next}}.
+  {% endif %}
+{% endif %}
+
+{% login_sidebar next %}
+
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block content %}
+<h1>New Sheet</h1>
+<form method='post'>
+  {% csrf_token %}
+  <table>{{ form.as_table }}</table>
+<input type='submit' value='Create Sheet'>
+</form>
+
+{% endblock %}

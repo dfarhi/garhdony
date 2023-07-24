@@ -1,0 +1,9 @@
+diff-match-patch==20121119
+Django==1.7.7
+django-guardian==1.2.5
+djiki==0.7
+pdfkit==0.5.0
+Pillow==2.7.0
+six==1.9.0
+django-sendfile==0.3.11
+

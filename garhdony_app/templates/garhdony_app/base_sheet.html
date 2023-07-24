@@ -1,0 +1,63 @@
+{% extends 'garhdony_app/base_character.html' %}
+{% load garhdony_tags %}
+
+{% block navbar %}
+{% if writer %}
+{% navbar here "Read" sheet|view_url "Write" sheet|edit_url "History" sheet|history_url%}
+{% else%}
+{{ block.super}}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<h1 id="sheet-name">{% block title %}
+  {{sheet.name}}
+{% endblock %}</h1>
+
+
+{% block sheet_content %}{% endblock %}
+
+{% endblock %}
+
+{% block rightcolumn %}
+{% if writer %}
+{% writable_field "Metadata" %}
+<h2> Metadata {% edit_button %}</h2>
+{% display %}
+<table id="sideformbox">
+  <tr><th>Name</th></tr>
+  <tr><td>{{sheet.filename}}</td></tr>
+  <tr><td>Display: {{sheet.name}}</td></tr>
+</table>
+<table id="sideformbox">
+<tr><th>Color, Type</th></tr>
+<tr><td>{{sheet.color}}</td></tr>
+<tr><td>{{sheet.sheet_type}}</td></tr>
+<tr><td>{{sheet.sheet_status}}</td></tr>
+<tr><td>
+    {% if sheet.hidden %} Hidden {% else %} Not Hidden {% endif %}
+</td></tr>
+</table>
+<table id="sideformbox">
+<tr><th>Preview Description</th></tr>
+<tr><td>{{sheet.preview_description}}</td></tr>
+</table>
+{% end_writable_field%}
+
+
+{% writable_field "characters" %}
+<table id="sideformbox">
+<tr><th>Characters {% edit_button %}</th></tr>
+<tr><td>
+{% display %}
+    <ul>
+      {% for c in sheet.characters.all|dictsort:"name" %}
+      <li> <a href={% url "character_home" game.name c.username %}>{{c.name}}</a></li>
+      {% endfor %}
+    </ul>
+{% end_writable_field %}
+</td></tr>
+</table>
+{% endif %}
+{% endblock %}

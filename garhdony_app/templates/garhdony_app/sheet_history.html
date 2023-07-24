@@ -1,0 +1,60 @@
+{% extends 'garhdony_app/base_sheet.html' %}
+{% load i18n djiki_tags %}
+{% load url from future %}
+
+{% block sheet_content %}
+
+
+<div class="page history grid_12">
+	<div class="content">
+		<h1>{{ sheet.title }}</h1>
+		<form method="get" action="{% url 'sheet_diff' sheet.game.name sheet.filename %}">
+		<table>
+			<thead>
+				<tr>
+					<th>Modification time</th>
+					{% if sheet.content_type == 'html' %}
+					<th><button type="submit">Compare</button></th>
+					{% else %}
+					<th>Preview</th>
+					{% endif %}
+					<th>Author</th>
+					{# <th>Description</th> #}
+					<th>Operations</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for revision in history %}
+				<tr>
+					<td>
+						<a href="{% url 'writer_sheet_old' sheet.game.name sheet.filename revision.pk %}" title="View">
+						  {{ revision.created }}
+						</a><br>
+						<span class="help_text">({% blocktrans with revision.created|timesince as timesince %}{{ timesince }} ago{% endblocktrans %})</span>
+					</td>
+					{% if sheet.content_type != 'html' %}
+					<td>
+						<img width=100 src="{% url 'writer_sheet_old' sheet.game.name sheet.filename revision.pk %}?format=file">
+					</td>
+					{% else %}
+					<td>
+						<input type="radio" name="from_revision_pk" value="{{ revision.pk }}" />
+						<input type="radio" name="to_revision_pk" value="{{ revision.pk }}" />
+					</td>
+					{% endif %}
+					<td>
+						{% if revision.author %}{{ revision.author }}
+						{% else %}<em>anon</em>{% endif %}
+					</td>
+					{# <td>{{ revision.description }}</td> #}
+					<td>
+					  <a href="{% url 'sheet_revert' sheet.game.name sheet.filename revision.pk %}" rel="nofollow" title="Revert to this version by discarding all later modifications.">[revert]</a>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		</form>
+	</div>
+</div>
+{% endblock %}

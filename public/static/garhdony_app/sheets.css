@@ -1,0 +1,11 @@
+#sheet-content h2 {
+    font-size: 24pt;
+}
+
+#sheet-content h3 {
+    font-size: 18pt;
+}
+
+#sheet-content .pagebreak {
+    page-break-after: always;
+}

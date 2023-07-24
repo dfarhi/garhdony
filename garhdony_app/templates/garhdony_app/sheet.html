@@ -1,0 +1,145 @@
+{% extends "garhdony_app/base_sheet.html" %}
+{% load garhdony_tags %}
+
+
+
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block morehead %}
+{{block.super}}
+{# need this anywhere there will be a filteredselectmultiple. That is dumb, I know. sorry. #}
+<script type="text/javascript" src="{% static 'admin/js/core.js' %}"></script>
+<script type="text/javascript" src="/admin/jsi18n/"></script>
+<script type="text/javascript" src="{% static 'admin/js/jquery.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/sheets.css' %}">
+{% endblock %}
+
+
+{% block floats %}
+{% if not editing %}
+<div class="floater green">
+  <img src="{% static 'garhdony_app/download.png'%}" height="50">
+  <ul>
+    {% if sheet.content_type == 'html' %}
+    <li>
+      <a class="green clickable" href=""> normal html </a>
+    </li>
+    <li>
+      <a class="green clickable" href="?format=plain"> plain html </a>
+    </li>
+    {% endif %}
+    {% if sheet.content_type == 'html' and sheet.needs_exporting %}{% else %}
+    <li>
+      <a class="green clickable" href="?format=file"> file </a>
+    </li>
+    {% endif %}
+    {% if False %}
+    <li>
+      <a class="green clickable" href="?format=kindle"> kindle </a>
+    </li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}
+
+{% if writer and sheet.current_lock %}
+{% if sheet.current_lock.author == request.user %}
+<a href="release">
+{% endif %}
+<div class="floater red {% if sheet.current_lock.author == request.user %} clickable {% endif %}"> {#style="background-image:url({% static 'garhdony_app/lock.png'%});background-repeat:no-repeat;vertical-align:middle">#}
+  <img src="{% static 'garhdony_app/lock.png'%}" height="30">
+    {{sheet.current_lock.author}}
+</div>
+{% if sheet.current_lock.author == request.user %}
+</a>
+{% endif %}
+{% endif %}
+
+{% if not editing and writer and sheet.content_type == 'html'%}
+  <a href="export">
+    <div class="floater {% if sheet.needs_exporting %} red {% else %} green {% endif %} clickable">
+      Generate<br>PDF<br>
+      <span style="font-size:8">
+         {% if sheet.needs_exporting %}
+           Last: {{sheet.current_revision.created|date:'M d'}}
+         {% else %}
+           no changes detected
+         {% endif %}
+      </span>
+    </div>
+  </a>
+{% endif %}
+
+{% endblock %}
+
+
+{% block sheet_content %}
+
+  {% if revision != sheet.current_revision %}
+    <div class="warning">
+      This is not the latest version! <a href={% url 'writer_sheet' game.name sheet.filename %}>View the latest version.</a>
+    </div>
+  {% endif %}
+
+{% if sheet.content_type == 'html' %}
+<div id="sheet-content">
+  {{ revision.content|render_larpstring:writer }}
+</div>
+{% elif sheet.get_content_type_display == 'pdf' %}
+  This sheet doesn't have an html version. Click the green button in the corner to download the {{sheet.get_content_type_display}} file.
+  {% if writer %}
+    (Players won't see this page; they'll get automatically sent to the file. You can see this page to edit the metadata.)
+  {% endif %}
+{% elif sheet.get_content_type_display == 'png' %}
+  <img src="?format=file" style="width: 100%;">
+{% endif %}
+
+{% endblock %}
+
+
+{% comment %}
+{% block rightcolumn %}
+{% if writer %}
+{% writable_field "Metadata" %}
+<h2> Metadata {% edit_button %}</h2>
+{% display %}
+<table id="sideformbox">
+  <tr><th>Name</th></tr>
+  <tr><td>{{sheet.filename}}</td></tr>
+  <tr><td>Display: {{sheet.name}}</td></tr>
+</table>
+<table id="sideformbox">
+<tr><th>Color, Type</th></tr>
+<tr><td>{{sheet.color}}</td></tr>
+<tr><td>{{sheet.sheet_type}}</td></tr>
+<tr><td>
+    {% if sheet.hidden %} Hidden {% else %} Not Hidden {% endif %}
+</td></tr>
+</table>
+<table id="sideformbox">
+<tr><th>Preview Description</th></tr>
+<tr><td>
+       {{sheet.preview_description}}
+</td></tr>
+</table>
+{% end_writable_field%}
+
+
+{% writable_field "characters" %}
+<table id="sideformbox">
+<tr><th>Characters {% edit_button %}</th></tr>
+<tr><td>
+{% display %}
+    <ul>
+      {% for c in sheet.characters.all|dictsort:"name" %}
+      <li> <a href={% url "character_home" game.name c.username %}>{{c.name}}</a></li>
+      {% endfor %}
+    </ul>
+{% end_writable_field %}
+</td></tr>
+</table>
+{% endif %}
+{% endblock %}
+{% endcomment %}

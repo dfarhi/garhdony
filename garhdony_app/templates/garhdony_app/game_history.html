@@ -1,0 +1,68 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load i18n djiki_tags %}
+{% load staticfiles %}
+
+{% block content %}
+
+<div class="page history grid_12">
+	<div class="content">
+		<div class="header">
+			{% if has_prev %}
+			<div class="left" style="float: left">
+				<a href="{% url 'recent_changes' game %}?page={{ prev }}">&lt; Newer</a>
+			</div>
+			{% endif %}
+			{% if has_next %}
+			<div class="left" style="float: right">
+				<a href="{% url 'recent_changes' game %}?page={{ next }}">Older &gt;</a>
+			</div>
+			{% endif %}
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<th>Sheet</th>
+					<th>Modification time</th>
+					<!--<th>Preview</th>-->
+					<th>Author</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for revision in history %}
+				<tr>
+					<td>
+						<a href="{% url 'writer_sheet' game revision.sheet.filename %}">{{ revision.sheet.name }}</a>
+					</td>
+					<td>
+						<a href="{% url 'writer_sheet_old' game revision.sheet.filename revision.pk %}" title="View">
+						  {{ revision.created }}
+						</a><br>
+						<span class="help_text">({% blocktrans with revision.created|timesince as timesince %}{{ timesince }} ago{% endblocktrans %})</span>
+					</td>
+					<!--<td>
+						<img width=100 src="{% url 'writer_sheet_old' revision.sheet.game.name revision.sheet.filename revision.pk %}?format=file">
+					</td>-->
+					<td>
+						{% if revision.author %}{{ revision.author }}
+						{% else %}<em>anon</em>{% endif %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		<div class="header">
+			{% if has_prev %}
+			<div class="left" style="float: left">
+				<a href="{% url 'recent_changes' game %}?page={{ prev }}">&lt; Newer</a>
+			</div>
+			{% endif %}
+			{% if has_next %}
+			<div class="left" style="float: right">
+				<a href="{% url 'recent_changes' game %}?page={{ next }}">Older &gt;</a>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% load staticfiles %}
+<HTML>
+    <HEAD>
+        <title>{{sheet.name}}</title>
+        <link rel="icon" type="image/vnd.microsoft.icon" href="{% static 'garhdony_app/favicon.ico' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/basics.css' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/sheets.css' %}"/>
+    </HEAD>
+    <body>
+
+        <h1>{{sheet.name}}</h1>
+        <div id="sheet-content">
+        {{revision.content.render}}
+        </div>
+    </body>
+</HTML>

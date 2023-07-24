@@ -1,0 +1,19 @@
+{% extends "garhdony_app/base_character.html" %}
+{% load garhdony_tags %}
+
+{% block navbar %}
+{% navbar here %}
+{% endblock %}
+
+{% block content %}
+<h2>Are you sure you want to give up your spot in {{game.name}}?</h2>
+<p>If you click the button below, we'll give your spot to someone on the waitlist. If you got to this page by accident,
+    just navigate away and nothing will happen.</p>
+
+<div style="margin:0px 100px;text-align:center;">
+    <form enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+          <input type="submit" style="width:80%;border-radius:8px;font-size:16px;" 
+		 value="Yes, give up my spot."/>
+    </form>
+</div>
+{% endblock %}

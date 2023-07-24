@@ -1,0 +1,17 @@
+{% extends "garhdony_app/base_game_public.html" %}
+
+{% block content%}
+
+
+{% if game.is_accepting_apps %}
+
+{{ game.app|safe }}
+
+{% else %}
+
+{{ game.interest|safe }}
+
+{% endif %}
+
+
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "garhdony_app/base_writer_game.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block morehead %}
+<script type="text/javascript" src={% static "garhdony_app/jquery-latest.js" %}></script> 
+<script type="text/javascript" src={% static "garhdony_app/jquery.tablesorter.js" %}></script>
+<script type="text/javascript" src={% static "garhdony_app/ajax.basics.js"%}></script>
+{% endblock %}
+
+{% block content %}
+<h1>Game: {{game.name}}</h1>
+
+<table style="font-size: 10; padding: 5px" class="tablesorter" id="sheets_table">
+<thead>
+  <tr>
+  <th>Name</th> 
+  <th>Color</th>
+  <th>Type</th>
+  <th>Status</th>     
+    {% for c in characters|dictsort:'first_name'%}
+    <td> <a href="{% url 'character_home' game.name c.username%}">
+    {{c.first_name}} </a></td>
+    {% endfor %}
+  
+  </tr>
+  <tr>
+  <th><img src={% static "garhdony_app/sortable_arrow.gif" %} height=10></th>
+  <th><img src={% static "garhdony_app/sortable_arrow.gif" %} height=10></th>
+  <th><img src={% static "garhdony_app/sortable_arrow.gif" %} height=10></th>
+  <th><img src={% static "garhdony_app/sortable_arrow.gif" %} height=10></th>
+    {% for c in characters|dictsort:'first_name'%}
+    <th>
+      <img src={% static "garhdony_app/sortable_arrow.gif" %} height=10></th>
+    {% endfor %}
+
+  </tr>
+</thead>
+
+<tbody>
+  {% for s in sheets|dictsort:'name'|dictsort:'filename'|dictsortreversed:'color.sort_order'%}
+    <tr style="background:#{{s.color.color}}">
+      <td>
+	     <a href="{% url 'writer_sheet' game.name s.filename%}">{{s.filename}}</a>
+      </td>
+      <td>{{s.color.name}}</td>
+      <td>{{s.sheet_type.name}}</td>
+
+      <td>
+        {{s.sheet_status.name}} {% if s.hidden %} * {% endif %}
+      </td>
+
+      {% for c in characters|dictsort:'first_name' %}
+      <td class="sheet-indicator" data-sheet={{s.id}} data-character={{c.id}}>
+        {% if s in c.sheets.all %}
+        x
+        {% endif %}
+      </td>
+      {% endfor %}
+
+    </tr>
+
+  {% endfor %}
+  </tbody>
+</table>
+*Hidden: Players can't see this sheet yet.
+<script>
+var ajaxclick = function(){
+        var thetd = $(this);
+        var oldbg = thetd.css("background-color");
+        thetd.css("background-color", "grey");
+        thetd.unbind('click');
+        $.ajax({
+            url:"modify/",
+            type: "POST",
+            data: {"sheet": thetd.attr('data-sheet'), "character": thetd.attr('data-character')},
+            success: function(json){
+                var t = $.trim(thetd.text());
+                if(t==""){
+                    thetd.text("x");
+                }else{
+                    thetd.text("");
+                }
+                thetd.css("background-color", oldbg);
+                thetd.click(ajaxclick)
+            },
+            error: function(xhr,errmsg,err){
+                alert(err+"    "+xhr.responseText);
+            }
+        })
+    }
+$(".sheet-indicator").click(ajaxclick);
+</script>
+
+<script>
+$(document).ready(function() 
+    { 
+        $("#sheets_table").tablesorter(); 
+    } ); 
+</script>
+{% endblock %}
+

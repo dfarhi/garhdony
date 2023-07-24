@@ -1,0 +1,34 @@
+{% extends "garhdony_app/base.html" %}
+
+{% block content%}
+
+<h2>Upcoming Games</h2>
+<ul>
+{% for game in upcoming_games %}
+<li>
+    <a href="{% url 'game_blurb' game.name  %}">{{ game.name }}</a>: {{ game.short_desc|safe }}
+</li>
+{% endfor %}
+</ul>
+
+<h2>Other Games</h2>
+<ul>
+{% for game in other_games %}
+<li>
+    <a href="{% url 'game_blurb' game.name  %}">{{ game.name }}</a>: {{ game.short_desc|safe }}
+</li>
+{% endfor %}
+</ul>
+
+{% comment %}
+<div style="margin:0px 100px; text-align:justify;"><i>
+<p>Once, the capital city of Vac was a huge, bustling center of commerce and activity.  Now it is ruined cinders and ashes, the royal palace and the Cathedral of Kelemen burned to the ground, the line of High Kings ended.  The Five Kingdoms of Garhdony, proud nations led by wise rulers, have struggled on the precipice of collapse for two decades as disaster upon unexplained disaster strikes and strikes again.  Their leaders strive to rebuild, but the inexorable decline continues.</p>
+
+<p>Now you join with other leaders and heroes of Garhdony at a quiet gathering in an ancient, secluded Kazkan barony.  What path it takes is in your hands.  Are you an ambitious noble, seeking to occupy the vacant throne? A wandering knight, protecting the weak from all who would prey upon them? A holy Eminent, seeking the blessing of the Ascended to turn aside the tide of decay?</p>
+
+<p>Join us in a tale of heroes and rulers, wizards and gods. Together we will tell the story of the council that will decide the future of Five Kingdoms. Will this weekend bring a time of glory and power for you and your people? A time of peace and tranquility? A time of salvation ... or a time of ultimate doom?</p>
+</i></div>
+{% endcomment %}
+
+
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "garhdony_app/base_game_public.html" %}
+
+{% block content%}
+
+
+{{ game.how_to_app|safe }}
+
+{% if game.is_accepting_apps %}
+
+<h2><a href={% url 'game_app' game.name %}>I'm ready to apply!</a></h2>
+
+{% else %}
+<br /><br />
+{{game.name}} does not have an open application. To be notified when applications are being accepted,
+<a href={% url 'game_app' game.name %}>join the mailing list</a>.
+
+{% endif %}
+
+
+{% endblock %}

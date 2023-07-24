@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <title>Add Title </title>
+    <script type="text/javascript" src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+  </head>
+  <body>
+    <h1>Add Title </h1>
+    <form method="POST" action="{% url 'add_title' %}">
+      <table>
+	{% csrf_token %}
+	{{ form }}
+      </table>
+      <p><input type="submit" value="Add" /> | <a href="javascript:window.close()"><button type="button">Cancel</button></a></p>
+    </form>
+  </body>
+</html>

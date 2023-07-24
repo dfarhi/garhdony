@@ -1,0 +1,9 @@
+media/
+data/
+
+pythonenv/
+start.sh
+stop.sh
+
+*.pyc
+*.py~

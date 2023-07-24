@@ -1,0 +1,162 @@
+{% extends "garhdony_app/base_character.html" %}
+{% load garhdony_tags %}
+{% load staticfiles %}
+
+{% block rightcolumn %}
+{% if writer %}
+{% writable_field "Metadata" %}
+<h2>Metadata {% edit_button %}</h2>
+{% display %}
+<table id="sideformbox">
+    <tr><th>Name</th></tr>
+    <tr><td>
+        {{character.title}}
+    </td></tr>
+    <tr><td>
+        {{character.first_name}}
+    </td></tr>
+    <tr><td colspan="3">
+          {{character.last_name}}
+    </td></tr>
+</table>
+<table id="sideformbox">
+    <tr><th>
+        Character Stats
+    </th></tr>
+    <tr><td>
+        Gender: {{character.gender}}
+        {% if character.char_type == "NPC" and character.gender_linked_pc %}
+            ({% if character.gender_field == "EQ" %}={% elif character.gender_field == "OP" %}≠{% endif %}{{character.gender_linked_pc.first_name}})
+        {% endif %}
+    </td></tr>
+    {% for s in character.stats.all %}
+    <tr>
+      <td>
+	{{s.stat_type.name}}: {{s.value}}
+      </td>
+    </tr>
+    {% endfor %}
+</table>
+{% if character.char_type == "PC" %}
+<table id="sideformbox">
+    <tr><th colspan="3">username / password</th></tr>
+    <tr><td>
+        {{character.username}} / {{character.password}}
+    </td></tr>
+</table>
+{% endif %}
+<table id="sideformbox">
+    <tr><th>        
+        Other Names
+    </th></tr>
+    {% for name in character.nonfirst_names %}
+    <tr><td>
+        {{name.auto_resolve}}
+    </td></tr>
+    {% endfor %}
+</table>
+{% edit %}
+{% csrf_token %}
+{{edit_form.non_field_errors}}
+<table id="sideformbox">
+  <tr><th colspan="3">Name</th></tr>
+    <tr><td colspan="3"><div class="fieldWrapper">
+          {{edit_form.title_obj.errors }}
+          {{edit_form.title_obj }}
+      </div></td>
+    </tr>
+    <tr>
+      <td><div class="fieldWrapper">
+          {{edit_form.first_male.errors }}
+          {{edit_form.first_male}}
+      </div></td>
+      <td>/</td>
+      <td><div class="fieldWrapper">
+          {{edit_form.first_female.errors }}
+          {{edit_form.first_female}}
+      </div></td>
+    </tr>
+    <tr><td colspan="3"><div class="fieldWrapper">
+          {{edit_form.last_name.errors }}
+          {{edit_form.last_name}}
+    </div></td></tr>
+</table>
+{{edit_form.stats_formset.non_form_errors}}
+{{edit_form.stats_formset.management_form}}
+<table id="sideformbox">
+    <tr><th colspan="2">
+        Character Stats
+    </th></tr>
+    <tr><th>Gender: </th>
+	<td>
+	{{edit_form.gender_field.errors}}
+	{{edit_form.gender_field}}
+	{% if character.char_type == "PC" and character.PlayerProfile %}
+	    {{character.gender}}
+	    (cast)
+	{% elif character.char_type == "NPC"%}
+    	{{edit_form.gender_linked_pc.errors}}
+	    {{edit_form.gender_linked_pc}}
+    {% endif %}
+    </td></tr>
+    {% for stat_form in edit_form.stats_formset %}
+      {{stat_form.as_table}}
+    {% endfor %}
+</table>
+{% if character.char_type == "PC" %}
+<table id="sideformbox">
+    <tr><th colspan="3">username/password</th></tr>
+    <tr>
+      <td><div class="fieldWrapper">
+          {{edit_form.username.errors }}
+         {{edit_form.username}}
+      </div></td>
+      <td>/</td>
+      <td><div class="fieldWrapper">
+          {{edit_form.password.errors }}
+          {{edit_form.password}}
+      </div></td>
+    </tr>
+</table>
+{% endif %}
+<table id="sideformbox">
+    <tr>
+      <th colspan="3">
+        Other Names
+      </th>
+      <th>
+        Del
+      </th>
+    </tr>
+    {{edit_form.names_formset.non_form_errors}}
+    {{edit_form.names_formset.management_form}}
+    {% for name_form in edit_form.names_formset %}
+    {% if name_form.non_field_errors %}
+    <tr><td>
+        {{name_form.non_field_errors}}
+    </td></tr>
+    {% endif %}
+    <tr>
+      {{name_form.category.errors}}{{name_form.category}}
+      {{name_form.character.errors}}{{name_form.character}}
+      {{name_form.genderizedkeyword_ptr.errors}}{{name_form.genderizedkeyword_ptr}}
+      <td><div class="fieldWrapper">
+          {{name_form.male.errors}}
+          {{name_form.male}}
+      </div></td>
+      <td>/</td>
+      <td><div class="fieldWrapper">
+          {{name_form.female.errors}}
+          {{name_form.female}}
+      </div></td>
+      <td><div class="fieldWrapper">
+          {{name_form.DELETE.errors}}{{name_form.DELETE}}
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+
+{% end_writable_field %}
+{% endif %}
+
+{% endblock %}

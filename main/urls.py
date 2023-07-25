@@ -54,7 +54,7 @@ urlpatterns = (
         name='login_view'),
     url(r'^logout_then_login(.*)$', garhdony_app.views_users.logout_then_login, name='logout_then_login'), # No trailing slash to make the redirect start with a slash.
     url(r'^logout/$', django.contrib.auth.views.LogoutView.as_view(),
-        {'next_page': reverse_lazy('garhdony_app.views_public.main_page')},
+        {'next_page': reverse_lazy('about')},
         name='logout_view'),
     url(r'^user_redirect/$', garhdony_app.views_users.user_redirect, name="user_redirect"),
     url(r'^writing/new_writer', NewWriterView.as_view(), name="new_writer"),

@@ -81,14 +81,18 @@ class CharacterForm(forms.ModelForm):
 
 
 class CharacterStatAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('stat_type', 'character', 'value')
+    list_filter = ('character__game',)
+    readonly_fields = ('character',)
 
 
 admin_site.register(CharacterStat, CharacterStatAdmin)
 
 
 class CharacterStatTypeAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'game',)
+    list_filter = ('game__name',)
+    readonly_fields = ('game',)
 
 
 admin_site.register(CharacterStatType, CharacterStatTypeAdmin)
@@ -102,6 +106,8 @@ admin_site.register(GenderizedKeyword, GenderizedKeywordAdmin)
 
 
 class GenderizedNameAdmin(admin.ModelAdmin):
+    list_display = (str, 'character')
+    list_filter = ('character__game__name',)
     exclude = ["category"]
 
 
@@ -119,7 +125,7 @@ class NameInline(admin.TabularInline):
 
 
 class ContactAdmin(admin.ModelAdmin):
-    pass
+    list_filter = ('owner__game__name', 'owner')
 
 
 admin_site.register(Contact, ContactAdmin)
@@ -131,25 +137,33 @@ class ContactInline(admin.TabularInline):
 
 
 class PlayerCharacterAdmin(admin.ModelAdmin):
-    pass
+    list_display = (str, 'game',)
+    list_filter = ('game__name',)
+    readonly_fields = ('game',)
 
 
 admin_site.register(PlayerCharacter, PlayerCharacterAdmin)
 
 class NonPlayerCharacterAdmin(admin.ModelAdmin):
-    pass
+    list_display = (str, 'game',)
+    list_filter = ('game__name',)
+    readonly_fields = ('game',)
 admin_site.register(NonPlayerCharacter, NonPlayerCharacterAdmin)
 
 
 class SimpleCharacterAdmin(admin.ModelAdmin):
-    pass
+    list_display = (str, 'game',)
+    list_filter = ('game__name',)
+    readonly_fields = ('game',)
 
 
 admin_site.register(Character, SimpleCharacterAdmin)
 
 
 class SheetRevisionAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('sheet', 'created', 'author')
+    list_filter = ('sheet__game__name', 'sheet__name')
+    readonly_fields = ('sheet',)
 
 
 admin_site.register(SheetRevision, SheetRevisionAdmin)
@@ -159,6 +173,7 @@ class PlayerProfileAdmin(admin.ModelAdmin):
     list_display = ('name', 'character', 'confirmed')
     filter_horizontal = ('done_tasks',)
     save_on_top = True
+    list_filter = ('character__game__name',)
 
 
 admin_site.register(PlayerProfile, PlayerProfileAdmin)
@@ -173,7 +188,9 @@ admin_site.register(LogisticalTask, LogisticalTaskAdmin)
 
 
 class GameInfoLinkAdmin(admin.ModelAdmin):
-    pass
+    list_display = (str, 'game',)
+    list_filter = ('game__name',)
+    readonly_fields = ('game',)
 admin_site.register(GameInfoLink, GameInfoLinkAdmin)
 
 class TravelProfileAdmin(admin.ModelAdmin):
@@ -231,7 +248,10 @@ admin_site.register(Sheet, AllSheetsAdmin)
 
 
 class EmbeddedImageAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('filename', 'sheets', 'game',)
+    list_filter = ('game__name',)
+    readonly_fields = ('game',)
+
 admin_site.register(EmbeddedImage, EmbeddedImageAdmin)
 
 class QuizSubmissionAdmin(admin.ModelAdmin):
@@ -239,7 +259,10 @@ class QuizSubmissionAdmin(admin.ModelAdmin):
 admin_site.register(QuizSubmission, QuizSubmissionAdmin)
 
 class TimelineEventAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('date', 'name', 'game',)
+    list_filter = ('game__name',)
+    readonly_fields = ('game',)
+    ordering = ('game', '-date',)
 admin_site.register(TimelineEvent, TimelineEventAdmin)
 
 class TimelineEventCharacterDescriptionAdmin(admin.ModelAdmin):

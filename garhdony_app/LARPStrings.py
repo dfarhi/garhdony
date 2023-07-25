@@ -122,7 +122,7 @@ class LARPTextField(models.TextField):
     """
 
     # in the old version of django, this was handled by __metaclass__ = models.SubfieldBase
-    def from_db_value(self, value, expression, connection, context):
+    def from_db_value(self, value, expression, connection):
         """ For getting out of the database."""
         return larpstring_to_python(value, check_keywords=False)
 

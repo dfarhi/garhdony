@@ -29,7 +29,7 @@ class QuizSubmission(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     result = models.CharField(max_length=20)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.result + "  (" + self.created_at.ctime() + ")"
 
 
@@ -64,7 +64,7 @@ class GameTemplate(models.Model):
 
     is_accepting_apps = models.BooleanField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     @property
@@ -99,7 +99,7 @@ class GameInstance(models.Model):
     # complete determines whether players can see all sheets.
     complete = models.BooleanField("Game Complete", default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def writers(self):
@@ -305,7 +305,7 @@ class SheetColor(models.Model):
     # Order it appears in players' lists.
     sort_order = models.IntegerField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -316,7 +316,7 @@ class SheetType(models.Model):
     description = models.CharField(max_length=1000)
     sort_order = models.IntegerField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -328,7 +328,7 @@ class SheetStatus(models.Model):
     sort_order = models.IntegerField()
     game = models.ForeignKey(GameInstance, related_name='sheet_status', on_delete=models.CASCADE)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -409,7 +409,7 @@ class Sheet(models.Model, Versioned):
             return self._last_revision
 
 
-    def __unicode__(self):
+    def __str__(self):
         return self.filename
 
     @property
@@ -837,7 +837,7 @@ class Character(models.Model):
     # char_type is either "PC" or "NPC"
     char_type = models.CharField(max_length=20)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.full_name()
 
     def nonfirst_names(self):
@@ -1219,6 +1219,9 @@ class GameInfoLink(models.Model):
     label = models.CharField(max_length=50)
     link_url = models.CharField(max_length=200)
 
+    def __str__(self) -> str:
+        return f'{self.label} ({self.game.name})'
+
 
 class LogisticalTask(models.Model):
     """
@@ -1233,7 +1236,7 @@ class LogisticalTask(models.Model):
     sort_order = models.IntegerField()
     page_text = models.TextField(blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -1276,7 +1279,7 @@ class PlayerProfile(models.Model):
     other_housing = models.TextField(blank=True,
                                      verbose_name="Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def confirmed(self):
@@ -1313,7 +1316,7 @@ class TravelProfile(models.Model):
                                      verbose_name="Do you think you'll come to the wrap-up dinner on Sunday, or go straight home?")
     other = models.TextField(verbose_name="Any other travel information?", blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.player_profile.name
 
 
@@ -1330,8 +1333,8 @@ class Contact(models.Model):
     # Writers can edit this to optimize the semantic ordering.
     order_number = models.IntegerField(default=0)
 
-    def __unicode__(self):
-        return str(self.owner) + "  ->  " + self.display_name
+    def __str__(self):
+        return str(self.owner) + "  ->  " + str(self.display_name)
 
     @property
     def game(self):

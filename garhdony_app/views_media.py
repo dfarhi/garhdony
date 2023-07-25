@@ -1,8 +1,8 @@
 from sendfile import sendfile
-import auth
+import garhdony_app.auth as auth
 from django.http import Http404, HttpResponse
-from models import EmbeddedImage, Sheet
-from forms_game_design import NewEmbeddedImageForm
+from garhdony_app.models import EmbeddedImage, Sheet
+from garhdony_app.forms_game_design import NewEmbeddedImageForm
 from django.utils.html import escape
 
 def can_see_player_photo(request, character_first_name):

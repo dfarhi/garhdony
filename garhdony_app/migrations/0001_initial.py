@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('broken', models.BooleanField(default=False)),
                 ('saved', models.BooleanField(default=False)),
-                ('author', models.ForeignKey(related_name='edit_locks', to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(related_name='edit_locks', to=settings.AUTH_USER_MODEL, on_delete=models.RESTRICT)),
             ],
             options={
             },
@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='GenderizedName',
             fields=[
-                ('genderizedkeyword_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='garhdony_app.GenderizedKeyword')),
+                ('genderizedkeyword_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='garhdony_app.GenderizedKeyword', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -131,7 +131,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='NonPlayerCharacter',
             fields=[
-                ('character_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='garhdony_app.Character')),
+                ('character_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='garhdony_app.Character', on_delete=models.CASCADE)),
                 ('notes', garhdony_app.LARPStrings.LARPTextField(default=b'', blank=True)),
                 ('photo', models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), null=True, upload_to=garhdony_app.models.getuploadpath, blank=True)),
                 ('npc_gender', models.CharField(default=b'M', max_length=2, choices=[(b'M', b'Male'), (b'F', b'Female')])),
@@ -143,7 +143,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='PlayerCharacter',
             fields=[
-                ('character_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='garhdony_app.Character')),
+                ('character_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='garhdony_app.Character', on_delete=models.CASCADE)),
                 ('username', models.CharField(max_length=50, blank=True)),
                 ('password', models.CharField(max_length=50, blank=True)),
                 ('costuming_hint', garhdony_app.LARPStrings.LARPTextField(default=b'', blank=True)),
@@ -166,7 +166,7 @@ class Migration(migrations.Migration):
                 ('housing_comments', models.TextField(verbose_name=b"Do you have any dietary restrictions? Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.", blank=True)),
                 ('dietary_restrictions', models.CharField(max_length=200, verbose_name=b'Do you have any dietary restrictions? Anything else we need to know to keep you happily fed for a weekend?', blank=True)),
                 ('other_housing', models.TextField(verbose_name=b"Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.", blank=True)),
-                ('character', models.OneToOneField(related_name='PlayerProfile', null=True, blank=True, to='garhdony_app.PlayerCharacter')),
+                ('character', models.OneToOneField(related_name='PlayerProfile', null=True, blank=True, to='garhdony_app.PlayerCharacter', on_delete=models.SET_NULL)),
                 ('done_tasks', models.ManyToManyField(related_name='Players', null=True, to='garhdony_app.LogisticalTask', blank=True)),
             ],
             options={
@@ -210,8 +210,8 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True, verbose_name='Created')),
                 ('description', models.CharField(max_length=400, verbose_name='Description', blank=True)),
                 ('content', garhdony_app.LARPStrings.LARPTextField(blank=True)),
-                ('author', models.ForeignKey(verbose_name='Author', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('sheet', models.ForeignKey(related_name='revisions', to='garhdony_app.Sheet')),
+                ('author', models.ForeignKey(verbose_name='Author', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=models.RESTRICT)),
+                ('sheet', models.ForeignKey(related_name='revisions', to='garhdony_app.Sheet', on_delete=models.RESTRICT)),
             ],
             options={
                 'ordering': ('-created',),
@@ -241,7 +241,7 @@ class Migration(migrations.Migration):
                 ('car_status', models.CharField(max_length=200, verbose_name=b'What is your car status?', choices=[(b'has car', b"I own a car and can help drive others up (we'll reimburse expenses + some wear and tear)"), (b'personal car', b'I own a car but will only drive myself'), (b'can rent', b"I don't own a car, but I am at least 25 and willing to rent a car (Dogmas will pay, of course)"), (b'can rent under 25', b"I don't own a car, but I am under 25 and willing to drive someone else's car"), (b"can't drive", b'I cannot or do not want to drive')])),
                 ('dinner_status', models.CharField(max_length=200, verbose_name=b"Do you think you'll come to the wrap-up dinner on Sunday, or go straight home?", choices=[(b'going', b"I'll come to dinner to share stories!"), (b"can't", b'I need to be back early.')])),
                 ('other', models.TextField(verbose_name=b'Any other travel information?', blank=True)),
-                ('player_profile', models.OneToOneField(related_name='TravelProfile', to='garhdony_app.PlayerProfile')),
+                ('player_profile', models.OneToOneField(related_name='TravelProfile', to='garhdony_app.PlayerProfile', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -250,19 +250,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sheet',
             name='color',
-            field=models.ForeignKey(related_name='sheets', to='garhdony_app.SheetColor'),
+            field=models.ForeignKey(related_name='sheets', to='garhdony_app.SheetColor', on_delete=models.RESTRICT),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='sheet',
             name='game',
-            field=models.ForeignKey(related_name='sheets', to='garhdony_app.GameInstance'),
+            field=models.ForeignKey(related_name='sheets', to='garhdony_app.GameInstance', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='sheet',
             name='sheet_type',
-            field=models.ForeignKey(related_name='sheets', blank=True, to='garhdony_app.SheetType'),
+            field=models.ForeignKey(related_name='sheets', blank=True, to='garhdony_app.SheetType', on_delete=models.RESTRICT),
             preserve_default=True,
         ),
         migrations.AddField(
@@ -274,73 +274,73 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='playercharacter',
             name='user',
-            field=models.OneToOneField(related_name='character', null=True, default=None, to=settings.AUTH_USER_MODEL),
+            field=models.OneToOneField(related_name='character', null=True, default=None, to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='genderizedname',
             name='character',
-            field=models.ForeignKey(related_name='genderized_names', to='garhdony_app.Character'),
+            field=models.ForeignKey(related_name='genderized_names', to='garhdony_app.Character', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='editlock',
             name='base_revision',
-            field=models.ForeignKey(related_name='branching_locks', to='garhdony_app.SheetRevision'),
+            field=models.ForeignKey(related_name='branching_locks', to='garhdony_app.SheetRevision', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='editlock',
             name='sheet',
-            field=models.ForeignKey(related_name='edit_locks', to='garhdony_app.Sheet'),
+            field=models.ForeignKey(related_name='edit_locks', to='garhdony_app.Sheet', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='contact',
             name='owner',
-            field=models.ForeignKey(related_name='contacts', to='garhdony_app.Character'),
+            field=models.ForeignKey(related_name='contacts', to='garhdony_app.Character', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='contact',
             name='target',
-            field=models.ForeignKey(related_name='contacters', to='garhdony_app.Character'),
+            field=models.ForeignKey(related_name='contacters', to='garhdony_app.Character', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='characterstattype',
             name='game',
-            field=models.ForeignKey(related_name='character_stat_types', to='garhdony_app.GameInstance'),
+            field=models.ForeignKey(related_name='character_stat_types', to='garhdony_app.GameInstance', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='characterstat',
             name='character',
-            field=models.ForeignKey(related_name='stats', to='garhdony_app.Character'),
+            field=models.ForeignKey(related_name='stats', to='garhdony_app.Character', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='characterstat',
             name='stat_type',
-            field=models.ForeignKey(to='garhdony_app.CharacterStatType'),
+            field=models.ForeignKey(to='garhdony_app.CharacterStatType', on_delete=models.RESTRICT),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='character',
             name='first_name_obj',
-            field=models.OneToOneField(related_name='first_name_of_character', null=True, blank=True, to='garhdony_app.GenderizedName'),
+            field=models.OneToOneField(related_name='first_name_of_character', null=True, blank=True, to='garhdony_app.GenderizedName', on_delete=models.SET_NULL),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='character',
             name='game',
-            field=models.ForeignKey(related_name='characters', to='garhdony_app.GameInstance'),
+            field=models.ForeignKey(related_name='characters', to='garhdony_app.GameInstance', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='character',
             name='title_obj',
-            field=models.ForeignKey(related_name='title_of', verbose_name=b'Title', blank=True, to='garhdony_app.GenderizedKeyword', null=True),
+            field=models.ForeignKey(related_name='title_of', verbose_name=b'Title', blank=True, to='garhdony_app.GenderizedKeyword', null=True, on_delete=models.SET_NULL),
             preserve_default=True,
         ),
     ]

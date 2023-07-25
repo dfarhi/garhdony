@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=30)),
                 ('description', models.CharField(max_length=1000)),
                 ('sort_order', models.IntegerField()),
-                ('game', models.ForeignKey(related_name='sheet_status', to='garhdony_app.GameInstance')),
+                ('game', models.ForeignKey(related_name='sheet_status', to='garhdony_app.GameInstance', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sheet',
             name='sheet_status',
-            field=models.ForeignKey(related_name='sheets', to='garhdony_app.SheetStatus', null=True),
+            field=models.ForeignKey(related_name='sheets', to='garhdony_app.SheetStatus', null=True, on_delete=models.SET_NULL),
             preserve_default=True,
         ),
     ]

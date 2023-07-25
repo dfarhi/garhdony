@@ -14,9 +14,9 @@ from django.db import models
 from django import forms
 from django.utils.html import format_html
 from django.utils.encoding import force_str
-from django.forms.widgets import flatatt
+from django.forms.utils import flatatt
 from django.utils.safestring import mark_safe
-from django.utils.encoding import python_2_unicode_compatible
+from six import python_2_unicode_compatible
 from garhdony_app.span_parser import span_parse
 from datetime import datetime
 import logging
@@ -120,7 +120,11 @@ class LARPTextField(models.TextField):
     Model field for storing LARPstrings.
     The .raw() string is what's actually stored in the database.
     """
-    __metaclass__ = models.SubfieldBase
+
+    # in the old version of django, this was handled by __metaclass__ = models.SubfieldBase
+    def from_db_value(self, value, expression, connection, context):
+        """ For getting out of the database."""
+        return larpstring_to_python(value, check_keywords=False)
 
     def to_python(self, value):
         """ For getting out of the database."""

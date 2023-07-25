@@ -1,15 +1,15 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.utils.safestring import mark_safe
 from django.utils.html import escape
 from diff_match_patch import diff_match_patch
-import auth
+import garhdony_app.auth as auth
 from django.views.decorators.csrf import csrf_exempt
 from garhdony_app.forms_writing import SheetContentForm, SheetUploadForm
 from garhdony_app.models import Sheet, SheetRevision, EditLock, GameInstance
-from LARPStrings import LARPstring
-import utils
-import span_parser
+from garhdony_app.LARPStrings import LARPstring
+import garhdony_app.utils as utils
+import garhdony_app.span_parser as span_parser
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)

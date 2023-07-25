@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-import auth
+import garhdony_app.assign_writer_game
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms.widgets import PasswordInput, TextInput
 from garhdony_app.models import GameInstance
@@ -48,7 +48,7 @@ class NewWriterForm(UserCreationForm):
         g = Group.objects.get(name='Writers')
         g.user_set.add(user)
         for game in self.cleaned_data['games']:
-            auth.assign_writer_game(user, game)
+            garhdony_app.assign_writer_game.assign_writer_game(user, game)
         return user
 
 

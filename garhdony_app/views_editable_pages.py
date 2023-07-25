@@ -6,7 +6,7 @@ Using the render_editable_page function is relatively easy; you just ue it like 
 and then in the template you can use the writable_field tag (defined and documented in garhdony_tags.py)
 """
 
-import auth
+import garhdony_app.auth as auth
 from django.http import HttpResponseRedirect
 
 def render_editable_page(request, template, template_args, on_save_url_func, writer, edit_form_getter, *args):

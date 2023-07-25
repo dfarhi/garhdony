@@ -1,6 +1,6 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import Http404, HttpResponseRedirect
-import auth
+import garhdony_app.auth as auth
 from garhdony_app.forms_game_design import ContactEditingFieldFormClass, CharacterEditingFieldForm, SheetEditingFieldForm
 from garhdony_app.models import SheetColor
 from garhdony_app.views_editable_pages import editable_page_update_args, render_editable_page

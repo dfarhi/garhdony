@@ -7,3 +7,5 @@ stop.sh
 
 *.pyc
 *.py~
+
+main/config.py

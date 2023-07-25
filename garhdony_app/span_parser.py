@@ -9,12 +9,12 @@ The tree then has the following important methods:
 
 import re
 import garhdony_app.utils as utils
-from django.db.models import get_model
+from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 import logging
-import HTMLParser
-html_parser = HTMLParser.HTMLParser()
+from html.parser import HTMLParser
+html_parser = HTMLParser  # Not sure this is upgraded to python 3.10 correctly.
 logger = logging.getLogger(__name__)
 
 ############################################################
@@ -630,9 +630,9 @@ class GenderSwitchNode(GenderNode):
             # TODO: Do something smarter here.
             raise InvalidGenderSwitch("Didn't receive required arguments.")
         try:
-            self.character = get_model('garhdony_app', 'Character').objects.get(id=character_id)
+            self.character = apps.get_model('garhdony_app', 'Character').objects.get(id=character_id)
             if 'data-keyword' in self.attrs:
-                self.keyword =  get_model('garhdony_app', 'GenderizedKeyword').objects.get(id=self.attrs['data-keyword'])
+                self.keyword =  apps.get_model('garhdony_app', 'GenderizedKeyword').objects.get(id=self.attrs['data-keyword'])
         except ObjectDoesNotExist:
             # TODO: Do something smarter here.
             raise InvalidGenderSwitch("Invalid character or keyword")

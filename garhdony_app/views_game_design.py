@@ -1,13 +1,13 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404, HttpResponse, JsonResponse
 from garhdony_app.views_editable_pages import render_editable_page
 from garhdony_app.models import GameInstance, SheetRevision, NonPlayerCharacter, Contact, Sheet, PlayerCharacter
 from garhdony_app.forms_users import writer_home_form_getter
 from garhdony_app.forms_game_design import NPCEditingForm, CharacterNewForm, CharacterDeleteForm, SheetNewForm, SheetDeleteForm,  NewTitleForm, GameCreationForm, GameCloneForm, GameEditingForm, SearchForm
-import utils
-import auth
+import garhdony_app.utils as utils
+import garhdony_app.auth as auth
 from django.core.exceptions import ObjectDoesNotExist
-from views_characters import view_sheet
+from garhdony_app.views_characters import view_sheet
 from django.shortcuts import render
 from django.core.exceptions import ValidationError
 from django.utils.html import escape

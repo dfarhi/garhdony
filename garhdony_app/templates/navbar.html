@@ -7,7 +7,7 @@
     <td id='navbarcenter'>
       <table class='navbuttons'><tr>
 	 {% for entry,url in entry_list %}
-	     <td><a href={{ url }} {% if here == entry %} class="here" {% endif %}>{{entry}}</a></td>
+	     <td><a href="{{ url }}" {% if here == entry %} class="here" {% endif %}>{{entry}}</a></td>
 	 {% endfor %}
       </tr></table>
     </td>

@@ -12,7 +12,7 @@ This could perhaps be abstracted a bit, since many of them are pretty similar in
 """
 
 from django import forms
-import auth
+import garhdony_app.assign_writer_game
 from django.forms.widgets import TextInput
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.template.loader import render_to_string
@@ -115,7 +115,7 @@ class GameCreationForm(forms.ModelForm):
         super(GameCreationForm, self).save(*args, **kwargs)
         for w in self.cleaned_data['writers']:
             # Assign writing permissions on the new game to the selected writers.
-            auth.assign_writer_game(w, self.instance)
+            garhdony_app.assign_writer_game.assign_writer_game(w, self.instance)
 
 
 class GameCloneForm(forms.Form):
@@ -252,7 +252,7 @@ class GameAddWritersForm(WithComplete, forms.ModelForm):
 
     def save(self, *args, **kwargs):
         for w in self.cleaned_data['writers']:
-            auth.assign_writer_game(w, self.instance)
+            garhdony_app.assign_writer_game.assign_writer_game(w, self.instance)
         return super(GameAddWritersForm, self).save(*args, **kwargs)
 
 

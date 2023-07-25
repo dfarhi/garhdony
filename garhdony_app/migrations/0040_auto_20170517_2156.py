@@ -28,8 +28,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('unique_description', models.TextField(blank=True)),
-                ('character', models.ForeignKey(related_name='event_descriptions', to='garhdony_app.PlayerCharacter')),
-                ('event', models.ForeignKey(related_name='descriptions', to='garhdony_app.TimelineEvent')),
+                ('character', models.ForeignKey(related_name='event_descriptions', to='garhdony_app.PlayerCharacter', on_delete=models.CASCADE)),
+                ('event', models.ForeignKey(related_name='descriptions', to='garhdony_app.TimelineEvent', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='timelineevent',
             name='game',
-            field=models.ForeignKey(related_name='timeline_events', to='garhdony_app.GameInstance'),
+            field=models.ForeignKey(related_name='timeline_events', to='garhdony_app.GameInstance', on_delete=models.CASCADE),
             preserve_default=True,
         ),
         migrations.AlterField(

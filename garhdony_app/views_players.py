@@ -4,9 +4,9 @@ Views for players and logistical things
 This will get revamped at some point.
 """
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect
-import auth
+import garhdony_app.auth as auth
 from django.shortcuts import render
 from django.core.mail import send_mail
 from garhdony_app.forms_players import LogisticalTaskFormClass

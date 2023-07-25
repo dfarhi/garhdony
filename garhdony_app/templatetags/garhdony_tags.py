@@ -14,9 +14,8 @@ There are three sections in this file:
 
 from django import template
 from garhdony_app.models import GameInstance, EditLock
-from django.contrib.auth.forms import AuthenticationForm
 from garhdony_app.forms_users import DogmasAuthenticationForm
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -116,7 +115,7 @@ def writer_editable_field(field_name, display, writer, editing, form):
 
 @register.inclusion_tag('navbar.html', takes_context = True)
 def navbar(context, here, *entries_and_urls):
-    mapping = [(entries_and_urls[2*i], entries_and_urls[2*i+1]) for i in range(len(entries_and_urls)/2)]
+    mapping = [(entries_and_urls[2*i], entries_and_urls[2*i+1]) for i in range(int(len(entries_and_urls)/2))]
     return {'entry_list':mapping, 'here':here, 'user':context['user']}
 
 @register.inclusion_tag('garhdony_app/admin-sidebar.html')

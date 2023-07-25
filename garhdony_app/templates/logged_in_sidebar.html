@@ -2,7 +2,7 @@
 
 {% if user.character %}
 {{user.character.full_name}}
-(<a href={% url "garhdony_app.views_users.user_redirect" %}>Home</a>
+(<a href={% url "user_redirect" %}>Home</a>
 {% else %}
 Hello, {{ user.username }}! 
 (<a href={% url "writer_home" %}>Writing Home</a>

@@ -3,10 +3,11 @@
 import os
 
 try:
-    from config import path, DEBUG, SENDFILE_BACKEND, DO_LOGGING, SENDFILE_ROOT, SENDFILE_URL
+    from .config import path, DEBUG, DO_LOGGING
 except ImportError:
     path = 'forkbomb-3.0-master'
     DEBUG = True
+    DO_LOGGING = True
 
 TEMPLATE_DEBUG = DEBUG
 
@@ -98,20 +99,26 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'lao28vfi)+daigf*lws4h4mpmad$dwm%lzig-9rj14sp9b#!c2'
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
+# copy-pasted from 
+# https://stackoverflow.com/questions/30005127/django-admin-breaks-after-upgrading-to-1-8-1
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                # 'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
+            ],
+        },
+    },
+]
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.request',
-    "django.core.context_processors.media",
-)
-
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -212,3 +219,4 @@ if DO_LOGGING:
                 'level': 'DEBUG',
                 'propagate': True,}})
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 import os
@@ -14,8 +14,8 @@ from garhdony_app.storage import DogmasFileSystemStorage
 import garhdony_app.utils as utils
 from garhdony_app.LARPStrings import LARPTextField
 from djiki.models import Versioned, Revision
-from django.shortcuts import render_to_response
-from auth import assign_writer_game
+from django.shortcuts import render
+from .assign_writer_game import assign_writer_game
 import logging
 import random
 
@@ -87,7 +87,7 @@ class GameInstance(models.Model):
 
     name = models.CharField("Name", max_length=50)
 
-    template = models.ForeignKey(GameTemplate, related_name="instances", null=True)
+    template = models.ForeignKey(GameTemplate, related_name="instances", null=True, on_delete=models.SET_NULL)
 
     # usernamesuffix is appended to the characters' usernames to get the actual login usernames
     # Like rrihul14. This is so that different runs of the same game can have rrihul14 and rrihul15.
@@ -251,7 +251,7 @@ def embeddedImageUploadTo(embeddedimage, filename=''):
 class EmbeddedImage(models.Model):
     # name = models.CharField(max_length=200)
     filename = models.CharField(max_length=210, unique=True)
-    game = models.ForeignKey(GameInstance, related_name="EmbeddedImages")
+    game = models.ForeignKey(GameInstance, related_name="EmbeddedImages", on_delete=models.CASCADE)
     file = models.FileField(upload_to=embeddedImageUploadTo)
     # sheets = models.ManyToManyField(Sheet, related_name="EmbeddedImages")
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
@@ -326,7 +326,7 @@ class SheetStatus(models.Model):
     name = models.CharField(max_length=30)
     description = models.CharField(max_length=1000)
     sort_order = models.IntegerField()
-    game = models.ForeignKey(GameInstance, related_name='sheet_status')
+    game = models.ForeignKey(GameInstance, related_name='sheet_status', on_delete=models.CASCADE)
 
     def __unicode__(self):
         return self.name
@@ -364,10 +364,10 @@ class Sheet(models.Model, Versioned):
         # This is the path for the sheet's pdf.
         return os.path.join(settings.MEDIA_ROOT, sheetuploadpath(self))
 
-    color = models.ForeignKey(SheetColor, related_name='sheets')
-    sheet_type = models.ForeignKey(SheetType, related_name='sheets')
-    sheet_status = models.ForeignKey(SheetStatus, related_name='sheets', null=True, blank=True)
-    game = models.ForeignKey(GameInstance, related_name='sheets')
+    color = models.ForeignKey(SheetColor, related_name='sheets', on_delete=models.RESTRICT)
+    sheet_type = models.ForeignKey(SheetType, related_name='sheets', on_delete=models.RESTRICT)
+    sheet_status = models.ForeignKey(SheetStatus, related_name='sheets', null=True, blank=True, on_delete=models.SET_NULL)
+    game = models.ForeignKey(GameInstance, related_name='sheets', on_delete=models.CASCADE)
 
     # filename is what the PDF is saved as, so it has to be unique. Of course Printed Names might be non-unique.
     name = LARPTextField(verbose_name="Printed Name")
@@ -435,7 +435,9 @@ class Sheet(models.Model, Versioned):
         # This uses pdfkit, which requires wkhtmltopdf.
 
         # First generate the html, by pretending that we're going to render it from sheet_plain (the plain html template):
-        http_response = render_to_response('garhdony_app/sheet_plain.html',
+        # This used to be render_to_response in django 1.7; now it's just render.
+        # Not sure we're using the new function quite right.
+        http_response = render(None, 'garhdony_app/sheet_plain.html',
                                            {'revision': self.current_revision, 'sheet': self})
         html = http_response.content
 
@@ -601,7 +603,7 @@ class SheetRevision(Revision):
     # They are versions of sheets. Each Revision of a sheet contains the entire sheet as of that moment, in content.
     # content is a LARPTextField, since it contains tons of stnotes and gender switches and stuff.
     # We use the manager above to avoid loading content when not needed, since it's a large html file.
-    sheet = models.ForeignKey(Sheet, related_name='revisions')
+    sheet = models.ForeignKey(Sheet, related_name='revisions', on_delete=models.RESTRICT)
     content = LARPTextField(blank=True)
     objects = SheetRevisionManager()
     embeddedImages = models.ManyToManyField(EmbeddedImage, related_name='sheetrevisions', default=[])
@@ -642,12 +644,12 @@ class EditLock(models.Model):
 
     # Most of the logic for actually using these things is in views.writer_sheet_edit
 
-    sheet = models.ForeignKey(Sheet, related_name='edit_locks')
+    sheet = models.ForeignKey(Sheet, related_name='edit_locks', on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     broken = models.BooleanField(default=False)
-    base_revision = models.ForeignKey(SheetRevision, related_name='branching_locks')
+    base_revision = models.ForeignKey(SheetRevision, related_name='branching_locks', on_delete=models.CASCADE)
     saved = models.BooleanField(default=False)
-    author = models.ForeignKey(User, related_name='edit_locks')
+    author = models.ForeignKey(User, related_name='edit_locks', on_delete= models.RESTRICT)
 
     def __str__(self):
         return "Edit Lock by %(author)s at %(time)s" % {"author": self.author, "time": self.created}
@@ -790,7 +792,7 @@ class GenderizedName(GenderizedKeyword):
     A GenderizedKeyword tied to a character. This includes first names and nicknames;
     They are treated exactly the same.
     """
-    character = models.ForeignKey("Character", related_name="genderized_names")
+    character = models.ForeignKey("Character", related_name="genderized_names", on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
         # Enforce that all GenderizedNames have category="name"
@@ -828,10 +830,10 @@ class Character(models.Model):
     # But if you are modifying them, it can be very confusing to keep them in sync
     # And you can get werid behavior if they get out of sync.
     title_obj = models.ForeignKey(GenderizedKeyword, related_name="title_of", blank=True, null=True,
-                                  verbose_name="Title")
-    first_name_obj = models.OneToOneField(GenderizedName, related_name="first_name_of_character", blank=True, null=True)
+                                  verbose_name="Title", on_delete=models.SET_NULL)
+    first_name_obj = models.OneToOneField(GenderizedName, related_name="first_name_of_character", blank=True, null=True, on_delete=models.SET_NULL)
     last_name = models.CharField(max_length=50, default="", blank=True)
-    game = models.ForeignKey(GameInstance, related_name='characters')
+    game = models.ForeignKey(GameInstance, related_name='characters', on_delete=models.CASCADE)
     # char_type is either "PC" or "NPC"
     char_type = models.CharField(max_length=20)
 
@@ -999,7 +1001,7 @@ class PlayerCharacter(Character):
 
     # User is a django-defined Model for an actual user who logs into the website.
     # Every PlayerCharacter has one; it just has a username and password and can be authenticated.
-    user = models.OneToOneField(User, related_name='character', default=None, null=True)
+    user = models.OneToOneField(User, related_name='character', default=None, null=True, on_delete=models.SET_NULL)
     sheets = models.ManyToManyField(Sheet, related_name='characters', blank=True)
     default_gender = models.CharField(max_length=2, choices=(("M", "Male"), ("F", "Female")), default="M")
 
@@ -1120,7 +1122,7 @@ class NonPlayerCharacter(Character):
     gender_field = models.CharField(max_length=2,
                                     choices=(("M", "Male"), ("F", "Female"), ("OP", "Opposite of"), ("EQ", "Same as"),),
                                     default="M")
-    gender_linked_pc = models.ForeignKey(PlayerCharacter, related_name="gender_linked_npcs", blank=True, null=True)
+    gender_linked_pc = models.ForeignKey(PlayerCharacter, related_name="gender_linked_npcs", blank=True, null=True, on_delete=models.SET_NULL)
 
     def save(self, *args, **kwargs):
         self.char_type = 'NPC'
@@ -1168,7 +1170,7 @@ class CharacterStatType(models.Model):
     class Meta:
         ordering = ['name']
 
-    game = models.ForeignKey(GameInstance, related_name="character_stat_types")
+    game = models.ForeignKey(GameInstance, related_name="character_stat_types", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
 
     # optional=True means PCs don't need to have it.
@@ -1201,8 +1203,8 @@ class CharacterStat(models.Model):
     class Meta:
         ordering = ['stat_type']
 
-    stat_type = models.ForeignKey(CharacterStatType)
-    character = models.ForeignKey(Character, related_name="stats")
+    stat_type = models.ForeignKey(CharacterStatType, on_delete=models.RESTRICT)
+    character = models.ForeignKey(Character, related_name="stats", on_delete=models.CASCADE)
     value = models.CharField(max_length=50, blank=True, default="")
 
     def __str__(self):
@@ -1213,7 +1215,7 @@ class GameInfoLink(models.Model):
     """
     An external link for putting in the sidebar
     """
-    game = models.ForeignKey(GameInstance, related_name="info_links")
+    game = models.ForeignKey(GameInstance, related_name="info_links", on_delete=models.CASCADE)
     label = models.CharField(max_length=50)
     link_url = models.CharField(max_length=200)
 
@@ -1259,13 +1261,12 @@ class PlayerProfile(models.Model):
     gender_options = (('M', 'M',), ('F', 'F',),)
     # TODO: Do we want to handle non-gender-normativity in some acceptable way?
     gender = models.CharField(max_length=1, choices=gender_options, default='M')
-    character = models.OneToOneField(PlayerCharacter, related_name='PlayerProfile', blank=True, null=True)
-    done_tasks = models.ManyToManyField(LogisticalTask, related_name='Players', blank=True,
-                                        null=True)  # null=True is totally unnecessary, but removing it once the database is set up breaks the database.
+    character = models.OneToOneField(PlayerCharacter, related_name='PlayerProfile', blank=True, null=True, on_delete=models.SET_NULL)
+    done_tasks = models.ManyToManyField(LogisticalTask, related_name='Players', blank=True)  # null=True is totally unnecessary, but removing it once the database is set up breaks the database.  # Update 7/25/23 -- we're going for it.
     picture = models.ImageField(upload_to=playerprofileuploadpath, blank=True, storage=DogmasFileSystemStorage())
     email = models.CharField(max_length=100, blank=True,
                              verbose_name="What email address can we give to other players for contacting you?")
-    pregame_party_rsvp = models.NullBooleanField(verbose_name="Will you be attending?")
+    pregame_party_rsvp = models.BooleanField(verbose_name="Will you be attending?", null=True)
     snail_mail_address = models.CharField(max_length=300, blank=True,
                                           verbose_name="If not, give us a snail mail address to send your packet to.")
     housing_comments = models.TextField(blank=True,
@@ -1295,7 +1296,7 @@ class PlayerProfile(models.Model):
 class TravelProfile(models.Model):
     # Every PlayerProfile has a TravelProfile.
     # This will get improved when we revamp logistics.
-    player_profile = models.OneToOneField(PlayerProfile, related_name='TravelProfile')
+    player_profile = models.OneToOneField(PlayerProfile, related_name='TravelProfile', on_delete=models.CASCADE)
     phone = models.CharField(max_length=20, verbose_name="Cell Phone Number", blank=True)
     departure_location = models.TextField(verbose_name='Where will you be leaving from?')
     departure_time = models.TextField(verbose_name='What time will you be ready to leave?')
@@ -1318,8 +1319,8 @@ class TravelProfile(models.Model):
 
 class Contact(models.Model):
     # A contact contains the info associated with "Hajdu knows Berlo"
-    owner = models.ForeignKey(Character, related_name="contacts")
-    target = models.ForeignKey(Character, related_name="contacters")
+    owner = models.ForeignKey(Character, related_name="contacts", on_delete=models.CASCADE)
+    target = models.ForeignKey(Character, related_name="contacters", on_delete=models.CASCADE)
 
     # description and display_name are the things the player sees.
     description = LARPTextField(blank=True)
@@ -1341,7 +1342,7 @@ class Contact(models.Model):
 
 class TimelineEvent(models.Model):
     # An event in the timeline
-    game = models.ForeignKey(GameInstance, related_name="timeline_events")
+    game = models.ForeignKey(GameInstance, related_name="timeline_events", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     date = models.DateField()
     default_description = models.TextField()
@@ -1355,8 +1356,8 @@ class TimelineEventCharacterDescription(models.Model):
     class Meta:
         unique_together = ("event", "character")
 
-    event = models.ForeignKey(TimelineEvent, related_name="descriptions")
-    character = models.ForeignKey(PlayerCharacter, related_name="event_descriptions")
+    event = models.ForeignKey(TimelineEvent, related_name="descriptions", on_delete=models.CASCADE)
+    character = models.ForeignKey(PlayerCharacter, related_name="event_descriptions", on_delete=models.CASCADE)
     unique_description = models.TextField(blank=True)
 
     def __str__(self):

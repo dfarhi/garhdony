@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='gameinstance',
             name='template',
-            field=models.ForeignKey(related_name='instances', to='garhdony_app.GameTemplate', null=True),
+            field=models.ForeignKey(related_name='instances', to='garhdony_app.GameTemplate', null=True, on_delete=models.SET_NULL),
             preserve_default=True,
         ),
     ]

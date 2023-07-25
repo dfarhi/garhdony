@@ -21,13 +21,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='sheet',
             name='sheet_status',
-            field=models.ForeignKey(related_name='sheets', blank=True, to='garhdony_app.SheetStatus', null=True),
+            field=models.ForeignKey(related_name='sheets', blank=True, to='garhdony_app.SheetStatus', null=True, on_delete=models.SET_NULL),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='sheet',
             name='sheet_type',
-            field=models.ForeignKey(related_name='sheets', to='garhdony_app.SheetType'),
+            field=models.ForeignKey(related_name='sheets', to='garhdony_app.SheetType', on_delete=models.RESTRICT),
             preserve_default=True,
         ),
     ]

@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('link_url', models.TextField()),
                 ('label', models.CharField(max_length=50)),
-                ('game', models.ForeignKey(related_name='info_links', to='garhdony_app.GameInstance')),
+                ('game', models.ForeignKey(related_name='info_links', to='garhdony_app.GameInstance', on_delete=models.CASCADE)),
             ],
             options={
             },

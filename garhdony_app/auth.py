@@ -4,21 +4,13 @@ Stuff related to logging in and authenticating.
 The main goal is the authenticate_resolve_and_callback function.
 """
 
-import models
+from .models import GameInstance, PlayerCharacter
 from django.shortcuts import render
 from django.http import Http404, HttpResponseRedirect
-from django.core.urlresolvers import reverse
-from guardian.shortcuts import assign_perm
+from django.urls import reverse
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__) # TODO: Organize logging.
-
-
-def assign_writer_game(writer, game):
-    """
-    Assigns a writer permissions on a game.
-    """
-    return assign_perm('writer', writer, game)
 
 
 class callback_package():
@@ -101,7 +93,7 @@ def authenticate_resolve_and_callback(request, callback, run_name, username=None
             approved = True
 
         resolved_items = {}
-        resolved_items['game'] = models.GameInstance.objects.get(name=run_name)
+        resolved_items['game'] = GameInstance.objects.get(name=run_name)
 
         resolved_items['writer'] = request.user.has_perm('garhdony_app.writer', resolved_items['game'])\
                                    or request.user.is_staff
@@ -115,7 +107,7 @@ def authenticate_resolve_and_callback(request, callback, run_name, username=None
             raise Http404
 
         if username:
-            resolved_items['character'] = models.PlayerCharacter.objects.get(game=resolved_items['game'],
+            resolved_items['character'] = PlayerCharacter.objects.get(game=resolved_items['game'],
                                                                              username=username)
 
         if not approved:

@@ -10,7 +10,7 @@ from garhdony_app.models import Character, PlayerProfile, GameInstance, Sheet, S
     CharacterStatType, GameInfoLink, EmbeddedImage, GameTemplate, WebsiteAboutPage, QuizSubmission, TimelineEvent,TimelineEventCharacterDescription
 from django.contrib.auth.models import User, Group
 from django import forms
-from django.conf.urls import patterns, url
+from django.urls import re_path as url
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.shortcuts import render
 
@@ -18,9 +18,10 @@ from django.shortcuts import render
 class DogmasAdminSite(admin.sites.AdminSite):
     def get_urls(self):
         urls = super(DogmasAdminSite, self).get_urls()
-        my_urls = patterns('',
-                           url(r'^logistics_table/$', self.logistics_table_view, name='logistics_table'),
-                           url(r'^travel_surveys/$', self.travel_surveys_view, name='travel_surveys'),)
+
+        # my_urls used to include '' but we removed it because of E004
+        my_urls = [url(r'^logistics_table/$', self.logistics_table_view, name='logistics_table'),
+                   url(r'^travel_surveys/$', self.travel_surveys_view, name='travel_surveys'),]
         return my_urls + urls
 
     def logistics_table_view(self, request):

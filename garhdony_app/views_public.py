@@ -1,9 +1,9 @@
 """
 The views that you can see without logging in.
 """
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.shortcuts import render
-from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.templatetags.static import static
 from django.views.generic import View, TemplateView
 from django.http import HttpResponseRedirect
 from garhdony_app.forms_public import AscendedQuizForm, Questions

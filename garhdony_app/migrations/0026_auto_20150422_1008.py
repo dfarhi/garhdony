@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='nonplayercharacter',
             name='gender_linked_pc',
-            field=models.ForeignKey(related_name='gender_linked_npcs', blank=True, to='garhdony_app.PlayerCharacter', null=True),
+            field=models.ForeignKey(related_name='gender_linked_npcs', blank=True, to='garhdony_app.PlayerCharacter', null=True, on_delete=models.SET_NULL),
             preserve_default=True,
         ),
         migrations.AlterField(

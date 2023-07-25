@@ -254,7 +254,7 @@ def writer_sheet_edit_html(request, game, sheet):
 @csrf_exempt
 # This is what the ajax calls to make sure the server is there and everything is ok.
 def writer_sheet_presave_handshake(request, run_name, filename):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return JsonResponse({"status": "NOT LOGGED IN"})
     elif not request.user.has_perm('garhdony_app.writer'):
         return JsonResponse({"status": "NOT LOGGED IN AS WRITER"})

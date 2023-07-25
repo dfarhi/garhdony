@@ -34,7 +34,7 @@ def authenticate_and_callback(request, callback, requires_writer=False):
     (or a regular HttpResponse, if you want, but that's less good).
     """
 
-    approved = request.user.is_authenticated()
+    approved = request.user.is_authenticated
 
     if requires_writer and not request.user.has_perm('garhdony_app.writer'):
         approved = False

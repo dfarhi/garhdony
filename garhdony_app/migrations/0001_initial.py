@@ -211,7 +211,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=400, verbose_name='Description', blank=True)),
                 ('content', garhdony_app.LARPStrings.LARPTextField(blank=True)),
                 ('author', models.ForeignKey(verbose_name='Author', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=models.RESTRICT)),
-                ('sheet', models.ForeignKey(related_name='revisions', to='garhdony_app.Sheet', on_delete=models.RESTRICT)),
+                ('sheet', models.ForeignKey(related_name='revisions', to='garhdony_app.Sheet', on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ('-created',),

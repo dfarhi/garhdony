@@ -12,7 +12,7 @@ from diff_match_patch import diff_match_patch
 from django.utils import timezone
 from garhdony_app.storage import DogmasFileSystemStorage
 import garhdony_app.utils as utils
-from garhdony_app.LARPStrings import LARPTextField
+from garhdony_app.LARPStrings import LARPTextField, larpstring_to_python
 from djiki.models import Versioned, Revision
 from django.shortcuts import render
 from .assign_writer_game import assign_writer_game
@@ -535,7 +535,7 @@ class Sheet(models.Model, Versioned):
             os.remove(self.full_path)
         super(Sheet, self).delete(*args, **kwargs)
 
-    new_sheet_content = 'You\'ve made a sheet! Here it is. It has some words in it. ' \
+    new_sheet_content = larpstring_to_python('You\'ve made a sheet! Here it is. It has some words in it. ' \
                         'Probably you can think of better words to put in it. ' \
                         'I bet you\'ve already thought of lots of ways to improve these words. ' \
                         'Like deleting them all and putting some of your own.' \
@@ -575,7 +575,7 @@ class Sheet(models.Model, Versioned):
                         '<br>&nbsp;&nbsp;&nbsp;&nbsp; Ok, fine, I guess you were right to keep reading this; it did tell you stuff. ' \
                         'But the idea was that all the stuff would be so simple you could figure it out on your own. ' \
                         'Now we\'ll never know if it was simple enough! ' \
-                        'Well, probably everyone else just deleted this text, so we can see if they figured out what to do.'
+                        'Well, probably everyone else just deleted this text, so we can see if they figured out what to do.')
 
 
 class SheetRevisionManager(models.Manager):
@@ -603,7 +603,7 @@ class SheetRevision(Revision):
     # They are versions of sheets. Each Revision of a sheet contains the entire sheet as of that moment, in content.
     # content is a LARPTextField, since it contains tons of stnotes and gender switches and stuff.
     # We use the manager above to avoid loading content when not needed, since it's a large html file.
-    sheet = models.ForeignKey(Sheet, related_name='revisions', on_delete=models.RESTRICT)
+    sheet = models.ForeignKey(Sheet, related_name='revisions', on_delete=models.CASCADE)
     content = LARPTextField(blank=True)
     objects = SheetRevisionManager()
     embeddedImages = models.ManyToManyField(EmbeddedImage, related_name='sheetrevisions', default=[])
@@ -622,7 +622,7 @@ class SheetRevision(Revision):
             imgregex = r"<img.*? data-id=['\"]([^\s]*)['\"] .*?>"
             matches = re.findall(imgregex, self.content.render_for_user(writer=True))
             images = {int(match_id) for match_id in matches}
-            self.embeddedImages = images
+            self.embeddedImages.set(images)
             # Django saves automatically upon changing m2m field; no need to call save explicitly.
             logger.debug(
                 str(datetime.now()) + ": Image Search took " + str(datetime.now() - starttime) + " (Found " + str(

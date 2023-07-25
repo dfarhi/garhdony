@@ -220,3 +220,5 @@ if DO_LOGGING:
                 'propagate': True,}})
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+CSRF_TRUSTED_ORIGINS = ['https://*.garhdony.com','https://*.127.0.0.1']

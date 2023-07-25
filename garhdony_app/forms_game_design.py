@@ -194,7 +194,7 @@ def stat_type_form_class_maker(game):
         class Meta:
             model = CharacterStatType
             widgets = {'game': forms.HiddenInput} # Leave the game in there, as a hidden input, so that saving is simple
-
+            fields = '__all__'
         def __init__(self, *args, **kwargs):
             super(GameStatForm, self).__init__(*args, **kwargs)
             self.fields['game'].initial = game # Set the game to the game argument provided to the function.
@@ -215,6 +215,7 @@ def info_link_form_class_maker(game):
         class Meta:
             model = GameInfoLink
             widgets = {'game': forms.HiddenInput} # Leave the game in there, as a hidden input, so that saving is simple
+            fields = '__all__'
 
         def __init__(self, *args, **kwargs):
             super(InfoLinkForm, self).__init__(*args, **kwargs)

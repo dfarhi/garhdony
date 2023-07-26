@@ -65,7 +65,7 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
             112: 'h1', // Cmd-F1
             113: 'h2', // Cmd-F2
             114: 'h3', // Cmd-F3
-            000: 'image',//No shortcut for image
+            0o0: 'image',//No shortcut for image
             // 76: 'alignImageLeft',//Cmd-L
             // 82: 'alignImageRight',//Cmd-R
             // 67: 'alignImageCenter',//Cmd-C

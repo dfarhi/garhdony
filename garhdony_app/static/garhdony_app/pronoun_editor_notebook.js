@@ -1900,8 +1900,9 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
         var parent = elem.parent();
         function update() {
             var parentTop = parent.offset().top;
-            var parentLeft = parent.offset().left;
-            // Get full width includng padding but not border.
+            // Left including left border
+            var parentLeft = parent.offset().left + parseInt(parent.css('border-left-width'));
+            // Get full width includng padding and border.
             var parentWidth = parent.innerWidth();
 
             if ($(window).scrollTop() > parentTop){

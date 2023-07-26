@@ -22,7 +22,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(path,'data/garhdony.db'),
+        'NAME': os.path.join(path,'data', 'garhdony.db'),
 	'USER': '',
 	'PASSWORD': '',
 	'HOST': '',
@@ -62,7 +62,7 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = os.path.join(path,'media/')
+MEDIA_ROOT = os.path.join(path,'media')
 
 
 
@@ -75,7 +75,7 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = os.path.join(path,'public/static/')
+STATIC_ROOT = os.path.join(path,'public', 'static')
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -194,7 +194,7 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filters': ['require_debug_true'],
-            'filename': os.path.join(path, 'logs/full_debug.log'),
+            'filename': os.path.join(path, 'logs', 'full_debug.log'),
         },
     },
     'loggers': {

@@ -11,9 +11,9 @@
 {# need this anywhere there will be a filteredselectmultiple. That is dumb, I know. sorry. #}
 <script type="text/javascript" src="{% static 'admin/js/core.js' %}"></script>
 <script type="text/javascript" src="/admin/jsi18n/"></script>
-<script type="text/javascript" src="{% static 'admin/js/jquery.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+{# here I removed 'admin/js/jquery.min.js' and 'admin/js/jquery.init.js' #}
 <link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/sheets.css' %}">
+<script type="text/javascript" src="{% static 'garhdony_app/jquery.wysiwyg-resize.nonifrm.js' %}"></script>
 {% endblock %}
 
 

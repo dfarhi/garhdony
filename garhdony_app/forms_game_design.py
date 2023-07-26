@@ -72,7 +72,7 @@ def EditingFieldFormClassGeneric(model_class, field_name):
                 # Note: this assumes the thing it is passed has a ".game" attribute.
                 # So if you have a model with a LARPTextField, you want to give it a .game property.
                 super(LARPStringVersion, self).__init__(*args, **kwargs)
-                self.fields[field_name] = LARPTextFormField(self.instance.game)
+                self.fields[field_name].set_game(self.instance.game)
                 self.fields[field_name].widget.attrs['style'] = "width:300;"
 
         return LARPStringVersion
@@ -685,8 +685,8 @@ class SheetMetadataForm(WithComplete, forms.ModelForm):
         LARPTextFormField to be the default form field for LARPTextFields in the model.
         """
         super(SheetMetadataForm, self).__init__(*args, **kwargs)
-        self.fields['preview_description'] = LARPTextFormField(self.instance.game)
-        self.fields['name'] = LARPTextFormField(self.instance.game)
+        self.fields['preview_description'].set_game(self.instance.game)
+        self.fields['name'].set_game(self.instance.game)
 
     def clean(self, *args, **kwargs):
         # TODO: Use clean() to check that there's a preview description for unhidden sheets if game's in preview mode.
@@ -766,9 +766,9 @@ class NewContactForm(WithComplete, forms.ModelForm):
         # owner is passed from the view which knows what page you're on.
         super(NewContactForm, self).__init__(*args, **kwargs)
         self.fields['owner'].initial = owner
-        self.fields['description'] = LARPTextFormField(owner.game)
+        self.fields['description'].set_game(owner.game)
         self.fields['target'].queryset = owner.game.characters
-        self.fields['display_name'] = LARPTextFormField(owner.game)
+        self.fields['display_name'].set_game(owner.game)
 
 
 class ContactForm(WithComplete, forms.ModelForm):
@@ -778,8 +778,8 @@ class ContactForm(WithComplete, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ContactForm, self).__init__(*args, **kwargs)
-        self.fields['description'] = LARPTextFormField(self.instance.game)
-        self.fields['display_name'] = LARPTextFormField(self.instance.game)
+        self.fields['description'].set_game(self.instance.game)
+        self.fields['display_name'].set_game(self.instance.game)
 
 # For re-ordering, we want a formset that only touches the order_number.
 # Maybe can_delete should be False? That controls whether you can delete contacts from the re-ordering form.

@@ -2,7 +2,7 @@ from diff_match_patch import diff_match_patch
 from django import forms
 from garhdony_app.models import SheetRevision, EditLock
 from garhdony_app.forms_game_design import WithComplete
-from garhdony_app.LARPStrings import LARPTextFormField, LARPstring
+from garhdony_app.LARPStrings import LARPTextWidget, LARPstring
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -49,11 +49,13 @@ class SheetContentForm(WithComplete, forms.ModelForm):
         self.sheet = sheet
         self.user = user
         super(SheetContentForm, self).__init__(*args, **kwargs)
+        self.fields['content'].set_game(sheet.game)
+        # add some attrs to the widget.
+        self.fields['content'].widget.attrs.update(
+            {'style': 'min-height:600;padding:100;background-color:#FFF;', 'data-control-panel': 'true'}
+        )
 
-        # Set up the main field:
         logger.debug(str(datetime.now())+": Making SheetContentForm")
-        # Make it a LARPField (not automatic due to the problem described in LARPString.py)
-        self.fields['content'] = LARPTextFormField(self.sheet.game)
 
         if 'data' not in kwargs:
             # Set its initial contents to the previous revision's contents
@@ -61,11 +63,6 @@ class SheetContentForm(WithComplete, forms.ModelForm):
             # (i.e. if we're not immediately going to replace the initial value with the user's input value)
             # Since it takes a long time.
             self.fields['content'].initial = self.sheet.current_revision.content#.raw()
-
-        # Make it big, and make the control-panel visible
-        # (big/small is an option because every other editor is small and in-line, and doesn't want a control panel).
-        self.fields['content'].widget.attrs['style'] = "min-height:600;padding:100;background-color:#FFF;"
-        self.fields['content'].widget.attrs['data-control-panel'] = "true"
 
         # We don't set the EditLock field now; that is passed in by the view. There's no particular reason for that.
 

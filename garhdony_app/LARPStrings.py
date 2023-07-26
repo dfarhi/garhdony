@@ -152,19 +152,32 @@ class LARPTextField(models.TextField):
         val = super(LARPTextField, self).value_from_object(obj)
         return val.raw()
 
+    def formfield(self, **kwargs):
+        """
+        For making a formfield for this field.
+        This is where we tell it to use a LARPTextFormField.
+
+        The tricky bit is that LARPTextFormField needs to take game as an init arg.
+        That is done by the form, which has to set it manually.
+        """
+        defaults = {'form_class': LARPTextFormField, 'widget': LARPTextWidget}
+        defaults.update(kwargs)
+        return super(LARPTextField, self).formfield(**defaults)
 
 class LARPTextWidget(forms.Widget):
     """
     The widget for editing these things.
-    Note that its init method takes a game argument, which is unusual for custom django widgets.
-        If you have problems copying internet code, that might be why.
     """
-    def __init__(self, game, attrs):
-        """
-        Has to be told what game it goes with to get the right names and so on.
-        """
+    def __init__(self, attrs=None):
         super(LARPTextWidget, self).__init__(attrs)
+        self.game = None
+
+    def set_game(self, game):
+        """
+        This must be called before the widget is used, to tell it what game it's in.
+        """
         self.game = game
+
     class Media:
         # There are complicated shenanigans with which media is loaded here and
         # which had to be hard-coded into the templates, because it has to be loaded in the right order.
@@ -174,7 +187,7 @@ class LARPTextWidget(forms.Widget):
         }
         js = ('garhdony_app/pronoun_editor_notebook.js','garhdony_app/pronoun_editor_main.js')
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         """
         render is what it puts in the html. value is the text currently in the field, name is the name of the field.
 
@@ -185,13 +198,22 @@ class LARPTextWidget(forms.Widget):
             2. The editor-shadow, which is a textarea. Forms can only actually save from textareas,
                 so there's an invisible textarea to which the content is copied right before saving.
             3. A list of characters in the current game, for populating the gender-correction dropdown menus.
+        
+        Note that we are bypassing django's fancy (read: enormous stack of pasthrough functions) rednering technology here.
+        Maybe that's bad?
         """
+
+        assert self.game is not None, "LARPTextWidget must have its set_game method called before it is used."
         if value is None:
             value = ''
-        final_attrs = self.build_attrs(attrs, name=name)
         characters = self.game.characters.all()
         characters_list = ['<span class="character" name="%s" gender="%s" id="%s"></span>'%(c.full_name(), c.gender(), str(c.id)) for c in characters]
         characters_html = '<span style="display:None" id="characters-list">\n  ' + '\n  '.join(characters_list) + '\n</span>'
+
+        # get the final attrs, making sure to include self.attrs
+        final_attrs = self.build_attrs(attrs, {'name':name})
+        final_attrs.update(self.attrs)
+
         html = format_html('''
         <div class="editor-bag" {0}>
            <div class="editor">
@@ -213,24 +235,25 @@ class LARPTextFormField(forms.CharField):
     """
     The field for forms.
     """
-    def __init__(self, game, *args, **kwargs):
-        """Set the widget to be a LARPTextWidget."""
-        if 'widget' in kwargs and hasattr(kwargs['widget'], 'attrs'):
-            # Don't want to stomp on any attributes that were supposed to be put in. This is untested. <-- that comment is from the distant past. Is it still untested? Who knows? David 4/15
-            widget_attrs = kwargs['widget'].attrs
-        else:
-            widget_attrs = {}
-        kwargs.update({'widget':LARPTextWidget(game, widget_attrs)})
-        
+    def __init__(self, *args, **kwargs):
         # Then init and set the game.
         super(LARPTextFormField, self).__init__(*args, **kwargs)
-        self.game = game
+        self.set_game(None)
 
         # All LarpTextFormFields keep a self.complete value, which decides whether this field needs gender correction.
         # If the form has WithComplete, then it will search these for False's, and if any are False, redisplay
         self.complete = False
         self._remembered_cleaned_data = None
 
+    def set_game(self, game):
+        self._game = game
+        self.widget.set_game(game)
+
+    @property
+    def game(self):
+        assert self._game is not None, "LARPTextFormField must have its set_game method called before it is used."
+        return self._game
+    
     def to_python(self, value):
         """ For converting the form string into python. """
         return larpstring_to_python(value, check_keywords=True)

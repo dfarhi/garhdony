@@ -24,28 +24,8 @@ $(document).ready(function() {
     all_characters.push(ignore_f);
 
     $('.editor').notebook({
-	characters: all_characters,
+        characters: all_characters,
         autoFocus: true,
-	username: $('#username')[0].innerText //I don't even know how to put a comment explaining how ridiculous this method of passing the variable from django to javascript is....
+        username: $('#username')[0].innerText //I don't even know how to put a comment explaining how ridiculous this method of passing the variable from django to javascript is....
     });
-
-    //Make the editor-control-bar float at the top.
-    // TODO: Abstract this to a function?
-    // TODO: Doesn't work if you have more than one. But how did you get more than one?
-    // TODO: Also might not work if you zoom?
-    var controlBar = $('.editor-control-bar')
-    var controlBarTop = controlBar.offset().top
-    var controlBarLeft = controlBar.offset().left
-    var controlBarWidth = controlBar.width()
-    $(window).scroll( function() {
-        if ($(window).scrollTop() > controlBarTop){
-            controlBar.addClass('stuck-at-top');
-            controlBar.width(controlBarWidth);
-            controlBar.css({'left':controlBarLeft})
-        } else {
-            controlBar.removeClass('stuck-at-top');
-            controlBar.width('100%');
-            controlBar.css({'left':''})
-        }
-    } );
 });

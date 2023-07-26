@@ -65,7 +65,7 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
             112: 'h1', // Cmd-F1
             113: 'h2', // Cmd-F2
             114: 'h3', // Cmd-F3
-            000: 'image',//No shortcut for image
+            0o0: 'image',//No shortcut for image
             // 76: 'alignImageLeft',//Cmd-L
             // 82: 'alignImageRight',//Cmd-R
             // 67: 'alignImageCenter',//Cmd-C
@@ -938,6 +938,11 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
                 control_panel.append(shortcuts);
 
 		        control_panel.insertBefore(elem);
+
+                // Call our custom function to make it float to the top of the screen when you scroll down.
+                // (This is a custom function because we want it to float to the top of the editor_bag, not the top of the screen.)
+                control_panel.floatToTopOfParent();
+
 		    },
 	        flip: function(){
 		        var editor_div = $(this).closest('.editor-bag').children('.editor');
@@ -1887,6 +1892,33 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
     $(".editor").on("input", function(event) {
         $('button .cancel-lose-unsaved-warning').show();
     });
+
+
+    // Function to make the editor-control-bar stay at the top as you scroll.
+    $.fn.floatToTopOfParent = function() {
+        var elem = $(this);
+        var parent = elem.parent();
+        function update() {
+            var parentTop = parent.offset().top;
+            var parentLeft = parent.offset().left;
+            // Get full width includng padding but not border.
+            var parentWidth = parent.innerWidth();
+
+            if ($(window).scrollTop() > parentTop){
+                elem.addClass('stuck-at-top');
+                elem.width(parentWidth);
+                elem.css({'left':parentLeft})
+            } else {
+                elem.removeClass('stuck-at-top');
+                elem.width(parentWidth);
+                elem.css({'left':''})
+            }
+        } 
+        // Do it on scroll or resize or zoom.
+        $(window).scroll( update );
+        $(window).resize( update );
+        $(window).on('zoom', update);
+    }
 
 
     /*

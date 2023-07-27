@@ -5,7 +5,7 @@
 <h1>{{character.full_name}} ({{character.PlayerProfile.name}})</h1>
 
 
-Welcome! This is where you'll find your character's sheets for {{game.name}}. Make sure to check out the <a href="{% url 'garhdony_app.views_players.character_logistics'  character.game.name character.username %}">logistics</a> in the other tab.
+Welcome! This is where you'll find your character's sheets for {{game.name}}. Make sure to check out the <a href="{% url 'character_logistics'  character.game.name character.username %}">logistics</a> in the other tab.
 
 Initially, you should have a costuming hint and a sheet with costuming suggestions. You'll receive further sheets in 2 installments:
 <ul>

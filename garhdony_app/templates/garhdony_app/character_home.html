@@ -22,7 +22,7 @@
 
       <br>Welcome! Your sheets are below.
 
-      Make sure to check out the <a href="{% url 'garhdony_app.views_players.character_logistics'  character.game.name character.username %}">logistics</a> in the other tab.
+      Make sure to check out the <a href="{% url 'character_logistics'  character.game.name character.username %}">logistics</a> in the other tab.
         {% writable_field "costuming_hint" %}
           <p>{% edit_button %}{% display %}<b>Costuming Hint:</b> 
             {{character.costuming_hint.inline}}
@@ -30,7 +30,7 @@
       </p>
     </td>
     <td style="width:200;text-align:right">
-      <a href="{% url 'garhdony_app.views_players.character_logistics_task' character.game.name character.username 'photo'%}">
+      <a href="{% url 'character_logistics_task' character.game.name character.username 'photo'%}">
         <img src='{{character.photo_url}}' style="max-width:200;max-height:200">
       </a>
     </td>

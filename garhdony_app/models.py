@@ -53,7 +53,7 @@ class GameTemplate(models.Model):
             ('writer', 'Writer'),
         )
 
-    name = models.CharField("Name", max_length=50)
+    name = models.CharField(b"Name", max_length=50)
     short_desc = models.TextField()
     blurb = models.TextField()
     about = models.TextField()
@@ -85,19 +85,19 @@ class GameInstance(models.Model):
             ('writer', 'Writer'),
         )
 
-    name = models.CharField("Name", max_length=50)
+    name = models.CharField(b"Name", max_length=50)
 
     template = models.ForeignKey(GameTemplate, related_name="instances", null=True, on_delete=models.SET_NULL)
 
     # usernamesuffix is appended to the characters' usernames to get the actual login usernames
     # Like rrihul14. This is so that different runs of the same game can have rrihul14 and rrihul15.
-    usernamesuffix = models.CharField("Username Suffix", max_length=50)
+    usernamesuffix = models.CharField(b"Username Suffix", max_length=50)
 
     # preview_mode determines whether people can log in and see everything, or just see sheets where hidden=False
     preview_mode = models.BooleanField(default=True)
 
     # complete determines whether players can see all sheets.
-    complete = models.BooleanField("Game Complete", default=False)
+    complete = models.BooleanField(b"Game Complete", default=False)
 
     def __str__(self):
         return self.name
@@ -370,8 +370,8 @@ class Sheet(models.Model, Versioned):
     game = models.ForeignKey(GameInstance, related_name='sheets', on_delete=models.CASCADE)
 
     # filename is what the PDF is saved as, so it has to be unique. Of course Printed Names might be non-unique.
-    name = LARPTextField(verbose_name="Printed Name")
-    filename = models.CharField(max_length=300, verbose_name="Internal Name (unique)")
+    name = LARPTextField(verbose_name=b"Printed Name")
+    filename = models.CharField(max_length=300, verbose_name=b"Internal Name (unique)")
 
     # content_type is almost always html.
     # But if we want upload a png or pdf, we can do that
@@ -386,7 +386,7 @@ class Sheet(models.Model, Versioned):
     hidden = models.BooleanField(default=True)
 
     # preview_description is the description the players get while the game is in preview mode. If hidden is true it doesn't matter.
-    preview_description = LARPTextField(blank=True, default="")
+    preview_description = LARPTextField(blank=True, default=b"")
 
     # last_printed is that timestamp of the last export to PDF
     infinite_past = timezone.make_aware(datetime(2000, 1, 1), timezone.utc)
@@ -830,9 +830,9 @@ class Character(models.Model):
     # But if you are modifying them, it can be very confusing to keep them in sync
     # And you can get werid behavior if they get out of sync.
     title_obj = models.ForeignKey(GenderizedKeyword, related_name="title_of", blank=True, null=True,
-                                  verbose_name="Title", on_delete=models.SET_NULL)
+                                  verbose_name=b"Title", on_delete=models.SET_NULL)
     first_name_obj = models.OneToOneField(GenderizedName, related_name="first_name_of_character", blank=True, null=True, on_delete=models.SET_NULL)
-    last_name = models.CharField(max_length=50, default="", blank=True)
+    last_name = models.CharField(max_length=50, default=b"", blank=True)
     game = models.ForeignKey(GameInstance, related_name='characters', on_delete=models.CASCADE)
     # char_type is either "PC" or "NPC"
     char_type = models.CharField(max_length=20)
@@ -997,7 +997,7 @@ class PlayerCharacter(Character):
     password = models.CharField(max_length=50, blank=True)
 
     # LARPTextField lets it include gender switches and stuff.
-    costuming_hint = LARPTextField(blank=True, default="")
+    costuming_hint = LARPTextField(blank=True, default=b"")
 
     # User is a django-defined Model for an actual user who logs into the website.
     # Every PlayerCharacter has one; it just has a username and password and can be authenticated.
@@ -1116,7 +1116,7 @@ class NPCManager(models.Manager):
 
 class NonPlayerCharacter(Character):
     # Notes are for writers to keep notes.
-    notes = LARPTextField(blank=True, default="")
+    notes = LARPTextField(blank=True, default=b"")
     objects = NPCManager()
     photo = models.ImageField(upload_to=npcuploadpath, blank=True, null=True, storage=DogmasFileSystemStorage())
     gender_field = models.CharField(max_length=2,
@@ -1205,7 +1205,7 @@ class CharacterStat(models.Model):
 
     stat_type = models.ForeignKey(CharacterStatType, on_delete=models.RESTRICT)
     character = models.ForeignKey(Character, related_name="stats", on_delete=models.CASCADE)
-    value = models.CharField(max_length=50, blank=True, default="")
+    value = models.CharField(max_length=50, blank=True, default=b"")
 
     def __str__(self):
         return self.stat_type.name + "(" + self.character.first_name() + ")"
@@ -1265,19 +1265,19 @@ class PlayerProfile(models.Model):
     # TODO: Do we want to handle non-gender-normativity in some acceptable way?
     gender = models.CharField(max_length=1, choices=gender_options, default='M')
     character = models.OneToOneField(PlayerCharacter, related_name='PlayerProfile', blank=True, null=True, on_delete=models.SET_NULL)
-    done_tasks = models.ManyToManyField(LogisticalTask, related_name='Players', blank=True)  # null=True is totally unnecessary, but removing it once the database is set up breaks the database.  # Update 7/25/23 -- we're going for it.
+    done_tasks = models.ManyToManyField(LogisticalTask, related_name='Players', blank=True, null=True)  # null=True is totally unnecessary, but removing it once the database is set up breaks the database. Update: tried again in 2023, still critical Null
     picture = models.ImageField(upload_to=playerprofileuploadpath, blank=True, storage=DogmasFileSystemStorage())
     email = models.CharField(max_length=100, blank=True,
-                             verbose_name="What email address can we give to other players for contacting you?")
-    pregame_party_rsvp = models.BooleanField(verbose_name="Will you be attending?", null=True)
+                             verbose_name=b"What email address can we give to other players for contacting you?")
+    pregame_party_rsvp = models.BooleanField(verbose_name=b"Will you be attending?", null=True)
     snail_mail_address = models.CharField(max_length=300, blank=True,
-                                          verbose_name="If not, give us a snail mail address to send your packet to.")
+                                          verbose_name=b"If not, give us a snail mail address to send your packet to.")
     housing_comments = models.TextField(blank=True,
-                                        verbose_name="Do you have any dietary restrictions? Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.")
+                                        verbose_name=b"Do you have any dietary restrictions? Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.")
     dietary_restrictions = models.CharField(max_length=200, blank=True,
-                                            verbose_name="Do you have any dietary restrictions? Any snack preferences?")
+                                            verbose_name=b"Do you have any dietary restrictions? Any snack preferences?")
     other_housing = models.TextField(blank=True,
-                                     verbose_name="Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.")
+                                     verbose_name=b"Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.")
 
     def __str__(self):
         return self.name
@@ -1300,21 +1300,21 @@ class TravelProfile(models.Model):
     # Every PlayerProfile has a TravelProfile.
     # This will get improved when we revamp logistics.
     player_profile = models.OneToOneField(PlayerProfile, related_name='TravelProfile', on_delete=models.CASCADE)
-    phone = models.CharField(max_length=20, verbose_name="Cell Phone Number", blank=True)
-    departure_location = models.TextField(verbose_name='Where will you be leaving from?')
-    departure_time = models.TextField(verbose_name='What time will you be ready to leave?')
+    phone = models.CharField(max_length=20, verbose_name=b"Cell Phone Number", blank=True)
+    departure_location = models.TextField(verbose_name=b'Where will you be leaving from?')
+    departure_time = models.TextField(verbose_name=b'What time will you be ready to leave?')
     car_choices = (
         ("has car", "I own a car and can help drive others up (we'll reimburse expenses + some wear and tear)"),
         ("personal car", "I own a car but will only drive myself"),
         ("can rent", "I don't own a car, but I am at least 25 and willing to rent a car (we will pay, of course)"),
         ("can rent under 25", "I don't own a car, but I am under 25 and willing to drive someone else's car"),
         ("can't drive", "I cannot or do not want to drive"),)
-    car_status = models.CharField(max_length=200, choices=car_choices, verbose_name="What is your car status?")
+    car_status = models.CharField(max_length=200, choices=car_choices, verbose_name=b"What is your car status?")
     dinner_choices = (("going", "I'll come to dinner to share stories!"), ("can't", "I need to be back early."),)
     # Dinner Status might get removed.
     dinner_status = models.CharField(max_length=200, choices=dinner_choices,
-                                     verbose_name="Do you think you'll come to the wrap-up dinner on Sunday, or go straight home?")
-    other = models.TextField(verbose_name="Any other travel information?", blank=True)
+                                     verbose_name=b"Do you think you'll come to the wrap-up dinner on Sunday, or go straight home?")
+    other = models.TextField(verbose_name=b"Any other travel information?", blank=True)
 
     def __str__(self):
         return self.player_profile.name

@@ -152,7 +152,7 @@ def writing_characters_table(request, run_name):
 def recent_changes(request, run_name):
     # A list of previous changes. Based on the history view but somehow global.
     def render_recent_changes(game, writer):
-        if request.GET.has_key('page'):
+        if 'page' in request.GET:
             page = int(request.GET['page'])
         else:
             page = 0

@@ -57,9 +57,9 @@ class AscendedFormView(View):
 
     def get(self, request, *args, **kwargs):
         form = self.form_class()
-        if request.method == 'GET' and request.GET.has_key('result'):
+        if request.method == 'GET' and 'result' in request.GET:
             winner = request.GET['result']
-            if Descriptions.has_key(winner):
+            if winner in Descriptions:
                 text = Descriptions[winner]
                 imgsrc = request.build_absolute_uri(static('garhdony_app/'+winner+'.png'))
                 return render(request, 'garhdony_app/ascended_quiz_results.html',

@@ -4,8 +4,7 @@
 
 {% block morehead %}
 <script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
-<script type="text/javascript" src="{% static 'admin/js/jquery.js' %}"></script>
-<script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+{# here I removed 'admin/js/jquery.min.js' and 'admin/js/jquery.init.js'. I don't think they mattered? david 7/2023 #}
 <script type="text/javascript" src="{% static 'admin/js/core.js'%}"></script>
 <script type="text/javascript" src="/admin/jsi18n/"></script>
 {% endblock %}

@@ -63,7 +63,7 @@ def EditingFieldFormClassGeneric(model_class, field_name):
 
     # Now check to see if it's a LARPTextField, because if so, due to the issues explained in LARPString.py, it doesn't
     # have the right default FormField.
-    field = model_class._meta.get_field_by_name(field_name)[0]
+    field = model_class._meta.get_field(field_name)
     if not isinstance(field, LARPTextField):
         return HelperEditingFieldForm
     else:

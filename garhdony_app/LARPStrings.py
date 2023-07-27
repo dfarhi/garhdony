@@ -185,7 +185,7 @@ class LARPTextWidget(forms.Widget):
         css = {
             'all': ('garhdony_app/pronoun_editor_style.css','garhdony_app/pronoun_editor_notebook_style.css',"http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css")
         }
-        js = ('garhdony_app/pronoun_editor_notebook.js','garhdony_app/pronoun_editor_main.js')
+        js = ('garhdony_app/jquery.wysiwyg-resize.nonifrm.js','garhdony_app/pronoun_editor_notebook.js','garhdony_app/pronoun_editor_main.js')
 
     def render(self, name, value, attrs=None, renderer=None):
         """

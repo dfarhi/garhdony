@@ -88,9 +88,9 @@ class SelectWithPop(forms.Select):
         super(SelectWithPop, self).__init__(*args, **kwargs)
         self.field_name = field_name
 
-    def render(self, name, value, attrs=None, choices=()):
+    def render(self, name, value, attrs=None, choices=(), renderer=None):
         attrs.update({'id': 'id_' + self.field_name})
-        html = super(SelectWithPop, self).render(name, value, attrs, choices)
+        html = super(SelectWithPop, self).render(name, value, attrs, renderer)
         popupplus = render_to_string("garhdony_app/popupplus.html", {'field': self.field_name})
         return html + popupplus
 
@@ -299,8 +299,6 @@ class CharacterNewForm(forms.Form):
         elif self.cleaned_data['char_type'] == "NPC":
             c = NonPlayerCharacter(game=game, first_name_obj=first, last_name=self.cleaned_data['last_name'])
 
-        # Set up the circular reference where the character's first_name, as a GenderizedName, needs to know about its character.
-        first.character = c # Not sure we need this line?
         c.save(*args) # This automatically saves the first_name_obj also.
         if self.cleaned_data['char_type'] == "PC":
             c.sheets.add(character_sheet)
@@ -371,18 +369,17 @@ class BaseCharacterMetadataForm(WithComplete, forms.ModelForm):
     def save(self, commit=True):
         """
         Save the stuff with commit, then update first name, then save for reals.
-
-        Use commit=False to avoid saving to the database twice.
         """
-        character = super(BaseCharacterMetadataForm, self).save(commit=False)
 
         # Update the first name
-        first = character.first_name_obj
+        first = self.instance.first_name_obj
         first.male = self.cleaned_data['first_male']
         first.female = self.cleaned_data['first_female']
 
         if commit:
-            character.save()
+            first.save()
+
+        character = super(BaseCharacterMetadataForm, self).save(commit=commit)
 
         return character
 
@@ -446,22 +443,15 @@ class PlayerCharacterMetadataForm(BaseCharacterMetadataForm):
 
 
     def save(self, commit=True):
-        # Save the normal bit
-        # TODO: Could maybe move the super call to the end to avoid the dumb commit=False thing?
-        # Might even need to do so to fix the bug where npc photos don't move when you change their name.
-        character = super(PlayerCharacterMetadataForm, self).save(commit=False)
-
         # Save the formsets
         self.names_formset.save(commit)
         self.stats_formset.save(commit)
 
         # Update the gender
-        character.default_gender = self.cleaned_data['gender_field']
+        self.instance.default_gender = self.cleaned_data['gender_field']
 
         # Save the changes
-        # character.save() automatically saves the first_name_obj also.
-        if commit:
-            character.save()
+        character = super(PlayerCharacterMetadataForm, self).save(commit=commit)
 
     def is_valid(self):
         # Check the main form and the internal formsets.

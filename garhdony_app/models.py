@@ -53,7 +53,7 @@ class GameTemplate(models.Model):
             ('writer', 'Writer'),
         )
 
-    name = models.CharField(b"Name", max_length=50)
+    name = models.CharField("Name", max_length=50)
     short_desc = models.TextField()
     blurb = models.TextField()
     about = models.TextField()
@@ -85,19 +85,19 @@ class GameInstance(models.Model):
             ('writer', 'Writer'),
         )
 
-    name = models.CharField(b"Name", max_length=50)
+    name = models.CharField("Name", max_length=50)
 
     template = models.ForeignKey(GameTemplate, related_name="instances", null=True, on_delete=models.SET_NULL)
 
     # usernamesuffix is appended to the characters' usernames to get the actual login usernames
     # Like rrihul14. This is so that different runs of the same game can have rrihul14 and rrihul15.
-    usernamesuffix = models.CharField(b"Username Suffix", max_length=50)
+    usernamesuffix = models.CharField("Username Suffix", max_length=50)
 
     # preview_mode determines whether people can log in and see everything, or just see sheets where hidden=False
     preview_mode = models.BooleanField(default=True)
 
     # complete determines whether players can see all sheets.
-    complete = models.BooleanField(b"Game Complete", default=False)
+    complete = models.BooleanField("Game Complete", default=False)
 
     def __str__(self):
         return self.name
@@ -370,8 +370,8 @@ class Sheet(models.Model, Versioned):
     game = models.ForeignKey(GameInstance, related_name='sheets', on_delete=models.CASCADE)
 
     # filename is what the PDF is saved as, so it has to be unique. Of course Printed Names might be non-unique.
-    name = LARPTextField(verbose_name=b"Printed Name")
-    filename = models.CharField(max_length=300, verbose_name=b"Internal Name (unique)")
+    name = LARPTextField(verbose_name="Printed Name")
+    filename = models.CharField(max_length=300, verbose_name="Internal Name (unique)")
 
     # content_type is almost always html.
     # But if we want upload a png or pdf, we can do that
@@ -386,7 +386,7 @@ class Sheet(models.Model, Versioned):
     hidden = models.BooleanField(default=True)
 
     # preview_description is the description the players get while the game is in preview mode. If hidden is true it doesn't matter.
-    preview_description = LARPTextField(blank=True, default=b"")
+    preview_description = LARPTextField(blank=True, default="")
 
     # last_printed is that timestamp of the last export to PDF
     infinite_past = timezone.make_aware(datetime(2000, 1, 1), timezone.utc)
@@ -830,9 +830,9 @@ class Character(models.Model):
     # But if you are modifying them, it can be very confusing to keep them in sync
     # And you can get werid behavior if they get out of sync.
     title_obj = models.ForeignKey(GenderizedKeyword, related_name="title_of", blank=True, null=True,
-                                  verbose_name=b"Title", on_delete=models.SET_NULL)
+                                  verbose_name="Title", on_delete=models.SET_NULL)
     first_name_obj = models.OneToOneField(GenderizedName, related_name="first_name_of_character", blank=True, null=True, on_delete=models.SET_NULL)
-    last_name = models.CharField(max_length=50, default=b"", blank=True)
+    last_name = models.CharField(max_length=50, default="", blank=True)
     game = models.ForeignKey(GameInstance, related_name='characters', on_delete=models.CASCADE)
     # char_type is either "PC" or "NPC"
     char_type = models.CharField(max_length=20)
@@ -883,38 +883,45 @@ class Character(models.Model):
             # super(Character, self).delete(*args, **kwargs)
 
     def save(self, *args, **kwargs):
+        """
+        Note that on a new character, save() also creates a bunch of related objects, 
+        like blank stats and first_name.
+        """
+        
         # save gets called for updates and for creations, so first lets check which it is:
-        if self.pk:
-            change = True
+        change = self.pk is not None
+
+        if change:
             # This could maybe be improved with select_related.
             # Basically, we need to load the previous version for seeing what changed.
             old_char = Character.objects.get(id=self.id)
-            old_g1 = old_char.gender()  # Need to call something so that it actually evaluates the queryset now, rather than after we change stuff.
 
-        else:
-            change = False
+            # rename my photo if my name (and thus its path) has changed.
+            if old_char.photo_path() != self.photo_path() and os.path.exists(old_char.photo_path()):
+                shutil.move(old_char.photo_path(), self.photo_path())     
 
-        super(Character, self).save(*args, **kwargs)
-
-        # Save my first name
-        if change:
-            self.first_name_obj.save()
-        else:
-            # New character.
-            # This is tricky because we need to make the first_name_obj, and then save the character again pointing to it.
-            # This is because of the circular pointers between GenderizedName.character and Character.first_name_obj
-            self.first_name_obj.character = self
-            self.first_name_obj.save()
-            self.first_name_obj = self.first_name_obj
             super(Character, self).save(*args, **kwargs)
 
-        # rename my photo if my name (and thus its path) has changed.
-        if change and old_char.photo_path() != self.photo_path() and os.path.exists(old_char.photo_path()):
-            shutil.move(old_char.photo_path(), self.photo_path())
+        else:
+            # Set up a bunch of related objects that must be in sync
+            # Supposedly this is bad practice (saving related objects within this model's save)
+            # But it seems to me like this is the natural place for it, to ensure that all callers do it right without having to worry about it.
 
-        # Make blank stats for new characters.
-        # Stats are changed through their own forms, so we don't need to save them when we modify the character.
-        if not change:
+            # Complicated song and dance to save the circular reference between first_name and character.
+            # 1. disconnect them, to avoid trying to save character with unsaved related object.
+            first_name_obj = self.first_name_obj
+            self.first_name_obj = None
+            # 2. save the character, so that it has a pk.
+            super(Character, self).save(*args, **kwargs)
+            # 3. save the first_name_obj, so that it has a pk.
+            first_name_obj.character = self
+            first_name_obj.save(*args, **kwargs)
+            # 4. reconnect the first_name_obj field.
+            self.first_name_obj = first_name_obj
+            self.save(*args, **kwargs)
+
+            # Make blank stats for new characters.
+            # Stats are changed through their own forms, so we don't need to save them when we modify the character.
             for cst in self.game.character_stat_types.all():
                 new_stat = CharacterStat(character=self, stat_type=cst)
                 new_stat.save()
@@ -997,7 +1004,7 @@ class PlayerCharacter(Character):
     password = models.CharField(max_length=50, blank=True)
 
     # LARPTextField lets it include gender switches and stuff.
-    costuming_hint = LARPTextField(blank=True, default=b"")
+    costuming_hint = LARPTextField(blank=True, default="")
 
     # User is a django-defined Model for an actual user who logs into the website.
     # Every PlayerCharacter has one; it just has a username and password and can be authenticated.
@@ -1054,8 +1061,7 @@ class PlayerCharacter(Character):
         new = PlayerCharacter(first_name_obj=None, title_obj=self.title_obj, last_name=self.last_name, game=new_game,
                               username=self.username, password=self.password, costuming_hint=self.costuming_hint,
                               default_gender=self.default_gender)
-        new.first_name_obj = self.first_name_obj.clone(new, commit=False)
-        new.save()
+        new.save_new(self.first_name_obj.clone(new, commit=False))
 
         for name in self.nonfirst_names():
             name.clone(new)
@@ -1116,7 +1122,7 @@ class NPCManager(models.Manager):
 
 class NonPlayerCharacter(Character):
     # Notes are for writers to keep notes.
-    notes = LARPTextField(blank=True, default=b"")
+    notes = LARPTextField(blank=True, default="")
     objects = NPCManager()
     photo = models.ImageField(upload_to=npcuploadpath, blank=True, null=True, storage=DogmasFileSystemStorage())
     gender_field = models.CharField(max_length=2,
@@ -1149,8 +1155,7 @@ class NonPlayerCharacter(Character):
         """Makes a new copy. A lot of this code is repeated from the PC class and could be abstracted."""
         new = NonPlayerCharacter(first_name_obj=None, title_obj=self.title_obj, last_name=self.last_name, game=new_game,
                                  notes=self.notes, gender_field=self.gender_field, photo=self.photo)
-        new.first_name_obj = self.first_name_obj.clone(new, commit=False)
-        new.save()
+        new.save_new(first_name_obj=self.first_name_obj.clone(new, commit=False))
         for name in self.nonfirst_names():
             name.clone(new)
         if os.path.exists(self.photo_path()):
@@ -1205,7 +1210,7 @@ class CharacterStat(models.Model):
 
     stat_type = models.ForeignKey(CharacterStatType, on_delete=models.RESTRICT)
     character = models.ForeignKey(Character, related_name="stats", on_delete=models.CASCADE)
-    value = models.CharField(max_length=50, blank=True, default=b"")
+    value = models.CharField(max_length=50, blank=True, default="")
 
     def __str__(self):
         return self.stat_type.name + "(" + self.character.first_name() + ")"
@@ -1301,8 +1306,8 @@ class TravelProfile(models.Model):
     # This will get improved when we revamp logistics.
     player_profile = models.OneToOneField(PlayerProfile, related_name='TravelProfile', on_delete=models.CASCADE)
     phone = models.CharField(max_length=20, verbose_name=b"Cell Phone Number", blank=True)
-    departure_location = models.TextField(verbose_name=b'Where will you be leaving from?')
-    departure_time = models.TextField(verbose_name=b'What time will you be ready to leave?')
+    departure_location = models.TextField(verbose_name='Where will you be leaving from?')
+    departure_time = models.TextField(verbose_name='What time will you be ready to leave?')
     car_choices = (
         ("has car", "I own a car and can help drive others up (we'll reimburse expenses + some wear and tear)"),
         ("personal car", "I own a car but will only drive myself"),

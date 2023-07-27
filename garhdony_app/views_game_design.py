@@ -187,7 +187,7 @@ def writing_game_timeline(request, game_name):
 def writer_new_sheet(request, run_name):
     def render_new_sheet(game, writer):
         if request.method == 'POST':
-            form = SheetNewForm(request.POST)
+            form = SheetNewForm(game=game, data=request.POST)
             if form.is_valid():
                 s = form.save(game)
                 return HttpResponseRedirect(reverse("writer_sheet", args=[game.name, s.filename]))
@@ -195,7 +195,7 @@ def writer_new_sheet(request, run_name):
                 return auth.callback_package('garhdony_app/writing_new_sheet.html', {'form':form})
 
         else:
-            f = SheetNewForm()
+            f = SheetNewForm(game=game)
             return auth.callback_package('garhdony_app/writing_new_sheet.html', {'form':f})
 
     return auth.authenticate_resolve_and_callback(request,render_new_sheet, run_name, requires_writer = True)

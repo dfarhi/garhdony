@@ -320,6 +320,10 @@ class SheetNewForm(forms.ModelForm):
         model = Sheet
         exclude = ['game', 'content', 'preview_description', 'last_printed', 'hidden', 'file']
 
+    def __init__(self, game, *args, **kwargs):
+        super(SheetNewForm, self).__init__(*args, **kwargs)
+        self.fields['name'].set_game(game)
+
     def save(self, game, commit=True, *args, **kwargs):
         s = super(SheetNewForm, self).save(commit=False, *args, **kwargs)
         s.game = game

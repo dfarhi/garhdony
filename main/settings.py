@@ -3,7 +3,7 @@
 import os
 
 try:
-    from .config import path, DEBUG, DO_LOGGING
+    from .config import path, DEBUG, DO_LOGGING, SENDFILE_BACKEND, SENDFILE_ROOT, SENDFILE_URL
 except ImportError:
     path = 'forkbomb-3.0-master'
     DEBUG = True

@@ -4,7 +4,7 @@ Getting Started
 # Get the code
 * Clone the Mercurial repository forkbomb-3.0-master to somewhere
 # Set up the python environment
-* Install python (TODO: VERSION?)
+* Install python (David has 3.10.11 as of 7/27/23)
 * Install virtualenv: pip install virtualenv
 * cd to forkbomb
 * Create virtual env: python -m venv pythonenv

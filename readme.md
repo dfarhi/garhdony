@@ -19,4 +19,5 @@ Getting Started
 * Probably the easiest way is to copy the one from the production server:
 mkdir data;
 scp user@garhdony.com:/home/django/forkbomb-3.0-master/data/garhdony.db data/garhdony.db
-# Run the server: python manage.py runserver
+# Run the server: 
+* python manage.py runserver

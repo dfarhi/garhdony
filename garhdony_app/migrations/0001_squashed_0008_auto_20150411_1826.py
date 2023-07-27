@@ -12,7 +12,7 @@ import djiki.models
 
 class Migration(migrations.Migration):
 
-    replaces = [(b'garhdony_app', '0001_initial'), (b'garhdony_app', '0002_auto_20150411_1635'), (b'garhdony_app', '0003_auto_20150411_1636'), (b'garhdony_app', '0004_auto_20150411_1636'), (b'garhdony_app', '0005_auto_20150411_1642'), (b'garhdony_app', '0006_auto_20150411_1707'), (b'garhdony_app', '0007_auto_20150411_1824'), (b'garhdony_app', '0008_auto_20150411_1826')]
+    replaces = [('garhdony_app', '0001_initial'), ('garhdony_app', '0002_auto_20150411_1635'), ('garhdony_app', '0003_auto_20150411_1636'), ('garhdony_app', '0004_auto_20150411_1636'), ('garhdony_app', '0005_auto_20150411_1642'), ('garhdony_app', '0006_auto_20150411_1707'), ('garhdony_app', '0007_auto_20150411_1824'), ('garhdony_app', '0008_auto_20150411_1826')]
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -169,7 +169,7 @@ class Migration(migrations.Migration):
                 ('dietary_restrictions', models.CharField(max_length=200, verbose_name=b'Do you have any dietary restrictions? Anything else we need to know to keep you happily fed for a weekend?', blank=True)),
                 ('other_housing', models.TextField(verbose_name=b"Any other notes on food or housing? For example, 'I really want a bed to myself' or 'It's very important to me that I get my own room' (that last one is hard to accommodate in our setup).  Please note that most people will be sleeping on airbeds; if this is a problem, please elaborate.", blank=True)),
                 ('character', models.OneToOneField(related_name='PlayerProfile', null=True, blank=True, to='garhdony_app.PlayerCharacter', on_delete=models.SET_NULL)),
-                ('done_tasks', models.ManyToManyField(related_name='Players', null=True, to=garhdony_app.models.LogisticalTask, blank=True)),
+                ('done_tasks', models.ManyToManyField(related_name='Players', null=True, to="garhdony_app.LogisticalTask", blank=True)),
             ],
             options={
             },

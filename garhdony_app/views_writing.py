@@ -449,8 +449,8 @@ def writer_sheet_diff(request, run_name, filename):
     def render_diff(game, writer, sheet):
         # Get the revisions.
         try:
-            from_rev = sheet.revisions.get(pk=request.REQUEST['from_revision_pk'])
-            to_rev = sheet.revisions.get(pk=request.REQUEST['to_revision_pk'])
+            from_rev = sheet.revisions.get(pk=request.GET.get('from_revision_pk'))
+            to_rev = sheet.revisions.get(pk=request.GET.get('to_revision_pk'))
         except (KeyError, Sheet.DoesNotExist):
             return HttpResponseNotFound()
 
@@ -461,6 +461,7 @@ def writer_sheet_diff(request, run_name, filename):
             from_rev, to_rev = to_rev, from_rev
 
         # Make the diff and send it to the template.
+        # TODO - add option to view diff of raws instead of renders
         dmp = diff_match_patch()
         diff = dmp.diff_compute(from_rev.content.render(), to_rev.content.render(), True, 2)
         return auth.callback_package('garhdony_app/sheet_diff.html', {'sheet': sheet, 'from_revision': from_rev, 'to_revision': to_rev, 'diff': diff, 'here':"History"})

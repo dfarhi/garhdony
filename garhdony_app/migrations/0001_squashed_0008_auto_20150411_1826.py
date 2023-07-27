@@ -270,7 +270,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='playercharacter',
             name='sheets',
-            field=models.ManyToManyField(related_name='characters', to=garhdony_app.models.Sheet, blank=True),
+            field=models.ManyToManyField(related_name='characters', to="garhdony_app.Sheet", blank=True),
             preserve_default=True,
         ),
         migrations.AddField(

@@ -18,7 +18,6 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.template.loader import render_to_string
 from garhdony_app.models import EmbeddedImage, Character, GameInstance, Contact, GenderizedKeyword, GenderizedName, CharacterStat, PlayerCharacter, NonPlayerCharacter, Sheet, SheetColor, SheetType, CharacterStatType, GameInfoLink
 from django.contrib.auth.models import Group, User
-from guardian.shortcuts import get_objects_for_user
 from garhdony_app.LARPStrings import LARPTextFormField, LARPTextField, LARPstring
 import os
 

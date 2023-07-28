@@ -307,13 +307,12 @@ class CharacterNewForm(forms.Form):
 
 class CharacterDeleteForm(forms.Form):
     """Form for choosing which character to Delete."""
-    def __init__(self, game, *args, **kwargs):
+    def __init__(self, game: GameInstance, *args, **kwargs):
         super(CharacterDeleteForm, self).__init__(*args, **kwargs)
         self.fields['character'].queryset = game.characters.all() # Only allow options in this game.
 
     def save(self, *args, **kwargs):
         c = self.cleaned_data['character'].cast()
-        print(c)
         c.delete()
 
     character = forms.ModelChoiceField(queryset=None)

@@ -379,10 +379,6 @@ class BaseCharacterMetadataForm(WithComplete, forms.ModelForm):
         self.fields['first_female'].initial = character.first_name_obj.female
 
     def save(self, commit=True):
-        """
-        Save the stuff with commit, then update first name, then save for reals.
-        """
-
         # Update the first name
         first = self.instance.first_name_obj
         first.male = self.cleaned_data['first_male']

@@ -8,6 +8,7 @@ The tree then has the following important methods:
 """
 
 import re
+from typing import List, Tuple
 import garhdony_app.utils as utils
 from django.apps import apps
 from django.core.exceptions import ObjectDoesNotExist
@@ -51,7 +52,7 @@ class InvalidGenderSwitch(Exception):
 class MalformedLarpStringException(Exception):
     pass
 
-def make_regex(keywords):
+def make_regex(keywords: List["GenderizedKeyword"]) -> str:
     """
     Takes a list of GenderizedKeyword objects
     And makes a regex that searches for all matches to any of them ignoring case.
@@ -88,7 +89,7 @@ def add_tag(string, open, close):
 ######################## Span Parse ########################
 ############################################################
 
-def span_parse(string):
+def span_parse(string) -> Tuple["SpanRootNode", List[str]]:
     """
     This is the main function, that takes an html string and returns a tree of nodes
     It ignores all tags other than spans, since our markup is all spans.
@@ -292,7 +293,7 @@ class Node(object):
         pass
     def regex_replace(self, regex, replacement):
         pass
-    def mark_unresolved_keywords(self, keywords, regex):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"], regex: str):
         """
         For validating forms.
         This is the heart of the gender-problem-catcher; each node calls mark_unresolved_keywords.
@@ -335,7 +336,7 @@ class TextNode(Node):
         return "[T: " + self.text + "]"
     def unescape_html(self):
         self.text = html_parser.unescape(self.text)
-    def mark_unresolved_keywords(self, keywords, regex):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"], regex: str):
         """
         Check if any text in here matches keywords.
         """
@@ -417,9 +418,9 @@ class SpanNode(Node):
         for child in self.children:
             child.cleanup_temporary_markup()
 
-    def mark_unresolved_keywords(self, *args):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"], regex: str):
         """Ask all my children to resolve, and then return whether any of them had a problem."""
-        children_resolved = [c.mark_unresolved_keywords(*args) for c in self.children]
+        children_resolved = [c.mark_unresolved_keywords(keywords, regex) for c in self.children]
         return any(children_resolved)
 
     def __repr__(self):
@@ -437,7 +438,7 @@ class SpanRootNode(SpanNode):
         return super(SpanRootNode, self).raw(False)
     def render(self, writer=False):
         return super(SpanRootNode, self).render(tagify=False, writer=writer)
-    def mark_unresolved_keywords(self, keywords):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"]):
         return super(SpanRootNode, self).mark_unresolved_keywords(keywords, make_regex(keywords))
 
 ##############################################################
@@ -498,11 +499,11 @@ class LarpActionNode(SpanNode):
         super(LarpActionNode, self).__init__(attrs)
         self.resolved = resolved
 
-    def mark_unresolved_keywords(self, *args):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"], regex: str):
         if self.resolved:
             return False
         else:
-            return super(LarpActionNode, self).mark_unresolved_keywords(*args)
+            return super(LarpActionNode, self).mark_unresolved_keywords(keywords, regex)
 
     def render(self, tagify=False, writer=False):
         """
@@ -560,7 +561,7 @@ class TemporaryIgnoreNode(RemoveTagNode):
     It doesn't look inside itself for unresolved words.
     But removes itself upon saving to the database (inherits from RemoveTagNode).
     """
-    def mark_unresolved_keywords(self, *args):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"], regex: str):
         return False
 
 
@@ -620,7 +621,7 @@ class GenderSwitchNode(GenderNode):
                 the_problem_logger.log("Invalid argument to data-gender-reversed: "+attrs['data-gender-reversed']+"; assuming 'true'")
                 attrs['data-gender-reversed'] = 'true'
 
-        super(GenderSwitchNode, self).__init__(attrs, self.keyword_bound) # The argument here becomes self.resolved
+        super(GenderSwitchNode, self).__init__(attrs, resolved=self.keyword_bound) # The argument here becomes self.resolved
 
         # Find the character and keyword objects from the database:
         try:
@@ -799,7 +800,7 @@ class BrokenGenderSwitchNode(LarpActionNode):
             the_problem_logger.log("Bad BrokenGenderSwitch; invalid Alternate.")
         return alt
 
-    def mark_unresolved_keywords(self, *args):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"], regex: str):
         return True
     #    # It should re-resolve itself, in case the set of keywords has changed.
 
@@ -964,7 +965,7 @@ class WritersBubbleInnerNode(WritersNode):
         else:
             return ""
 
-    def mark_unresolved_keywords(self, *args):
+    def mark_unresolved_keywords(self, keywords: List["GenderizedKeyword"], regex: str):
         """Don't look inside inner bubbles for markup, since it would be really awkward to find in the editor."""
         return False
 

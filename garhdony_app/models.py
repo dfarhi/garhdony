@@ -1,3 +1,4 @@
+from typing import List
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.urls import reverse
@@ -228,7 +229,7 @@ class GameInstance(models.Model):
 
         return new_game
 
-    def relevant_genderized_keywords(self):
+    def relevant_genderized_keywords(self) -> List["GenderizedKeyword"]:
         # These are all the words that might need to be tied to a person's gender
         # This include he/she, Baron/baroness, and Nicalao/Nikol. The pronouns and titles
         # Are universal across all games, but names is just the ones from this game.

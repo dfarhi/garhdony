@@ -8,5 +8,8 @@ stop.sh
 
 *.pyc
 *.py~
+__pycache__/
+.vscode/
 
 main/config.py
+public/static/

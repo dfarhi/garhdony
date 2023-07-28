@@ -58,11 +58,11 @@ class TestFormsGameDesign(TestCase):
 
         # Check we have a character with the simple values we expect
         char = NonPlayerCharacter.objects.get(last_name="Test Last Name")
-        self.assertEquals(char.last_name, "Test Last Name")
+        self.assertEqual(char.last_name, "Test Last Name")
 
         # Set their gender and check first name
         char.gender_field = "F"
-        self.assertEquals(char.name(), "Test First Female Test Last Name")
+        self.assertEqual(char.name(), "Test First Female Test Last Name")
 
     def test_new_pc_valid(self):
         game = GameInstance.objects.get(name="Test Game")
@@ -76,22 +76,22 @@ class TestFormsGameDesign(TestCase):
 
         # Check we have a character with the simple values we expect
         char = PlayerCharacter.objects.get(last_name="Test Last Name")
-        self.assertEquals(char.last_name, "Test Last Name")
+        self.assertEqual(char.last_name, "Test Last Name")
 
         # Set their gender and check first name
         char.default_gender = "F"
         char.save()
-        self.assertEquals(char.name(), "Test First Female Test Last Name")        
+        self.assertEqual(char.name(), "Test First Female Test Last Name")        
 
         # Check consistency of their first name obj
-        self.assertEquals(char.first_name_obj.character.pk, char.pk)
+        self.assertEqual(char.first_name_obj.character.pk, char.pk)
 
         # Check they have a sheet
-        self.assertEquals(char.sheets.count(), 1)
+        self.assertEqual(char.sheets.count(), 1)
         sheet = char.sheets.first()
-        self.assertEquals(sheet.name.render(), char.name())
-        self.assertEquals(sheet.sheet_type.name, "Story")
-        self.assertEquals(sheet.color.name, "Yellowsheet")
+        self.assertEqual(sheet.name.render(), char.name())
+        self.assertEqual(sheet.sheet_type.name, "Story")
+        self.assertEqual(sheet.color.name, "Yellowsheet")
 
         # Check they have a user
         User.objects.get(username=char.username)
@@ -109,5 +109,22 @@ class TestFormsGameDesign(TestCase):
         self.assertEqual(NonPlayerCharacter.objects.filter(last_name="NPC1-Last").count(), 0)
         # Check the first name is gone.
         self.assertEqual(GenderizedName.objects.filter(male=first_name_male).count(), 0)
+        # TODO: contacts
 
+    def test_delete_character_pc(self):
+        pc = PlayerCharacter.objects.get(last_name="PC1-Last")
+        first_name_male = pc.first_name_obj.male
+        game = GameInstance.objects.get(name="Test Game")
+        form = CharacterDeleteForm(game, {'character': pc.pk})
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
 
+        # Check the character is gone
+        self.assertEqual(PlayerCharacter.objects.filter(last_name="PC1-Last").count(), 0)
+        # But not another character
+        self.assertEqual(PlayerCharacter.objects.filter(last_name="PC2-Last").count(), 1)
+        # Check the first name is gone
+        self.assertEqual(GenderizedName.objects.filter(male=first_name_male).count(), 0)
+        # Check the user is gone
+        self.assertEqual(User.objects.filter(username=pc.username).count(), 0)
+        # TODO: contacts? timeline entries?

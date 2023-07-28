@@ -1,16 +1,12 @@
 == new ==
 New title check if dup
-hover time for sheet mode thingy
-
-
-
-
 
 == Morally good things ==
 * split garhdony_app into separate pieces
     * irl_app: PlayerProfile, Logistcal-whatever, login views, etc
-    * game_design_app: GameInstance, Character, PlayerCharacter, NonPlayerCharacter, Sheet, SheetType, SheetColor, GenderizedKeyword, GenderizedName, CharacterStatType, CharacterStat, Contact
-    * sheet_writing_app: SheetRevision, EditLock, javascript editor stuff
+    * game_design_app: GameInstance, Character, PlayerCharacter, NonPlayerCharacter, Sheet, SheetType, SheetColor, GenderizedName, CharacterStatType, CharacterStat, Contact
+    * sheet_writing_app: SheetRevision, EditLock, 
+    * larp_strings: GenderizedKeyword, LARPStrings.py, javascript editor stuff
 * Set up unit tests
 * migrate to mysql
 
@@ -53,7 +49,6 @@ Relatively Cool Features:
 Unimportant Features:
 * PC Gender constraints.
 * Generate all PDFs
-* Autogenerate a character sheet with the character
 
 Dream Features
 * init script to generate directories and so on.

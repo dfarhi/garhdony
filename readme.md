@@ -2,11 +2,11 @@ Getting Started
 ---
 
 # Get the code
-* Clone the Mercurial repository forkbomb-3.0-master to somewhere
+* Clone the git repo garhdony to somewhere
 # Set up the python environment
 * Install python (David has 3.10.11 as of 7/27/23)
 * Install virtualenv: pip install virtualenv
-* cd to forkbomb
+* cd to garhdony
 * Create virtual env: python -m venv pythonenv
 * Enter the virtualenv: source start.sh
   ** Windows: pythonenv\Scripts\activate.bat

@@ -104,10 +104,11 @@ class GameCreationForm(forms.ModelForm):
         model = GameInstance
         exclude = ['preview_mode', 'complete']
 
-    writers = forms.ModelMultipleChoiceField(queryset=Group.objects.get(name="Writers").user_set.all())
+    writers = forms.ModelMultipleChoiceField(queryset=User.objects.none())  # Set the queryset at init time, not startup time.
 
     def __init__(self, user, *args, **kwargs):
         super(GameCreationForm, self).__init__(*args, **kwargs)
+        self.fields['writers'].queryset = Group.objects.get(name="Writers").user_set.all()
         self.fields['writers'].initial = [user] # Default to the user being a writer.
 
     def save(self, *args, **kwargs):
@@ -238,7 +239,7 @@ class GameAddWritersForm(WithComplete, forms.ModelForm):
         fields = []
 
 
-    writers = forms.ModelMultipleChoiceField(queryset = Group.objects.get(name="Writers").user_set.all(),
+    writers = forms.ModelMultipleChoiceField(queryset = User.objects.none(),  # Set the queryset at init time, not startup time.
                                              label="",
                                              required=False)
 
@@ -247,6 +248,7 @@ class GameAddWritersForm(WithComplete, forms.ModelForm):
         # Set the choices to only those not already writing.
         # choices is a list of pairs of (id, display)
         writers_not_already_writing = [(u.pk, u.username) for u in list(Group.objects.get(name="Writers").user_set.all()) if not u.has_perm('garhdony_app.writer', self.instance)]
+        self.fields['writers'].queryset = Group.objects.get(name="Writers").user_set.all()
         self.fields['writers'].choices = writers_not_already_writing
 
 
@@ -274,7 +276,7 @@ class CharacterNewForm(forms.Form):
                                 required=False)
     char_type = forms.ChoiceField(choices=(("PC", "PC"), ("NPC", "NPC"),))
 
-    def save(self, game, *args):
+    def save(self, game: GameInstance, *args):
         """Note the extra game argument. We don't want that in the form, so you have to pass it."""
 
         # Make a new first name object out of the cleaned_data
@@ -309,6 +311,11 @@ class CharacterDeleteForm(forms.Form):
         super(CharacterDeleteForm, self).__init__(*args, **kwargs)
         self.fields['character'].queryset = game.characters.all() # Only allow options in this game.
 
+    def save(self, *args, **kwargs):
+        c = self.cleaned_data['character'].cast()
+        print(c)
+        c.delete()
+
     character = forms.ModelChoiceField(queryset=None)
 
 
@@ -318,23 +325,27 @@ class SheetNewForm(forms.ModelForm):
         model = Sheet
         exclude = ['game', 'content', 'preview_description', 'last_printed', 'hidden', 'file']
 
-    def __init__(self, game, *args, **kwargs):
+    def __init__(self, game: GameInstance, *args, **kwargs):
         super(SheetNewForm, self).__init__(*args, **kwargs)
         self.fields['name'].set_game(game)
+        self.game = game
 
-    def save(self, game, commit=True, *args, **kwargs):
+    def save(self, commit=True, *args, **kwargs):
         s = super(SheetNewForm, self).save(commit=False, *args, **kwargs)
-        s.game = game
+        s.game = self.game
         if commit:
-            # Sometimes django does dry runs of the save function.
             s.save()
         return s
 
 
 class SheetDeleteForm(forms.Form):
-    def __init__(self, game, *args, **kwargs):
+    def __init__(self, game: GameInstance, *args, **kwargs):
         super(SheetDeleteForm, self).__init__(*args, **kwargs)
         self.fields['sheet'].queryset = game.sheets.all() # Only display this game's sheets as options.
+
+    def save(self, commit=True, *args, **kwargs):
+        if commit:
+            self.cleaned_data['sheet'].delete()
 
     sheet = forms.ModelChoiceField(queryset=None)
 
@@ -585,13 +596,15 @@ def character_sheets_form_class_maker(sheet_types=None, sheet_colors=None):
     return CharacterSheetsForm
 
 
-character_editing_form_classes = {
-    "Metadata": PlayerCharacterMetadataForm,
-    "public_sheets": character_sheets_form_class_maker(sheet_types=[SheetType.objects.get(name="Public Sheet")]),
-    "private_sheets": character_sheets_form_class_maker(
-        sheet_types=SheetType.objects.filter(name__in=['Story', 'Details', 'Supplement'])),
-    "in-game_documents": character_sheets_form_class_maker(sheet_types=SheetType.objects.filter(name__in=['In-Game Document']))
-}
+def character_editing_form_class(field_name):
+    special = {
+        "Metadata": PlayerCharacterMetadataForm,
+        "public_sheets": character_sheets_form_class_maker(sheet_types=[SheetType.objects.get(name="Public Sheet")]),
+        "private_sheets": character_sheets_form_class_maker(
+            sheet_types=SheetType.objects.filter(name__in=['Story', 'Details', 'Supplement'])),
+        "in-game_documents": character_sheets_form_class_maker(sheet_types=SheetType.objects.filter(name__in=['In-Game Document']))
+    }
+    return special.get(field_name, EditingFieldFormClassGeneric(PlayerCharacter, field_name))
 
 
 def CharacterEditingFieldForm(request, field_name, data, files, character):
@@ -601,13 +614,7 @@ def CharacterEditingFieldForm(request, field_name, data, files, character):
     """
 
     # First get the right form class
-    if field_name in character_editing_form_classes.keys():
-        # This is the above dictionary of edit_fields to form classes.
-        form_class = character_editing_form_classes[field_name]
-    else:
-        # If it's one that's simpler than those, use the Generic form class.
-        # This is currently just Costuming Hint.
-        form_class = EditingFieldFormClassGeneric(PlayerCharacter, field_name)
+    form_class = character_editing_form_class(field_name)
 
     # Then initialize it with the passed data and files, and tie it to the right character.
     return form_class(data=data, files=files, instance=character)

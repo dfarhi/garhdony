@@ -879,9 +879,7 @@ class Character(models.Model):
         for name in self.genderized_names.all():
             name.delete()
 
-            # Don't have to delete this because it died on the deletion cascade from the first_name_obj.
-            # Since the first_name_obj had a pointer to self, and all pointers get deleted.
-            # super(Character, self).delete(*args, **kwargs)
+        super(Character, self).delete(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         """
@@ -1387,8 +1385,8 @@ def setup_database():
     and remade the database. It had better not be needed anymore.
     But I don't have the guts to remove it.
     """
-    c = GameInstance(name="Current", usernamesuffix="C")
-    c.save()
+    w = Group(name="Writers")
+    w.save()
 
     cs = SheetColor(name="Yellowsheet", color='000000', sort_order=0,
                     description="A yellow sheet goes only to you.")
@@ -1412,7 +1410,7 @@ def setup_database():
 
     supplement = SheetType(name='Supplement', sort_order=3,
                            description="A Supplement Sheet is supplementary.")
-    story.save()
+    supplement.save()
 
     igd = SheetColor(name='In-game Document', color='000000', sort_order=30,
                      description="An in-game document is a piece of paper your character has.")

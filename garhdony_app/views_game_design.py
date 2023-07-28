@@ -191,7 +191,7 @@ def writer_new_sheet(request, run_name):
         if request.method == 'POST':
             form = SheetNewForm(game=game, data=request.POST)
             if form.is_valid():
-                s = form.save(game)
+                s = form.save()
                 return HttpResponseRedirect(reverse("writer_sheet", args=[game.name, s.filename]))
             else:
                 return auth.callback_package('garhdony_app/writing_new_sheet.html', {'form':form})
@@ -208,8 +208,7 @@ def delete_sheet(request, run_name):
         if request.method == 'POST':
             form = SheetDeleteForm(game, data=request.POST)
             if form.is_valid():
-                s = form.cleaned_data['sheet']
-                s.delete()
+                form.save()
                 return HttpResponseRedirect(reverse("game_writer_home", args=[game.name]))
         else:
             form = SheetDeleteForm(game)
@@ -242,8 +241,7 @@ def delete_character(request, run_name):
         if request.method == 'POST':
             form = CharacterDeleteForm(game, data=request.POST)
             if form.is_valid():
-                c = form.cleaned_data['character'].cast()
-                c.delete()
+                form.save()
                 return HttpResponseRedirect(reverse("game_writer_home", args=[game.name]))
         else:
             form = CharacterDeleteForm(game)

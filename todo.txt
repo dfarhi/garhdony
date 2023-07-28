@@ -1,3 +1,11 @@
+== new ==
+New title check if dup
+hover time for sheet mode thingy
+
+
+
+
+
 == Morally good things ==
 * split garhdony_app into separate pieces
     * irl_app: PlayerProfile, Logistcal-whatever, login views, etc

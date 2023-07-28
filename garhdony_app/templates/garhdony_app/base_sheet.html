@@ -52,7 +52,7 @@
 <tr><td>
 {% display %}
     <ul>
-      {% for c in sheet.characters.all|dictsort:"name" %}
+      {% for c in sheet.characters.all|dictsort:"last_name" %}
       <li> <a href={% url "character_home" game.name c.username %}>{{c.name}}</a></li>
       {% endfor %}
     </ul>

@@ -83,9 +83,11 @@ def writing_game_sheets_grid(request, game_name):
     """
     The grid of characters and sheets.
     """
-    def render_writing_game_sheets_grid(game, writer):
+    def render_writing_game_sheets_grid(game: GameInstance, writer: bool):
         logger.debug(str(datetime.now())+": Loading Sheets Grid!")
-        return auth.callback_package('garhdony_app/writing_game_sheets.html', {'characters':list(game.pcs()), 'sheets':game.sheets.all()})
+        characters_sorted = sorted(list(game.pcs()), key=lambda c: c.first_name())
+        sheets_sorted = sorted(list(game.sheets.all()), key=lambda s: (s.name.render_for_user(writer), s.filename, s.color.name))
+        return auth.callback_package('garhdony_app/writing_game_sheets.html', {'characters':characters_sorted, 'sheets':sheets_sorted})
     return auth.authenticate_resolve_and_callback(request, render_writing_game_sheets_grid, game_name, requires_writer = True)
 
 def sheets_grid_modify(request, game):

@@ -4,6 +4,7 @@ Stuff related to logging in and authenticating.
 The main goal is the authenticate_resolve_and_callback function.
 """
 
+from typing import Any, Callable
 from .models import GameInstance, PlayerCharacter
 from django.shortcuts import render
 from django.http import Http404, HttpResponseRedirect
@@ -27,7 +28,7 @@ class callback_package():
         return self
 
 
-def authenticate_and_callback(request, callback, requires_writer=False):
+def authenticate_and_callback(request, callback: Callable[[], Any], requires_writer: bool=False):
     """
     Make sure that the user is logged in, and optionally that they're a writer.
     Then call callback(), which should return a callback_package
@@ -66,8 +67,8 @@ def authenticate_and_callback(request, callback, requires_writer=False):
         return callback_result
 
 
-def authenticate_resolve_and_callback(request, callback, run_name, username=None, requires_writer=False,
-                                      sheet=None, sheet_by_display_name=False):
+def authenticate_resolve_and_callback(request, callback, run_name: str, username: str=None, requires_writer: bool=False,
+                                      sheet=None, sheet_by_display_name: bool=False):
     """
     Does four things:
         1. Authenticate: Check that user is logged in and matches run_name and and username, if provided,

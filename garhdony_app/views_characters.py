@@ -73,10 +73,10 @@ def splitup_sheets(sheets):
     :param sheets: A list of sheets (probably that a particular character has)
     :return: A dictionary of sheets by type, for passing to a template.
     """
-    ps = sheets.filter(sheet_type__name='Public Sheet')
-    igds = sheets.filter(sheet_type__name='In-Game Document')
-    s = sheets.exclude(sheet_type__name='Public Sheet').exclude(sheet_type__name="In-Game Document")
-    all_colors = SheetColor.objects.all()
+    ps = sorted(sheets.filter(sheet_type__name='Public Sheet'), key=lambda x: x.name)
+    igds = sorted(sheets.filter(sheet_type__name='In-Game Document'), key=lambda x: x.name)
+    s = sheets.exclude(sheet_type__name='Public Sheet').exclude(sheet_type__name="In-Game Document").order_by('sheet_type')
+    all_colors = sorted(SheetColor.objects.all(), key=lambda x: x.sort_order)
     return {'sheets':s, 'public_sheets':ps, 'all_colors':all_colors, 'in_game_documents':igds}
 
 def character_contacts(request, run_name, username):

@@ -59,12 +59,12 @@
 
      <br>
      {% display %}
-         {% regroup sheets.all|dictsort:'sheet_type.sort_order' by sheet_type as type_list %}
+         {% regroup sheets by sheet_type as type_list %}
          <table style="width:100%">
 	   <tr>
 	     <td style="background:#CCCCCC" width="10%">
 	     </td>
-	     {% for color in all_colors|dictsort:'sort_order' %}
+	     {% for color in all_colors %}
 	     <th style="background:#CCCCCC" width="30%">
 	       {{color.name}}s<sup><span style="color:#AA1111" title="{{color.description}}">?</span></sup>
 	     </th>
@@ -76,7 +76,7 @@
 	       {{t.grouper.name}}<sup><span style="color:#AA1111" title="{{t.grouper.description}}">?</span></sup>
 	     </th>
 	     
-	     {% for color in all_colors|dictsort:'sort_order' %}
+	     {% for color in all_colors %}
 	     <td style="background:#{{color.color}}; padding:5px;">
    	         {% for item in t.list %}
 	         {% if item.color == color %}

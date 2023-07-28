@@ -36,8 +36,6 @@ class LARPstring():
     self.render_for_user(writer): renders the markup according to the boolean 'writer'
         which indicates if the user is a writer (and thus how to display stnotes etc).
     """
-    # TODO: Currently doesn't default to using a LARPTextFormField, because those need to be told about their games and
-    # I can't figure out how to do that.
     def __init__(self, raw, check_keywords=True):
         """
         raw is a raw string with the markup. span_parse parses it for html span tags, which are how the markup works.

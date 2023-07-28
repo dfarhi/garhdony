@@ -289,18 +289,17 @@ class CharacterNewForm(forms.Form):
                 username = self.cleaned_data['first_male']
             c = PlayerCharacter(game=game, first_name_obj=first, last_name=self.cleaned_data['last_name'],
                                 username=username, password="DEFAULT")
-            # Make them a sheet by default
-            name_ls = LARPstring(c.first_name()+" "+c.last_name)
-            #TODO: That doesn't catch the first_name keyword, because first_name isn't a saved keyword yet.
-            character_sheet = Sheet(game=game, color=SheetColor.objects.get(name='Yellowsheet'),
-                      sheet_type=SheetType.objects.get(name="Story"), name=name_ls,
-                      filename=c.first_name()+" "+c.last_name, content_type='html')
-            character_sheet.save(*args)
         elif self.cleaned_data['char_type'] == "NPC":
             c = NonPlayerCharacter(game=game, first_name_obj=first, last_name=self.cleaned_data['last_name'])
 
         c.save(*args) # This automatically saves the first_name_obj also.
         if self.cleaned_data['char_type'] == "PC":
+            name_ls = LARPstring(c.first_name()+" "+c.last_name)
+            name_ls.tree.mark_unresolved_keywords([c.first_name_obj])
+            character_sheet = Sheet(game=game, color=SheetColor.objects.get(name='Yellowsheet'),
+                      sheet_type=SheetType.objects.get(name="Story"), name=name_ls,
+                      filename=c.first_name()+" "+c.last_name, content_type='html')
+            character_sheet.save(*args)
             c.sheets.add(character_sheet)
         return c
 

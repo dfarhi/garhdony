@@ -1,5 +1,4 @@
     # Untested urls.py:
-    # url(r'^writing/([^/]+)/$', garhdony_app.views_game_design.writing_game_home, name='game_writer_home'),
     # url(r'^writing/([^/]+)/sheetsgrid/$', garhdony_app.views_game_design.writing_game_sheets_grid,
     #     name='game_writer_sheets_grid'),
     # url(r'^writing/([^/]+)/timeline/$', garhdony_app.views_game_design.writing_game_timeline,
@@ -47,8 +46,7 @@ class NongameDesignViewsTest(TestCase):
 
     def test_writing_home(self):
         response = self.client.get("/writing/")
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "TestGame")
+        self.assertContains(response, "TestGame", status_code=200)
 
     def test_writing_new_game(self):
         response = self.client.get("/writing/new")
@@ -124,3 +122,63 @@ class NongameDesignViewsTest(TestCase):
         self.assertEqual(some_character.genderized_names.filter(male="M").count(), 0)
         self.assertEqual(some_characters_clone.genderized_names.filter(male="M").count(), 1)
         
+class GameDesignViewsTest(TestCase):
+    def setUp(self) -> None:
+        setup_test_db()
+        self.game = models.GameInstance.objects.get(name="TestGame")
+        # Add a writer on the game.
+        self.writer = User.objects.create_user(username="writer", password="writer")
+        Group.objects.get(name='Writers').user_set.add(self.writer)
+        assign_writer_game(self.writer, self.game)
+
+        self.client.login(username="writer", password="writer")
+
+    def assert_writer_game_leftbar(self, response):
+        self.assertContains(response, "Game Homepage")
+        self.assertContains(response, "Big Sheets Grid")
+        self.assertContains(response, "Characters Grid")
+        self.assertContains(response, "Logistics Table")
+        self.assertContains(response, "Recent Changes")
+        self.assertContains(response, "Game Search")
+        self.assertContains(response, "Website Bugs")
+
+    def test_writing_game_home(self):
+        response = self.client.get(f"/writing/{self.game.name}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.game.name)
+
+        #Check all characters listed
+        for character in models.Character.objects.filter(game=self.game):
+            self.assertContains(response, character.name())
+        for sheet in models.Sheet.objects.filter(game=self.game):
+            self.assertContains(response, sheet.filename)
+
+        # check sidebar
+        self.assert_writer_game_leftbar(response)
+
+    def test_writing_game_home_no_game(self):
+        response = self.client.get("/writing/NonExistantGame/")
+        self.assertEqual(response.status_code, 404)
+    
+    def test_writing_game_home_no_access(self):
+        # Create a new game, but don't add the writer to it.
+        # TODO this file system access isn't the best thing.
+        if os.path.exists("media/TestGameNew"):
+            shutil.rmtree("media/TestGameNew")
+        new_game = models.GameInstance(name="TestGameNew", template=models.GameTemplate.objects.get(name="TestGameTemplate"))
+        new_game.save()
+        response = self.client.get("/writing/TestGameNew/")
+        self.assertEqual(response.status_code, 404)
+
+    def test_writing_sheets_grid(self):
+        response = self.client.get(f"/writing/{self.game.name}/sheets/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.game.name)
+        for sheet in models.Sheet.objects.filter(game=self.game):
+            self.assertContains(response, sheet.filename)
+        for character in models.PlayerCharacter.objects.filter(game=self.game):
+            self.assertContains(response, character.first_name())
+
+        # check sidebar
+        self.assert_writer_game_leftbar(response)
+    

@@ -94,7 +94,10 @@ def authenticate_resolve_and_callback(request, callback, run_name: str, username
             approved = True
 
         resolved_items = {}
-        resolved_items['game'] = GameInstance.objects.get(name=run_name)
+        try:
+            resolved_items['game'] = GameInstance.objects.get(name=run_name)
+        except GameInstance.DoesNotExist:
+            raise Http404
 
         resolved_items['writer'] = request.user.has_perm('garhdony_app.writer', resolved_items['game'])\
                                    or request.user.is_staff

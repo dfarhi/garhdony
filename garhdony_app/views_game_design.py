@@ -59,7 +59,7 @@ def writing_new_game(request):
                 name = form.instance.name
                 return HttpResponseRedirect(reverse("game_writer_home", args=[name]))
             else:
-                raise ValueError("Invalid Form. TODO: Make this handle errors the normal way.")
+                raise ValueError(f"Invalid Form. TODO: Make this handle errors the normal way.\n{form.errors}")
         else:
             new_form = GameCreationForm(request.user)
             clone_form = GameCloneForm(request.user)

@@ -41,8 +41,6 @@ Bugs:
 * Non-WYSIWYG mode for merging, with mine, theirs, diff, and automerge as options for the base to work from.
 
 Relatively Cool Features:
-* Upload pdf/png sheets.
-* Recent Changes
 * Something like section edits.
 * Global game keywords (Kakuhfu, Irichi, etc)
 

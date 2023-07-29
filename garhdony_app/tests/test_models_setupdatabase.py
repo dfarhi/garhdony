@@ -1,5 +1,5 @@
 from django.test import TestCase
-from garhdony_app.models import SheetColor, SheetType, setup_database
+from garhdony_app.models import GenderizedKeyword, SheetColor, SheetType, setup_database
 
 class TestSetupDatabase(TestCase):
     def setUp(self):
@@ -13,3 +13,7 @@ class TestSetupDatabase(TestCase):
         available_types = SheetType.objects.all()
         self.assertEqual(set(t.name for t in available_types), {'Story', 'Details', 'Supplement'})
 
+    def test_genderized_names(self):
+        self.assertGreater(GenderizedKeyword.objects.count(), 0)
+        heshe = GenderizedKeyword.objects.get(male="he")
+        self.assertEqual(heshe.female, "she")

@@ -1,6 +1,6 @@
 from typing import List
 from django.conf import settings
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
@@ -1057,10 +1057,10 @@ class PlayerCharacter(Character):
         This clones the character and attaches it to the new_game.
         I think it's saving more than it has to? Because character.save() saves a lot too.
         """
-        new = PlayerCharacter(first_name_obj=None, title_obj=self.title_obj, last_name=self.last_name, game=new_game,
+        new = PlayerCharacter(first_name_obj=self.first_name_obj.clone(new_character=None, commit=False), title_obj=self.title_obj, last_name=self.last_name, game=new_game,
                               username=self.username, password=self.password, costuming_hint=self.costuming_hint,
                               default_gender=self.default_gender)
-        new.save_new(self.first_name_obj.clone(new, commit=False))
+        new.save()
 
         for name in self.nonfirst_names():
             name.clone(new)
@@ -1152,9 +1152,9 @@ class NonPlayerCharacter(Character):
 
     def clone(self, new_game):
         """Makes a new copy. A lot of this code is repeated from the PC class and could be abstracted."""
-        new = NonPlayerCharacter(first_name_obj=None, title_obj=self.title_obj, last_name=self.last_name, game=new_game,
+        new = NonPlayerCharacter(first_name_obj=self.first_name_obj.clone(new_character=None, commit=False), title_obj=self.title_obj, last_name=self.last_name, game=new_game,
                                  notes=self.notes, gender_field=self.gender_field, photo=self.photo)
-        new.save_new(first_name_obj=self.first_name_obj.clone(new, commit=False))
+        new.save()
         for name in self.nonfirst_names():
             name.clone(new)
         if os.path.exists(self.photo_path()):
@@ -1385,8 +1385,14 @@ def setup_database():
     and remade the database. It had better not be needed anymore.
     But I don't have the guts to remove it.
     """
+    WebsiteAboutPage(content="This is the about page.").save()
+
+    # Make writers group with permission garhdony_app.writer
     w = Group(name="Writers")
     w.save()
+    for perm in Permission.objects.filter(codename='writer'):
+        w.permissions.add(perm)
+
 
     cs = SheetColor(name="Yellowsheet", color='000000', sort_order=0,
                     description="A yellow sheet goes only to you.")
@@ -1415,3 +1421,24 @@ def setup_database():
     igd = SheetColor(name='In-game Document', color='000000', sort_order=30,
                      description="An in-game document is a piece of paper your character has.")
     igd.save()
+
+    for male, female in [
+        ("he", "she"),
+        ("him", "her"),
+        ("his", "her"),
+        ("himself", "herself"),
+        ("his", "hers"),
+        ("father", "mother"),
+        ("brother", "sister"),
+        ("son", "daughter"),
+    ]:
+        GenderizedKeyword(male=male, female=female, category="pronoun").save()
+
+    for male, female in [
+        ("Mr.", "Ms."),
+        ("king", "queen"),
+        ("prince", "princess"),
+        ("duke", "duchess"),
+        ("lord", "lady"),
+    ]:
+        GenderizedKeyword(male=male, female=female, category="title").save()

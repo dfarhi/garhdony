@@ -1,6 +1,6 @@
 from django.test import TestCase
-from garhdony_app.forms_game_design import CharacterDeleteForm, CharacterNewForm, SheetDeleteForm, SheetNewForm
-from garhdony_app.models import GameInstance, GenderizedName, NonPlayerCharacter, PlayerCharacter, Sheet, SheetColor, SheetType
+from garhdony_app.forms_game_design import CharacterDeleteForm, CharacterNewForm, PlayerCharacterMetadataForm, SheetDeleteForm, SheetNewForm
+from garhdony_app.models import GameInstance, GenderizedKeyword, GenderizedName, NonPlayerCharacter, PlayerCharacter, Sheet, SheetColor, SheetType
 from garhdony_app.tests.setup_test_db import setup_test_db
 from django.contrib.auth.models import User
 
@@ -9,7 +9,7 @@ class TestFormsGameDesign(TestCase):
         setup_test_db()
 
     def test_new_sheet_valid(self):
-        game = GameInstance.objects.get(name="Test Game")
+        game = GameInstance.objects.get(name="TestGame")
         form = SheetNewForm(game, 
                             {'name': 'Test Sheet', 
                              'sheet_type': SheetType.objects.get(name="Story").pk, 
@@ -34,7 +34,7 @@ class TestFormsGameDesign(TestCase):
         self.assertIsNone(sheet.current_lock())
 
     def test_delete_sheet_valid(self):
-        game = GameInstance.objects.get(name="Test Game")
+        game = GameInstance.objects.get(name="TestGame")
         sheet: Sheet = Sheet.objects.get(name="Bluesheet Story 1")
         form = SheetDeleteForm(game, {'sheet': sheet.pk})
         self.assertTrue(form.is_valid(), form.errors)
@@ -47,7 +47,7 @@ class TestFormsGameDesign(TestCase):
         self.assertEqual(Sheet.objects.filter(name="Bluesheet Story 2").count(), 1)
 
     def test_new_npc_valid(self):
-        game = GameInstance.objects.get(name="Test Game")
+        game = GameInstance.objects.get(name="TestGame")
         form = CharacterNewForm({
             'first_male': 'Test First Male',
             'first_female': 'Test First Female',
@@ -65,7 +65,7 @@ class TestFormsGameDesign(TestCase):
         self.assertEqual(char.name(), "Test First Female Test Last Name")
 
     def test_new_pc_valid(self):
-        game = GameInstance.objects.get(name="Test Game")
+        game = GameInstance.objects.get(name="TestGame")
         form = CharacterNewForm({
             'first_male': 'Test First Male',
             'first_female': 'Test First Female',
@@ -100,7 +100,7 @@ class TestFormsGameDesign(TestCase):
         npc = NonPlayerCharacter.objects.get(last_name="NPC1-Last")
         first_name_male = npc.first_name_obj.male
         self.assertEqual(GenderizedName.objects.filter(male=first_name_male).count(), 1)
-        game = GameInstance.objects.get(name="Test Game")
+        game = GameInstance.objects.get(name="TestGame")
         form = CharacterDeleteForm(game, {'character': npc.pk})
         self.assertTrue(form.is_valid(), form.errors)
         form.save()
@@ -114,7 +114,7 @@ class TestFormsGameDesign(TestCase):
     def test_delete_character_pc(self):
         pc = PlayerCharacter.objects.get(last_name="PC1-Last")
         first_name_male = pc.first_name_obj.male
-        game = GameInstance.objects.get(name="Test Game")
+        game = GameInstance.objects.get(name="TestGame")
         form = CharacterDeleteForm(game, {'character': pc.pk})
         self.assertTrue(form.is_valid(), form.errors)
         form.save()

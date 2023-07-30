@@ -721,7 +721,8 @@ class GenderizedKeyword(models.Model):
             return self.female
         elif gender is None:
             return self.__str__()
-
+        else:
+            raise ValueError(f"Invalid gender {gender}")
     @property
     def actually_genderized(self):
         return self.male != self.female
@@ -1138,6 +1139,7 @@ class NonPlayerCharacter(Character):
 
     def gender(self):
         if self.gender_linked_pc is None:
+            assert self.gender_field in ["M", "F"], self.gender_field
             return self.gender_field
         else:
             linked = self.gender_linked_pc.gender()

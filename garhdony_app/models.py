@@ -1138,19 +1138,19 @@ class NonPlayerCharacter(Character):
         return reverse('writing_npc', args=[self.game.name, self.id])
 
     def gender(self):
-        if self.gender_linked_pc is None:
-            assert self.gender_field in ["M", "F"], self.gender_field
+        if self.gender_linked_pc is None and self.gender_field in ["M", "F"]:
             return self.gender_field
-        else:
+        elif self.gender_linked_pc is not None and self.gender_field in ["OP", "EQ"]:
             linked = self.gender_linked_pc.gender()
             if self.gender_field == "EQ":
                 return linked
             elif self.gender_field == "OP":
                 return utils.other_gender(linked)
-            else:
-                # Really shouldn't get here if everything is going smoothly;
-                # if gender_field is M or F, then gender_linked_pc should be None.
-                return self.gender_field
+        else:
+            # Really shouldn't get here if everything is going smoothly;
+            # if gender_field is M or F, then gender_linked_pc should be None.
+            logger.warning(f"Invalid NPC gender situation:\n  {self.gender_field=}\n  {self.gender_linked_pc=}")
+            return "M"
 
     def clone(self, new_game):
         """Makes a new copy. A lot of this code is repeated from the PC class and could be abstracted."""

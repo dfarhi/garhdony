@@ -20,7 +20,9 @@ import tempfile
 from django.conf import settings
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from garhdony_app import models
+from garhdony_app.LARPStrings import LARPstring
 from garhdony_app.assign_writer_game import assign_writer_game
 from garhdony_app.tests.setup_test_db import setup_test_db
 from django.contrib.auth.models import User, Group
@@ -180,6 +182,143 @@ class GameDesignViewsTest(GameDesignViewsTestCase):
         for character in models.PlayerCharacter.objects.filter(game=self.game):
             self.assertContains(response, character.first_name())
             self.assertContains(response, character.last_name)
+
+class GameSearchViewsTest(GameDesignViewsTestCase):
+    def assert_sheet_in_results(self, response, sheet, is_in=True, **kwargs):
+        entry = f"""<a href="{reverse("writer_sheet", args=[self.game.name, sheet.filename])}"> {sheet.filename}</a>"""
+        if is_in:
+            self.assertContains(response, entry, html=True, **kwargs)
+        else:
+            self.assertNotContains(response, entry, html=True, **kwargs)
+
+    def test_writing_search_form(self):
+        response = self.client.get(f"/writing/{self.game.name}/search/")
+        self.assertEqual(response.status_code, 200)
+        # check sidebar
+        self.assert_writer_game_leftbar(response)
+        self.assertContains(response, self.game.name)
+        self.assertContains(response, "Search")
+        self.assertContains(response, "id_query")
+        self.assertContains(response, "id_raw")
+        self.assertContains(response, "id_wholewords")
+        self.assertContains(response, "id_matchcase")
+
+    def test_writing_search_simple(self):
+        sheet1 = models.Sheet.objects.filter(game=self.game).first()
+        models.SheetRevision(sheet=sheet1, content=LARPstring("foo bar baz.")).save()
+
+        # Search for "foo"
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "baz",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": False,
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1)
+
+    def test_writing_search_multiple(self):
+        sheet1 = models.Sheet.objects.filter(game=self.game).first()
+        models.SheetRevision(sheet=sheet1, content=LARPstring("foo bar.")).save()
+        sheet2 = models.Sheet.objects.filter(game=self.game).last()
+        models.SheetRevision(sheet=sheet2, content=LARPstring("foo baz.")).save()
+
+        # Search for "foo"
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "foo",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": False,
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1)
+        self.assert_sheet_in_results(response, sheet2)
+
+        # search for bar
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "bar",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": False,
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1)
+        self.assert_sheet_in_results(response, sheet2, is_in=False)
+
+    def test_writing_search_matchcase(self):
+        sheet1 = models.Sheet.objects.filter(game=self.game).first()
+        models.SheetRevision(sheet=sheet1, content=LARPstring("foo.")).save()
+        sheet2 = models.Sheet.objects.filter(game=self.game).last()
+        models.SheetRevision(sheet=sheet2, content=LARPstring("Foo.")).save()
+
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "foo",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": True,
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1, msg_prefix=response.content.decode("utf-8"))
+        self.assert_sheet_in_results(response, sheet2, is_in=False)
+
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "Foo",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": False,
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1, msg_prefix=response.content.decode("utf-8"))
+        self.assert_sheet_in_results(response, sheet2)
+
+    def test_writing_search_wholewords(self):
+        sheet1 = models.Sheet.objects.filter(game=self.game).first()
+        models.SheetRevision(sheet=sheet1, content=LARPstring("foo bar.")).save()
+        sheet2 = models.Sheet.objects.filter(game=self.game).last()
+        models.SheetRevision(sheet=sheet2, content=LARPstring("foo barbaz.")).save()
+
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "bar",
+            "raw": False,
+            "wholewords": True,
+            "matchcase": False,
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1)
+        self.assert_sheet_in_results(response, sheet2, is_in=False)
+
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "bar",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": False,
+            })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, sheet1.filename)
+        self.assertContains(response, sheet2.filename)
+
+    def test_writing_search_old_revision(self):
+        sheet1 = models.Sheet.objects.filter(game=self.game).first()
+        models.SheetRevision(sheet=sheet1, content=LARPstring("foo bar.")).save()
+        models.SheetRevision(sheet=sheet1, content=LARPstring("foo baz.")).save()
+
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "bar",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": False,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1, is_in=False)
+
+        response = self.client.post(f"/writing/{self.game.name}/search/", {
+            "query": "baz",
+            "raw": False,
+            "wholewords": False,
+            "matchcase": False,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assert_sheet_in_results(response, sheet1)
 
 class NPCEditingTest(GameDesignViewsTestCase):
     def test_writing_npc_page_loads(self):

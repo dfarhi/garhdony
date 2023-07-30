@@ -442,6 +442,9 @@ class SheetsTest(GameDesignViewsTestCase):
         sheet = models.Sheet.objects.filter(game=self.game).first()
         response = self.client.get(f"/writing/{self.game.name}/sheet/{sheet.filename}/", {'Edit': 'characters'})
         self.assertEqual(response.status_code, 200)
+        for char in models.PlayerCharacter.objects.filter(game=self.game):
+            self.assertContains(response, char.name())
+            self.assertContains(response, f'value="{char.id}"')
 
         char = models.PlayerCharacter.objects.filter(game=self.game).first()
         response = self.client.post(f"/writing/{self.game.name}/sheet/{sheet.filename}/", {

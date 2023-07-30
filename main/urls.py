@@ -48,13 +48,10 @@ urlpatterns = (
     url(r'^admin/', admin_site.urls),
 
     #### Users logging in and out ####
-    url(r'^login/', django.contrib.auth.views.LoginView.as_view(),
-        {'template_name': 'garhdony_app/login.html',
-         'authentication_form': DogmasAuthenticationForm},
+    url(r'^login/', django.contrib.auth.views.LoginView.as_view(template_name='garhdony_app/login.html', authentication_form=DogmasAuthenticationForm),
         name='login_view'),
     url(r'^logout_then_login(.*)$', garhdony_app.views_users.logout_then_login, name='logout_then_login'), # No trailing slash to make the redirect start with a slash.
-    url(r'^logout/$', django.contrib.auth.views.LogoutView.as_view(),
-        {'next_page': reverse_lazy('about')},
+    url(r'^logout/$', django.contrib.auth.views.LogoutView.as_view(next_page=reverse_lazy('about')),
         name='logout_view'),
     url(r'^user_redirect/$', garhdony_app.views_users.user_redirect, name="user_redirect"),
     url(r'^writing/new_writer', NewWriterView.as_view(), name="new_writer"),

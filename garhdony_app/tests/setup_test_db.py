@@ -28,8 +28,17 @@ def setup_test_db(game=True, sheets=True, characters=True):
     for color in ["Bluesheet", "Yellowsheet", "Greensheet"]:
         for type in ["Story", "Details", "Supplement"]:
             for i in range(1, 3):
-                models.Sheet(game=game, name=f"{color} {type} {i}", sheet_type=models.SheetType.objects.get(name=type), color=models.SheetColor.objects.get(name=color), filename=f"test_sheet_{color}_{type}_{i}.txt", content_type="html").save()
-
+                models.Sheet(
+                    game=game, 
+                    name=f"{color} {type} {i}", 
+                    sheet_type=models.SheetType.objects.get(name=type), 
+                    color=models.SheetColor.objects.get(name=color), 
+                    filename=f"test_sheet_{color}_{type}_{i}", 
+                    content_type="html",
+                    preview_description=f"Test sheet {color} {type} {i} preview description",
+                    sheet_status=models.SheetStatus.objects.get(name="Status 1"),
+                    ).save()
+    
     if not characters:
         return
     # Create a few characters
@@ -42,15 +51,34 @@ def setup_test_db(game=True, sheets=True, characters=True):
     f.save(game)
     f = CharacterNewForm({
         'first_male': 'PC1-Male',
-        'first_female': 'PC1-Feale',
+        'first_female': 'PC1-Female',
         'last_name':  'PC1-Last',
         'char_type': 'PC'})
     f.is_valid()
     f.save(game)
     f = CharacterNewForm({
         'first_male': 'PC2-Male',
-        'first_female': 'PC2-Feale',
+        'first_female': 'PC2-Female',
         'last_name':  'PC2-Last',
         'char_type': 'PC'})
     f.is_valid()
     f.save(game)
+
+    # give characters some sheets
+    char1 = models.PlayerCharacter.objects.get(last_name="PC1-Last")
+    char1.sheets.add(models.Sheet.objects.get(name="Bluesheet Story 1"))
+    char1.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 1"))
+    char1.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 2"))
+    char1.sheets.add(models.Sheet.objects.get(name="Yellowsheet Supplement 1"))
+    char1.save()
+
+    char2 = models.PlayerCharacter.objects.get(last_name="PC2-Last")
+    char2.sheets.add(models.Sheet.objects.get(name="Bluesheet Story 1"))
+    char2.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 1"))
+    char2.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 2"))
+    char2.sheets.add(models.Sheet.objects.get(name="Bluesheet Supplement 1"))
+    char2.sheets.add(models.Sheet.objects.get(name="Yellowsheet Supplement 1"))
+    char2.sheets.add(models.Sheet.objects.get(name="Yellowsheet Supplement 2"))
+    char2.sheets.add(models.Sheet.objects.get(name="Greensheet Supplement 1"))
+    char2.sheets.add(models.Sheet.objects.get(name="Greensheet Details 2"))
+    char2.save()

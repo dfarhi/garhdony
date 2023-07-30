@@ -364,7 +364,7 @@ class NPCEditingTest(GameDesignViewsTestCase):
         character = models.NonPlayerCharacter.objects.get(id=character.id)
         self.assertEqual(character.gender(), "F")
 
-class SheetCreationDeletionTest(GameDesignViewsTestCase):
+class SheetsTest(GameDesignViewsTestCase):
     def test_sheet_create_delete(self):
         """ Test that we can create and delete a sheet """
         for content_type in ["html", "image/png", "application/pdf"]:
@@ -414,3 +414,22 @@ class SheetCreationDeletionTest(GameDesignViewsTestCase):
 
             # check file was deleted
             self.assertFalse(os.path.exists(sheet_path))
+    
+    def test_sheet_view(self):
+        """ Test that we can view a sheet's page """
+        for sheet in models.Sheet.objects.filter(game=self.game):
+            response = self.client.get(f"/writing/{self.game.name}/sheet/{sheet.filename}/")
+            self.assertEqual(response.status_code, 200)
+            
+            # check  sidebar
+            self.assert_writer_game_leftbar(response)
+
+            self.assertContains(response, sheet.name.render())
+            self.assertContains(response, sheet.sheet_type.name)
+            self.assertContains(response, sheet.color.name)
+            if sheet.sheet_status:
+                self.assertContains(response, sheet.sheet_status.name)
+
+            for char in sheet.characters.all():
+                self.assertContains(response, char.name())
+

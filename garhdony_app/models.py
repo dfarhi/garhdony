@@ -709,6 +709,7 @@ class GenderizedKeyword(models.Model):
 
     class Meta:
         ordering = ['male']
+        unique_together = ('male', 'female',)
 
     @property
     def is_name(self):

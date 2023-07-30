@@ -1,15 +1,12 @@
     # Untested urls.py:
     # url(r'^writing/([^/]+)/timeline/$', garhdony_app.views_game_design.writing_game_timeline,
     #     name='game_writer_timeline'),
-    # url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify,
-    #     name='sheets_grid_modify'),
+    # url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify, name='sheets_grid_modify'),
     # url(r'^writing/([^/]+)/character/new/$', garhdony_app.views_game_design.new_character, name='new_character'),
     # url(r'^writing/([^/]+)/character/delete/$', garhdony_app.views_game_design.delete_character, name='delete_character'),
     # url(r'^writing/([^/]+)/sheet/([^/]+)/$', garhdony_app.views_game_design.writer_sheet, name='writer_sheet'),
-    # url(r'^([^/]+)/character/([^/]+)/contacts/delete$', garhdony_app.views_game_design.character_contacts_delete,
-    #     name='character_contacts_delete'),
-    # url(r'^add/title_obj/$', garhdony_app.views_game_design.add_title, name='add_title'),
-    # url(r'^writing/([^/]+)/search/$', garhdony_app.views_game_design.search, name='search'),
+    #   Need to test the actual content part of it. Write, History tabs, Generate PDF, locks, plain html, etc
+    # url(r'^([^/]+)/character/([^/]+)/contacts/delete$', garhdony_app.views_game_design.character_contacts_delete, name='character_contacts_delete'),
     # url(r'^writing/([^/]+)/recent_changes/$', garhdony_app.views_game_design.recent_changes, name='recent_changes'),
 
 from io import BytesIO
@@ -182,6 +179,33 @@ class GameDesignViewsTest(GameDesignViewsTestCase):
         for character in models.PlayerCharacter.objects.filter(game=self.game):
             self.assertContains(response, character.first_name())
             self.assertContains(response, character.last_name)
+
+    def test_add_title(self):
+        response = self.client.get(f"/add/title_obj/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Add Title")
+        self.assertContains(response, "id_male")
+        self.assertContains(response, 'id_female')
+        self.assertContains(response, """<input type="hidden" name="category" value="title" id="id_category">""", html=True)
+
+        response = self.client.post(f"/add/title_obj/", {
+            'male': 'TestMaleTitle',
+            'female': 'TestFemaleTitle',
+            'category': 'title',
+        })
+        title = models.GenderizedKeyword.objects.get(male="TestMaleTitle")
+        self.assertEqual(title.female, "TestFemaleTitle")
+        self.assertEqual(title.category, "title")
+
+    def test_add_title_duplicate(self):
+        title = models.GenderizedKeyword.objects.filter(category="title").first()
+        response = self.client.post(f"/add/title_obj/", {
+            'male': title.male,
+            'female': title.female,
+            'category': 'title',
+        })
+        self.assertContains(response, "already exists")
+        self.assertEqual(models.GenderizedKeyword.objects.filter(category="title", male=title.male, female=title.female).count(), 1)
 
 class GameSearchViewsTest(GameDesignViewsTestCase):
     def assert_sheet_in_results(self, response, sheet, is_in=True, **kwargs):

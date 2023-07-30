@@ -7,7 +7,6 @@
     # url(r'^writing/([^/]+)/sheet/delete/$', garhdony_app.views_game_design.delete_sheet, name='delete_sheet'),
     # url(r'^writing/([^/]+)/character/new/$', garhdony_app.views_game_design.new_character, name='new_character'),
     # url(r'^writing/([^/]+)/character/delete/$', garhdony_app.views_game_design.delete_character, name='delete_character'),
-    # url(r'^writing/([^/]+)/NPC/([^/]+)/$', garhdony_app.views_game_design.writing_npc, name='writing_npc'),
     # url(r'^writing/([^/]+)/sheet/([^/]+)/$', garhdony_app.views_game_design.writer_sheet, name='writer_sheet'),
     # url(r'^([^/]+)/character/([^/]+)/contacts/delete$', garhdony_app.views_game_design.character_contacts_delete,
     #     name='character_contacts_delete'),
@@ -18,6 +17,8 @@
 from io import BytesIO
 import os
 import shutil
+import tempfile
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from garhdony_app import models
@@ -33,17 +34,28 @@ class GameDesignNotLoggedInTest(TestCase):
         response = self.client.get("/writing/")
         self.assertRedirects(response, "/login/?next=/writing/")
 
-class NongameDesignViewsTest(TestCase):
-    def setUp(self):
+class GameDesignViewsTestCase(TestCase):
+    def setUp(self) -> None:
+        settings.MEDIA_ROOT=tempfile.mkdtemp()
         setup_test_db()
-        game = models.GameInstance.objects.get(name="TestGame")
+        self.game = models.GameInstance.objects.get(name="TestGame")
         # Add a writer on the game.
         self.writer = User.objects.create_user(username="writer", password="writer")
         Group.objects.get(name='Writers').user_set.add(self.writer)
-        assign_writer_game(self.writer, game)
+        assign_writer_game(self.writer, self.game)
 
         self.client.login(username="writer", password="writer")
 
+    def assert_writer_game_leftbar(self, response):
+        self.assertContains(response, "Game Homepage")
+        self.assertContains(response, "Big Sheets Grid")
+        self.assertContains(response, "Characters Grid")
+        self.assertContains(response, "Logistics Table")
+        self.assertContains(response, "Recent Changes")
+        self.assertContains(response, "Game Search")
+        self.assertContains(response, "Website Bugs")
+
+class NongameDesignViewsTest(GameDesignViewsTestCase):
     def test_writing_home(self):
         response = self.client.get("/writing/")
         self.assertContains(response, "TestGame", status_code=200)
@@ -54,9 +66,6 @@ class NongameDesignViewsTest(TestCase):
         # Check the form is there.
         self.assertContains(response, "id_name")
     
-        # TODO this file system access isn't the best thing.
-        if os.path.exists("media/TestGameNew"):
-            shutil.rmtree("media/TestGameNew")
         response = self.client.post("/writing/new", 
                                     {"Create": "True", 
                                      "name": "TestGameNew", 
@@ -69,6 +78,10 @@ class NongameDesignViewsTest(TestCase):
         self.assertEqual(game.name, "TestGameNew")
         self.assertEqual(game.template.name, "TestGameTemplate")
         self.assertEqual(game.usernamesuffix, "T")
+        # chech media path was created.
+        self.assertTrue(os.path.exists(game.abs_media_directory))
+        self.assertTrue(os.path.exists(game.abs_sheets_directory))
+        self.assertTrue(os.path.exists(game.abs_photo_directory))
 
     def test_writing_clone_game(self):
         original_game = models.GameInstance.objects.get(name="TestGame")
@@ -77,9 +90,6 @@ class NongameDesignViewsTest(TestCase):
         some_name = models.GenderizedName(male="M", female="F", character=some_character)
         some_name.save()
 
-        # TODO this file system access isn't the best thing.
-        if os.path.exists("media/TestGameNew"):
-            shutil.rmtree("media/TestGameNew")
         response = self.client.post("/writing/new",
                                     {"Clone": "True", 
                                      "source": original_game.id,
@@ -123,27 +133,6 @@ class NongameDesignViewsTest(TestCase):
         self.assertEqual(some_characters_clone.genderized_names.filter(male="M").count(), 1)
         
 # Make sure to use a separate media root for each test case function call.
-@override_settings(DEFAULT_FILE_STORAGE='django.core.files.storage.InMemoryStorage', MEDIA_ROOT='media/test_media')
-class GameDesignViewsTestCase(TestCase):
-    def setUp(self) -> None:
-        setup_test_db()
-        self.game = models.GameInstance.objects.get(name="TestGame")
-        # Add a writer on the game.
-        self.writer = User.objects.create_user(username="writer", password="writer")
-        Group.objects.get(name='Writers').user_set.add(self.writer)
-        assign_writer_game(self.writer, self.game)
-
-        self.client.login(username="writer", password="writer")
-
-    def assert_writer_game_leftbar(self, response):
-        self.assertContains(response, "Game Homepage")
-        self.assertContains(response, "Big Sheets Grid")
-        self.assertContains(response, "Characters Grid")
-        self.assertContains(response, "Logistics Table")
-        self.assertContains(response, "Recent Changes")
-        self.assertContains(response, "Game Search")
-        self.assertContains(response, "Website Bugs")
-
 class GameDesignViewsTest(GameDesignViewsTestCase):
     def test_writing_game_home(self):
         response = self.client.get(f"/writing/{self.game.name}/")
@@ -165,9 +154,6 @@ class GameDesignViewsTest(GameDesignViewsTestCase):
     
     def test_writing_game_home_no_access(self):
         # Create a new game, but don't add the writer to it.
-        # TODO this file system access isn't the best thing.
-        if os.path.exists("media/TestGameNew"):
-            shutil.rmtree("media/TestGameNew")
         new_game = models.GameInstance(name="TestGameNew", template=models.GameTemplate.objects.get(name="TestGameTemplate"))
         new_game.save()
         response = self.client.get("/writing/TestGameNew/")
@@ -377,3 +363,54 @@ class NPCEditingTest(GameDesignViewsTestCase):
         other_character.save()
         character = models.NonPlayerCharacter.objects.get(id=character.id)
         self.assertEqual(character.gender(), "F")
+
+class SheetCreationDeletionTest(GameDesignViewsTestCase):
+    def test_sheet_create_delete(self):
+        """ Test that we can create and delete a sheet """
+        for content_type in ["html", "image/png", "application/pdf"]:
+            # Load sheet creation form
+            response = self.client.get(f"/writing/{self.game.name}/sheet/new/")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Create Sheet")
+            self.assertContains(response, "Sheet type")
+            self.assertContains(response, "id_sheet_type")
+            self.assertContains(response, "Sheet status")
+            self.assertContains(response, "id_sheet_status")
+            self.assertContains(response, "Color")
+            self.assertContains(response, "id_color")
+            self.assertContains(response, "Name")
+            self.assertContains(response, "id_name")
+            self.assertContains(response, "id_filename")
+
+            # Create sheet
+            type = models.SheetType.objects.first()
+            response = self.client.post(f"/writing/{self.game.name}/sheet/new/", {
+                "name": "Test Sheet", 
+                "sheet_type": type.id,
+                "sheet_status": models.SheetStatus.objects.first().id,
+                "color": models.SheetColor.objects.first().id,
+                "filename": "Test Sheet",
+                "content_type": content_type,
+            })
+            self.assertEqual(response.status_code, 302)
+            sheet = models.Sheet.objects.get(game=self.game, name="Test Sheet")
+            self.assertEqual(sheet.sheet_type, type)
+
+            response = self.client.get(f"/writing/{self.game.name}/sheet/delete/")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Delete Sheet")
+            self.assertContains(response, "cannot be undone!")
+            self.assertContains(response, "id_sheet")
+
+            # Delete sheet
+            sheet_path = sheet.full_path
+            #create dummy file there to test deletion
+            with open(sheet_path, "w") as f:
+                f.write("test")
+
+            response = self.client.post(f"/writing/{self.game.name}/sheet/delete/", {"sheet": sheet.id})
+            self.assertEqual(response.status_code, 302)
+            self.assertFalse(models.Sheet.objects.filter(game=self.game, name="Test Sheet").exists())
+
+            # check file was deleted
+            self.assertFalse(os.path.exists(sheet_path))

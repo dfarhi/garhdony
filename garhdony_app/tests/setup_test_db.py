@@ -17,12 +17,13 @@ def setup_test_db(game=True, sheets=True, characters=True):
     template.save()
 
     game = models.GameInstance(name="TestGame")
-    if os.path.exists(game.abs_media_directory):
-        shutil.rmtree(game.abs_media_directory)
     game.save()
 
     if not sheets:
         return
+    
+    models.SheetStatus(name="Status 1", game=game, sort_order=1).save()
+    models.SheetStatus(name="Status 2", game=game, sort_order=2).save()
     # Create a few sheets.
     for color in ["Bluesheet", "Yellowsheet", "Greensheet"]:
         for type in ["Story", "Details", "Supplement"]:

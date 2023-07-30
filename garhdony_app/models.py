@@ -121,25 +121,25 @@ class GameInstance(models.Model):
 
     @property
     def abs_media_directory(self):
-        return settings.MEDIA_ROOT + self.media_directory
+        return os.path.join(settings.MEDIA_ROOT, self.media_directory)
 
     @property
     def sheets_directory(self):
         # Sheets PDFs go here.
-        return self.media_directory + '/sheets/'
+        return os.path.join(self.media_directory, 'sheets/')
 
     @property
     def abs_sheets_directory(self):
-        return self.abs_media_directory + '/sheets/'
+        return os.path.join(self.abs_media_directory, 'sheets/')
 
     @property
     def photos_directory(self):
         # player photos (and npc photos) go here.
-        return self.media_directory + '/player_photos/'
+        return os.path.join(self.media_directory, 'player_photos/')
 
     @property
     def abs_photo_directory(self):
-        return self.abs_media_directory + '/player_photos/'
+        return os.path.join(self.abs_media_directory, 'player_photos/')
 
     def delete(self, *args, **kwargs):
         # Deleting a game can only be done through the admin interface when logged in as admin.

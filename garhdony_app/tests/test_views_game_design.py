@@ -463,3 +463,47 @@ class SheetsTest(GameDesignViewsTestCase):
         self.assertEqual(response.status_code, 302)
         sheet = models.Sheet.objects.get(game=self.game, filename=sheet.filename)
         self.assertEqual(sheet.characters.count(), 0)
+
+    def test_sheet_edit_metadata(self):
+        """ Test that we can edit a sheet's metadata """
+        sheet = models.Sheet.objects.filter(game=self.game).first()
+        response = self.client.get(f"/writing/{self.game.name}/sheet/{sheet.filename}/", {'Edit': 'Metadata'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Name")
+        self.assertContains(response, "id_name")
+        self.assertContains(response, "Sheet type")
+        self.assertContains(response, "id_sheet_type")
+        self.assertContains(response, "Sheet status")
+        self.assertContains(response, "id_sheet_status")
+        self.assertContains(response, "Color")
+        self.assertContains(response, "id_color")
+        self.assertContains(response, "unique")
+        self.assertContains(response, "id_filename")
+        self.assertContains(response, "Hidden")
+        self.assertContains(response, "id_hidden")
+        self.assertContains(response, "Preview description")
+        self.assertContains(response, "id_preview_description")
+        
+
+        new_color = models.SheetColor.objects.exclude(id=sheet.color.id).first()
+        new_type = models.SheetType.objects.exclude(id=sheet.sheet_type.id).first()
+        # no need to exclude sheet status, as it's None to start with
+        new_status = models.SheetStatus.objects.first()
+        response = self.client.post(f"/writing/{self.game.name}/sheet/{sheet.filename}/", {
+            "Save": "Metadata",
+            "name": "Test Sheet",
+            "sheet_type": new_type.id,
+            "sheet_status": new_status.id,
+            "color": new_color.id,
+            "filename": "Test Sheet",
+            "hidden": False,
+            "preview_description": "Test description new",
+        })
+        self.assertEqual(response.status_code, 302)
+        sheet = models.Sheet.objects.get(game=self.game, filename="Test Sheet")
+        self.assertEqual(sheet.name.render(), "Test Sheet")
+        self.assertEqual(sheet.sheet_type, new_type)
+        self.assertEqual(sheet.sheet_status, new_status)
+        self.assertEqual(sheet.color, new_color)
+        self.assertFalse(sheet.hidden)
+        self.assertEqual(sheet.preview_description.render(), "Test description new")

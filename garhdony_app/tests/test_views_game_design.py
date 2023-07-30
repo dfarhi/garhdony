@@ -401,7 +401,7 @@ class NPCEditingTest(GameDesignViewsTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/writing/{self.game.name}/NPC/{character.id}/")
 
-    def test_writing_npc_page_edit_metadata_name(self):
+    def test_writing_npc_page_edit_metadata(self):
         character = models.NonPlayerCharacter.objects.filter(game=self.game).first()
         # Check the edit form loads
         response = self.client.get(f"/writing/{self.game.name}/NPC/{character.id}/", {"Edit": "Metadata"})
@@ -670,3 +670,75 @@ class SheetsTest(GameDesignViewsTestCase):
         self.assertEqual(sheet.color, new_color)
         self.assertFalse(sheet.hidden)
         self.assertEqual(sheet.preview_description.render(), "Test description new")
+
+class CharacterCreateDeleteTest(GameDesignViewsTestCase):
+    def test_npc_create_delete(self):
+        """ Test that we can create and delete a player character """
+        response = self.client.get(f"/writing/{self.game.name}/character/new/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "id_first_male")
+        self.assertContains(response, "id_first_female")
+        self.assertContains(response, "id_last_name")
+        self.assertContains(response, "id_char_type")
+        self.assertContains(response, """<option value="PC">PC</option>""", html=True)
+        self.assertContains(response, """<option value="NPC">NPC</option>""", html=True)
+        self.assertContains(response, """<input type="submit" value="Create Character">""", html=True)
+
+        response = self.client.post(f"/writing/{self.game.name}/character/new/", {
+            "first_male": "TestM",
+            "first_female": "TestF",
+            "last_name": "TestL",
+            "char_type": "NPC"
+            })
+        self.assertTrue(models.NonPlayerCharacter.objects.filter(game=self.game, last_name="TestL").exists())
+        first_name_obj = models.NonPlayerCharacter.objects.get(game=self.game, last_name="TestL").first_name_obj
+        self.assertTrue(models.GenderizedName.objects.filter(id=first_name_obj.id).exists())
+
+        char = models.NonPlayerCharacter.objects.get(game=self.game, last_name="TestL")
+        response = self.client.get(f"/writing/{self.game.name}/character/delete/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Delete Character")
+        self.assertContains(response, "cannot be undone!")
+        self.assertContains(response, "id_character")
+
+        response = self.client.post(f"/writing/{self.game.name}/character/delete/", {"character": char.id})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(models.NonPlayerCharacter.objects.filter(game=self.game, last_name="TestL").exists())
+        # No more first name
+        self.assertFalse(models.GenderizedName.objects.filter(id=first_name_obj.id).exists())
+
+    def test_pc_create_delete(self):
+        response = self.client.post(f"/writing/{self.game.name}/character/new/", {
+            "first_male": "TestM",
+            "first_female": "TestF",
+            "last_name": "TestL",
+            "char_type": "PC"
+            })
+        # Check that the character was created
+        self.assertTrue(models.PlayerCharacter.objects.filter(game=self.game, last_name="TestL").exists())
+        char = models.PlayerCharacter.objects.get(game=self.game, last_name="TestL")
+        # Check that the first name obj was created
+        first_name_obj = models.PlayerCharacter.objects.get(game=self.game, last_name="TestL").first_name_obj
+        self.assertTrue(models.GenderizedName.objects.filter(id=first_name_obj.id).exists())
+        # Check that the character has a sheet
+        main_char_sheet = None
+        for sheet in char.sheets.all():
+            if sheet.name.render() == char.name():
+                main_char_sheet = sheet
+        self.assertIsNotNone(main_char_sheet)
+        # Check it's a yellow story sheet
+        self.assertEqual(main_char_sheet.color, models.SheetColor.objects.get(name="Yellowsheet"))
+        self.assertEqual(main_char_sheet.sheet_type, models.SheetType.objects.get(name="Story"))
+        # Check that the user got created
+        self.assertTrue(models.User.objects.filter(username=char.username).exists())
+
+        # Delete the character
+        response = self.client.post(f"/writing/{self.game.name}/character/delete/", {"character": char.id})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(models.PlayerCharacter.objects.filter(game=self.game, last_name="TestL").exists())
+        # No more first name
+        self.assertFalse(models.GenderizedName.objects.filter(id=first_name_obj.id).exists())
+        # Sheet still there - don't delete sheets when we delete characters
+        self.assertTrue(models.Sheet.objects.filter(id=main_char_sheet.id).exists())
+        # Check user is gone
+        self.assertFalse(models.User.objects.filter(username=char.username).exists())

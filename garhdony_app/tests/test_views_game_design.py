@@ -3,8 +3,6 @@
     #     name='game_writer_timeline'),
     # url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify,
     #     name='sheets_grid_modify'),
-    # url(r'^writing/([^/]+)/sheet/new/$', garhdony_app.views_game_design.writer_new_sheet, name='new_sheet'),
-    # url(r'^writing/([^/]+)/sheet/delete/$', garhdony_app.views_game_design.delete_sheet, name='delete_sheet'),
     # url(r'^writing/([^/]+)/character/new/$', garhdony_app.views_game_design.new_character, name='new_character'),
     # url(r'^writing/([^/]+)/character/delete/$', garhdony_app.views_game_design.delete_character, name='delete_character'),
     # url(r'^writing/([^/]+)/sheet/([^/]+)/$', garhdony_app.views_game_design.writer_sheet, name='writer_sheet'),
@@ -17,9 +15,10 @@
 from io import BytesIO
 import os
 import shutil
+
 import tempfile
 from django.conf import settings
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from garhdony_app import models
 from garhdony_app.assign_writer_game import assign_writer_game
@@ -430,6 +429,34 @@ class SheetsTest(GameDesignViewsTestCase):
             if sheet.sheet_status:
                 self.assertContains(response, sheet.sheet_status.name)
 
+            self.assertContains(response, inline_edit_buttom_html("Metadata"), html=True)
+            self.assertContains(response, inline_edit_buttom_html("characters"), html=True)
+            self.assertContains(response, "Write")
+            self.assertContains(response, "History")
+
             for char in sheet.characters.all():
                 self.assertContains(response, char.name())
 
+    def test_sheet_edit_characters(self):
+        """ Test that we can edit a sheet's characters """
+        sheet = models.Sheet.objects.filter(game=self.game).first()
+        response = self.client.get(f"/writing/{self.game.name}/sheet/{sheet.filename}/", {'Edit': 'characters'})
+        self.assertEqual(response.status_code, 200)
+
+        char = models.PlayerCharacter.objects.filter(game=self.game).first()
+        response = self.client.post(f"/writing/{self.game.name}/sheet/{sheet.filename}/", {
+            "Save": "characters",
+            "characters": [char.id],
+        })
+        self.assertEqual(response.status_code, 302)
+        sheet = models.Sheet.objects.get(game=self.game, filename=sheet.filename)
+        self.assertEqual(sheet.characters.count(), 1)
+        self.assertEqual(sheet.characters.first(), char)
+
+        response = self.client.post(f"/writing/{self.game.name}/sheet/{sheet.filename}/", {
+            "Save": "characters",
+            "characters": [],
+        })
+        self.assertEqual(response.status_code, 302)
+        sheet = models.Sheet.objects.get(game=self.game, filename=sheet.filename)
+        self.assertEqual(sheet.characters.count(), 0)

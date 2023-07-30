@@ -62,7 +62,7 @@ def editable_page_update_args(request, writer, edit_form_getter, *args):
         if "Save" in request.POST:
             edit_field = request.POST.get("Save")
         else:
-            raise ValueError("Not saving editable field")
+            raise ValueError(f"Not saving editable field; need 'Save' argument in POST dict.")
 
         # Make a form and check if it's valid.
         form = edit_form_getter(request, edit_field, request.POST, request.FILES, *args)

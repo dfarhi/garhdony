@@ -599,7 +599,10 @@ def character_editing_form_class(field_name):
             sheet_types=SheetType.objects.filter(name__in=['Story', 'Details', 'Supplement'])),
         "in-game_documents": character_sheets_form_class_maker(sheet_types=SheetType.objects.filter(name__in=['In-Game Document']))
     }
-    return special.get(field_name, EditingFieldFormClassGeneric(PlayerCharacter, field_name))
+    if field_name in special:
+        return special[field_name]
+    else:
+        return EditingFieldFormClassGeneric(PlayerCharacter, field_name)
 
 
 def CharacterEditingFieldForm(request, field_name, data, files, character):

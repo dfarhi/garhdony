@@ -269,7 +269,13 @@ def writer_sheet(request, run_name, filename, revision_pk=None):
 def writing_npc(request, game_name, npc_id):
     def render_writing_npc(game, writer):
         character =  NonPlayerCharacter.objects.get(id=npc_id)
-        return render_editable_page(request, 'garhdony_app/writing_npc.html', {'character': character}, lambda: reverse("writing_npc", args=[game_name, npc_id]), writer, NPCEditingForm, character)
+        return render_editable_page(request, 
+                                    'garhdony_app/writing_npc.html', 
+                                    {'character': character}, 
+                                    lambda: reverse("writing_npc", args=[game_name, npc_id]), 
+                                    writer, 
+                                    NPCEditingForm, 
+                                    character)
     return auth.authenticate_resolve_and_callback(request, render_writing_npc, game_name, requires_writer = True)
 
 

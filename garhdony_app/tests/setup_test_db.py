@@ -19,6 +19,10 @@ def setup_test_db(game=True, sheets=True, characters=True):
     game = models.GameInstance(name="TestGame")
     game.save()
 
+    # create a few CharacterStatTypes
+    models.CharacterStatType(name="Stat1-optional", game=game, optional=True).save()
+    models.CharacterStatType(name="Stat2-required", game=game, optional=False).save()
+
     if not sheets:
         return
     
@@ -38,6 +42,19 @@ def setup_test_db(game=True, sheets=True, characters=True):
                     preview_description=f"Test sheet {color} {type} {i} preview description",
                     sheet_status=models.SheetStatus.objects.get(name="Status 1"),
                     ).save()
+    
+    for type in ["Public Sheet", "In-Game Document"]:
+        for i in range(1, 3):
+            models.Sheet(
+                game=game, 
+                name=f"{type} {i}", 
+                sheet_type=models.SheetType.objects.get(name=type), 
+                color=models.SheetColor.objects.get(name="Bluesheet"), 
+                filename=f"test_sheet_{type}_{i}", 
+                content_type="html",
+                preview_description=f"Test sheet {type} {i} preview description",
+                sheet_status=models.SheetStatus.objects.get(name="Status 1"),
+                ).save()
     
     if not characters:
         return
@@ -66,13 +83,18 @@ def setup_test_db(game=True, sheets=True, characters=True):
 
     # give characters some sheets
     char1 = models.PlayerCharacter.objects.get(last_name="PC1-Last")
-    char1.sheets.add(models.Sheet.objects.get(name="Bluesheet Story 1"))
+    char1.sheets.add(models.Sheet.objects.get(name="Public Sheet 1"))
+    char1.sheets.add(models.Sheet.objects.get(name="Public Sheet 2"))
+    char1.sheets.add(models.Sheet.objects.get(name="Greensheet Story 1"))
     char1.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 1"))
     char1.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 2"))
     char1.sheets.add(models.Sheet.objects.get(name="Yellowsheet Supplement 1"))
+    char1.sheets.add(models.Sheet.objects.get(name="In-Game Document 2"))
     char1.save()
 
     char2 = models.PlayerCharacter.objects.get(last_name="PC2-Last")
+    char2.sheets.add(models.Sheet.objects.get(name="Public Sheet 1"))
+    char2.sheets.add(models.Sheet.objects.get(name="Public Sheet 2"))
     char2.sheets.add(models.Sheet.objects.get(name="Bluesheet Story 1"))
     char2.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 1"))
     char2.sheets.add(models.Sheet.objects.get(name="Bluesheet Details 2"))
@@ -81,4 +103,6 @@ def setup_test_db(game=True, sheets=True, characters=True):
     char2.sheets.add(models.Sheet.objects.get(name="Yellowsheet Supplement 2"))
     char2.sheets.add(models.Sheet.objects.get(name="Greensheet Supplement 1"))
     char2.sheets.add(models.Sheet.objects.get(name="Greensheet Details 2"))
+    char2.sheets.add(models.Sheet.objects.get(name="In-Game Document 1"))
+    char2.sheets.add(models.Sheet.objects.get(name="In-Game Document 2"))
     char2.save()

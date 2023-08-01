@@ -36,15 +36,15 @@ class LARPstring():
     self.render_for_user(writer): renders the markup according to the boolean 'writer'
         which indicates if the user is a writer (and thus how to display stnotes etc).
     """
-    def __init__(self, raw, check_keywords=True):
+    def __init__(self, raw, check_keywords=True, check_keywords_from_game=None):
         """
         raw is a raw string with the markup. span_parse parses it for html span tags, which are how the markup works.
         """
-        # TODO: remove the check_keywords argument which seems not to be used? 4/15
-
         if len(raw)>100: logger.debug(str(datetime.now())+": Creating new LARPString from: '"+raw[0:500]+"'")
         self.tree, self.syntax_problems = span_parse(raw)
         self._broken = None
+        if check_keywords_from_game is not None:
+            self.mark_unresolved_keywords(game=check_keywords_from_game)
 
     def inline(self):
         # renders and strips off outside <p> tags

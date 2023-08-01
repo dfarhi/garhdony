@@ -1,19 +1,17 @@
     # Untested urls.py:
     # url(r'^writing/([^/]+)/timeline/$', garhdony_app.views_game_design.writing_game_timeline,
     #     name='game_writer_timeline'),
-    # url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify, name='sheets_grid_modify'),
-    # url(r'^writing/([^/]+)/character/new/$', garhdony_app.views_game_design.new_character, name='new_character'),
-    # url(r'^writing/([^/]+)/character/delete/$', garhdony_app.views_game_design.delete_character, name='delete_character'),
-    # url(r'^writing/([^/]+)/sheet/([^/]+)/$', garhdony_app.views_game_design.writer_sheet, name='writer_sheet'),
-    #   Need to test the actual content part of it. Write, History tabs, Generate PDF, locks, plain html, etc
-    # url(r'^([^/]+)/character/([^/]+)/contacts/delete$', garhdony_app.views_game_design.character_contacts_delete, name='character_contacts_delete'),
     # url(r'^writing/([^/]+)/recent_changes/$', garhdony_app.views_game_design.recent_changes, name='recent_changes'),
+    # url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify, name='sheets_grid_modify'),
+
+    # sheets - actual content part of it. Write, History tabs, Generate PDF, locks, plain html, etc
+    # Writing game home edits - metadata, stats, links, writers
 
 from io import BytesIO
 import os
-import shutil
 
 import tempfile
+from typing import List
 from django.conf import settings
 from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -742,3 +740,240 @@ class CharacterCreateDeleteTest(GameDesignViewsTestCase):
         self.assertTrue(models.Sheet.objects.filter(id=main_char_sheet.id).exists())
         # Check user is gone
         self.assertFalse(models.User.objects.filter(username=char.username).exists())
+
+class PlayerCharacterEditingTest(GameDesignViewsTestCase):
+    """
+    Test everything game-writing-related under /writing/<game>/character/<character>
+      * Sheets Tab
+      * Metadata Right panel
+      * All Sheets Tab
+      * Contacts Tab
+      * NOT Logistics Tab
+    """
+    def setUp(self) -> None:
+        super().setUp()
+        self.pc = models.PlayerCharacter.objects.first()
+        assert self.pc.sheets.count() > 0, "The test character doesn't have any sheets"
+
+    def test_character_main_sheets_view(self):
+        response = self.client.get(f"/{self.game.name}/character/{self.pc.username}/")
+        self.assertEqual(response.status_code, 200, msg=self.pc.username)
+        for sheet in self.pc.sheets.all():
+            self.assertContains(response, 
+                                f"""<a href="{reverse("character_sheet", args=[self.game.name, self.pc.username, sheet.name.render_for_user(writer=False)])}"> {sheet.name.render_for_user(writer=False)} </a>""", html=True)
+
+    def assert_sheet_in_selector_widget(self, response, sheet, selected, is_in=True, **kwargs):
+        string = f"""<option value="{sheet.id}" {"selected" if selected else ""}>{sheet.filename}</option>"""
+        if is_in:
+            self.assertContains(response, string, html=True, **kwargs)
+        else:
+            self.assertNotContains(response, string, html=True, **kwargs)
+
+    def template_test_edit_sheets_type(self, type_names: List[str], field_name: str):
+            types = [models.SheetType.objects.get(name=type_name) for type_name in type_names]
+            sheets = [self.game.sheets.filter(sheet_type=type).first() for type in types]
+
+            # Check that the starting situation is ok for testing; they have sheets of each type and not the ones we're going to test adding:
+            for type, type_name, a_sheet in zip(types, type_names, sheets):
+                assert self.pc.sheets.filter(sheet_type=type).count() > 0, f"The test character {self.pc} doesn't have any {type_name} sheets. Add more in setup_test_db."
+                assert self.pc.sheets.filter(sheet_type=type).exclude(id=a_sheet.id).count() > 0, f"The test character {self.pc} doesn't have any {type_name} sheets other than the one we're going to remove ({a_sheet.filename}). Add more in setup_test_db."
+
+            # Check we can get the form
+            response = self.client.get(f"/{self.game.name}/character/{self.pc.username}/", {"Edit": field_name})
+            self.assertEqual(response.status_code, 200)
+
+            # Check all options are there if the type matches, and not otherwise
+            my_sheets = self.pc.sheets.all()
+            for sheet in models.Sheet.objects.all():
+                if sheet.sheet_type in types and sheet.game == self.game:
+                    self.assert_sheet_in_selector_widget(response, sheet, selected=sheet in my_sheets, msg_prefix=response.content.decode())
+                    self.assert_sheet_in_selector_widget(response, sheet, selected=sheet not in my_sheets, is_in=False, msg_prefix=response.content.decode())
+                else:
+                    self.assert_sheet_in_selector_widget(response, sheet, selected=True, is_in=False, msg_prefix=response.content.decode())
+                    self.assert_sheet_in_selector_widget(response, sheet, selected=False, is_in=False, msg_prefix=response.content.decode())
+            
+            # Make a change
+            response = self.client.post(f"/{self.game.name}/character/{self.pc.username}/", 
+                                        {"Save": field_name, 
+                                        "sheets": [a_sheet.id]})
+            self.assertEqual(response.status_code, 302)
+            self.assertListEqual([sheet.name.render() for sheet in self.pc.sheets.filter(sheet_type=type)], [a_sheet.name.render()])
+
+    def test_edit_character_sheets_public(self):
+        self.template_test_edit_sheets_type(["Public Sheet"], "public_sheets")
+
+    def test_edit_character_sheets_igd(self):
+        self.template_test_edit_sheets_type(["In-Game Document"], "in-game_documents")
+
+    def test_edit_character_sheets_story(self):
+        self.template_test_edit_sheets_type(["Story", "Supplement", "Details"], "private_sheets")
+
+    def test_character_main_sheets_charstats_view(self):
+        # Check a required stat and an optional stat with a value shows up
+        optional_stat = models.CharacterStatType.objects.filter(game=self.game, optional=True).first()
+        assert optional_stat is not None, "Need an optional stat to test this. Add one in setup_test_db."
+        pc_optional_stat = self.pc.stats.get(stat_type=optional_stat)
+        
+        required_stat = models.CharacterStatType.objects.filter(game=self.game, optional=False).first()
+        assert required_stat is not None, "Need a required stat to test this. Add one in setup_test_db."
+        pc_required_stat = self.pc.stats.get(stat_type=required_stat)
+
+        pc_optional_stat.value = "TEST STAT 1 VALUE"
+        pc_optional_stat.save()
+        pc_required_stat.value = "TEST STAT 2 VALUE"
+        pc_required_stat.save()
+
+        response = self.client.get(f"/{self.game.name}/character/{self.pc.username}/")
+        self.assertEqual(response.status_code, 200)
+        # count=2 becuase it appears once in the edit bar and once on the main sheet.
+        self.assertContains(response, required_stat.name, count=2)
+        self.assertContains(response, "TEST STAT 1 VALUE", count=2, msg_prefix=response.content.decode())
+        self.assertContains(response, optional_stat.name, count=2)
+        self.assertContains(response, "TEST STAT 2 VALUE", count=2)
+
+        # Check that an optional stat with no value doesn't show up, but a required one does.
+        pc_optional_stat.value = ""
+        pc_optional_stat.save()
+        pc_required_stat.value = ""
+        pc_required_stat.save()
+        response = self.client.get(f"/{self.game.name}/character/{self.pc.username}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, required_stat.name, count=2)
+        self.assertNotContains(response, "TEST STAT 1 VALUE", msg_prefix=response.content.decode())
+        self.assertContains(response, optional_stat.name, count=1, msg_prefix=response.content.decode())
+        self.assertNotContains(response, "TEST STAT 2 VALUE", msg_prefix=response.content.decode())
+
+    def test_character_edit_metadata_simple(self):
+        # TODO add testing new genderized names
+        response = self.client.get(f"/{self.game.name}/character/{self.pc.username}/", {"Edit": "Metadata"})
+        self.assertEqual(response.status_code, 200)
+        # Check all the fields are there
+        self.assertContains(response, "id_title_obj")
+        # These few are clearly testing too much, it shouldn't fail if we change some random html attr. Not sure how to do that.
+        self.assertContains(response, f"""<input type="text" name="main_form-first_male" value="{self.pc.first_name_obj.male}" placeholder="Male First Name" size="10" style="background-color: #BCF" required id="id_main_form-first_male">""", html=True)
+        self.assertContains(response, f"""<input type="text" name="main_form-first_female" value="{self.pc.first_name_obj.female}" placeholder="Female First Name" size="10" style="background-color:#FFA" required id="id_main_form-first_female">""", html=True)  
+        self.assertContains(response, f"""<input type="text" name="main_form-last_name" value="{self.pc.last_name}" placeholder="Last Name" size="28" maxlength="50" id="id_main_form-last_name">""", html=True)
+        
+        self.assertContains(response, "plus.jpeg")  # Add title button.
+        # Make sure the weird NPC gender options aren't available; EQ and OP
+        self.assertContains(response, 
+                            f"""<select name="main_form-gender_field" id="id_main_form-gender_field">
+                                <option value="M" {"selected" if self.pc.gender()=="M" else ""}>Male</option>
+                                <option value="F" {"selected" if self.pc.gender()=="F" else ""}>Female</option>
+                                </select>""", html=True)
+        self.assertContains(response, f"""<input type="text" name="main_form-username" value="{self.pc.username}" placeholder="username" size="10" maxlength="50" id="id_main_form-username">""", html=True)
+        self.assertContains(response, f"""<input type="text" name="main_form-password" value="{self.pc.password}" placeholder="password" size="10" maxlength="50" id="id_main_form-password">""", html=True)
+
+        # Check the form submission works
+        num_stat_fields = models.CharacterStatType.objects.filter(game=self.game).count()
+        assert num_stat_fields == 2, "This test is brittle and assumes the setup_test_db adds 2 stat types. Sorry"   
+        num_other_names = self.pc.genderized_names.count() - 1  # first name is handled specially
+        assert num_other_names == 0, "This test is brittle and assumes the setup_test_db adds no other names. Sorry"
+        title_id = models.GenderizedKeyword.objects.filter(male="king").first().id
+        response = self.client.post(f"/{self.game.name}/character/{self.pc.username}/", 
+                                    {"Save": "Metadata",
+                                     "main_form-title_obj": title_id,
+                                     "main_form-first_male": "FIRST MALE",
+                                     "main_form-first_female": "FIRST_FEMALE",
+                                     "main_form-last_name": "LAST NAME",
+                                     "main_form-gender_field": "F",
+                                     "main_form-username": "USERNAME",
+                                     "main_form-password": "PASSWORD",
+                                     "stats-TOTAL_FORMS": num_stat_fields,
+                                     "stats-INITIAL_FORMS": num_stat_fields,
+                                     "stats-0-value": 'STAT 0 VALUE',
+                                     "stats-0-id": self.pc.stats.get(stat_type=self.game.character_stat_types.first()).id,
+                                     "stats-1-value": 'STAT 1 VALUE',
+                                     "stats-1-id": self.pc.stats.get(stat_type=self.game.character_stat_types.last()).id,
+                                     "other_names-TOTAL_FORMS": num_other_names,
+                                     "other_names-INITIAL_FORMS": num_other_names,
+                                     })
+        self.assertEqual(response.status_code, 302)
+        # Check data is updated
+        self.pc.refresh_from_db()
+        self.assertEqual(self.pc.first_name_obj.male, "FIRST MALE")
+        self.assertEqual(self.pc.first_name_obj.female, "FIRST_FEMALE")
+        self.assertEqual(self.pc.last_name, "LAST NAME")
+        self.assertEqual(self.pc.gender(), "F")
+        self.assertEqual(self.pc.username, "USERNAME")
+        self.assertEqual(self.pc.password, "PASSWORD")
+        self.assertEqual(self.pc.title(), "queen")
+        self.assertEqual(self.pc.stats.get(stat_type=self.game.character_stat_types.first()).value, "STAT 0 VALUE")
+        self.assertEqual(self.pc.stats.get(stat_type=self.game.character_stat_types.last()).value, "STAT 1 VALUE")
+                                                                                       
+    def test_character_contacts_view(self):
+        # create some contacts for our pc
+        characters = list(self.game.characters.all())
+        models.Contact.objects.create(owner=self.pc, target=characters[0], display_name=LARPstring("Self"), order_number=0)
+        models.Contact.objects.create(owner=self.pc, target=characters[2], display_name=LARPstring(characters[1].full_name(), check_keywords_from_game=self.game), order_number=1, description=LARPstring(f"A friend named {characters[1].first_name()}", check_keywords_from_game=self.game))
+
+        response = self.client.get(reverse("character_contacts", args=[self.game.name, self.pc.username]))
+        self.assertEqual(response.status_code, 200)
+        
+        self.assertContains(response, "Self")
+        self.assertContains(response, characters[1].full_name())
+        self.assertContains(response, f"A friend named {characters[1].first_name()}")
+        self.assertNotContains(response, characters[2].first_name())
+        
+        # Delete buttons
+        for contact in self.pc.contacts.all():
+            self.assertContains(response, f"""<input type="hidden" name="contact_id" value="{contact.id}"><input type="submit" value="Delete">""", html=True)
+
+        # Check genderizing works
+        assert characters[1].gender() == "M", "Test assumes character starts male. Alterations to setup_test_db may have broken this."
+        original_name = characters[1].first_name()
+        pc = characters[1].cast()
+        pc.default_gender = "F"
+        pc.save()
+        assert characters[1].first_name() != original_name, characters[1].gender()
+        response = self.client.get(reverse("character_contacts", args=[self.game.name, self.pc.username]))
+        self.assertNotContains(response, original_name, msg_prefix=response.content.decode())
+        self.assertContains(response, characters[1].first_name(), count=2)  # once in display_name and once in decription.
+
+    def test_character_contacts_add(self):
+        response = self.client.get(reverse("character_contacts", args=[self.game.name, self.pc.username]), {"Edit": "add"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "id_target")
+        for character in self.game.characters.all():
+            self.assertContains(response, f"""<option value="{character.id}">{character.full_name()}</option>""", html=True)
+        self.assertContains(response, "id_display_name")
+        self.assertContains(response, "id_description")
+
+        # Check the form submission works
+        target = self.game.characters.last()
+        response = self.client.post(reverse("character_contacts", args=[self.game.name, self.pc.username]), {
+            "Save": "add",
+            "owner": self.pc.id,  # hidden field
+            "target": target.id,
+            "display_name": "DISPLAY NAME",
+            "description": f"DESCRIPTION {target.first_name()}",
+        })
+        self.assertEqual(response.status_code, 302)
+        new_contact = models.Contact.objects.get(owner=self.pc, target=target)
+        self.assertEqual(new_contact.display_name.render(), "DISPLAY NAME")
+        self.assertEqual(new_contact.description.render(), f"DESCRIPTION {target.first_name()}")
+
+    def test_character_contacts_edit(self):
+        contact = models.Contact.objects.create(owner=self.pc, target=self.game.characters.last(), display_name=LARPstring("Self"), order_number=0)
+        response = self.client.get(reverse("character_contacts", args=[self.game.name, self.pc.username]), {"Edit": contact.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "id_display_name")
+        self.assertContains(response, "id_description")
+
+        # Check the form submission works
+        response = self.client.post(reverse("character_contacts", args=[self.game.name, self.pc.username]), {
+            "Save": contact.id,
+            "display_name": "DISPLAY NAME",
+            "description": f"DESCRIPTION {contact.target.first_name()}",
+        })
+        self.assertEqual(response.status_code, 302)
+        contact.refresh_from_db()
+        self.assertEqual(contact.display_name.render(), "DISPLAY NAME")
+        self.assertEqual(contact.description.render(), f"DESCRIPTION {contact.target.first_name()}")
+
+    def test_character_contacts_delete(self):
+        contact = models.Contact.objects.create(owner=self.pc, target=self.game.characters.last(), display_name=LARPstring("Self"), order_number=0)
+        self.assertTrue(models.Contact.objects.filter(id=contact.id).exists())
+        response = self.client.post(reverse("character_contacts_delete", args=[self.game.name, self.pc.username]), {"contact_id": contact.id})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(models.Contact.objects.filter(id=contact.id).exists())

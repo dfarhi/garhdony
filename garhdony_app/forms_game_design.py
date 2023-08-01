@@ -459,7 +459,7 @@ class PlayerCharacterMetadataForm(BaseCharacterMetadataForm):
         self.instance.default_gender = self.cleaned_data['gender_field']
 
         # Save the changes
-        character = super(PlayerCharacterMetadataForm, self).save(commit=commit)
+        super(PlayerCharacterMetadataForm, self).save(commit=commit)
 
     def is_valid(self):
         # Check the main form and the internal formsets.

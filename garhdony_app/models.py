@@ -1421,9 +1421,13 @@ def setup_database():
                            description="A Supplement Sheet is supplementary.")
     supplement.save()
 
-    igd = SheetColor(name='In-game Document', color='000000', sort_order=30,
+    igd = SheetType(name='In-Game Document', sort_order=30,
                      description="An in-game document is a piece of paper your character has.")
     igd.save()
+
+    public = SheetType(name='Public Sheet', sort_order=30,
+                     description="A sheet which every player gets.")
+    public.save()
 
     for male, female in [
         ("he", "she"),

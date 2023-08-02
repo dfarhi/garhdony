@@ -71,5 +71,9 @@ class AdminTest(TestCase):
             response = self.client.get(f'/admin/garhdony_app/{model_name.lower()}/{instance.id}/change/')
             self.assertEqual(response.status_code, 200, msg=f"Failed to load {model_name} edit page")
 
-            
+    def test_all_models_load_add_page(self):
+        for model in self.MODELS_TO_TEST:
+            model_name = model.__name__
+            response = self.client.get(f'/admin/garhdony_app/{model_name.lower()}/add/')
+            self.assertEqual(response.status_code, 200, msg=f"Failed to load {model_name} add page")
 

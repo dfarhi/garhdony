@@ -23,11 +23,11 @@ class AdminModelFormLARPStringAware(forms.ModelForm):
     def get_game(self):
         return self.instance.game
     
-    def __init__(self, *args, **kwargs):
-        super(AdminModelFormLARPStringAware, self).__init__(*args, **kwargs)
+    def clean(self, *args, **kwargs):
         for name, field in self.fields.items():
             if hasattr(field, 'set_game'):
                 field.set_game(self.get_game())
+        super(AdminModelFormLARPStringAware, self).clean(*args, **kwargs)
 
 class DogmasAdminSite(admin.sites.AdminSite):
     def get_urls(self):
@@ -57,7 +57,6 @@ admin_site = DogmasAdminSite()
 
 admin_site.register(User, UserAdmin)
 admin_site.register(Group, GroupAdmin)
-
 
 class CharacterForm(forms.ModelForm):
     class Meta:
@@ -297,12 +296,25 @@ class QuizSubmissionAdmin(admin.ModelAdmin):
     pass
 admin_site.register(QuizSubmission, QuizSubmissionAdmin)
 
+class TimelineEventForm(AdminModelFormLARPStringAware):
+    class Meta:
+        model = TimelineEvent
+        exclude = []
 class TimelineEventAdmin(admin.ModelAdmin):
     list_display = ('date', 'default_description', 'game',)
     list_filter = ('game__name',)
     ordering = ('game', '-date',)
+    form = TimelineEventForm
 admin_site.register(TimelineEvent, TimelineEventAdmin)
 
+class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):
+    class Meta:
+        model = TimelineEventSheetDescription
+        exclude = []
+    def get_game(self):
+        return self.instance.event.game
 class TimelineEventSheetDescriptionAdmin(admin.ModelAdmin):
-    pass
+    form = TimelineEventSheetDescriptionForm
+    list_filter = ('event__game__name',)
+
 admin_site.register(TimelineEventSheetDescription, TimelineEventSheetDescriptionAdmin)

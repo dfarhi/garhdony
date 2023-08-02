@@ -1210,7 +1210,7 @@ class CharacterStat(models.Model):
     class Meta:
         ordering = ['stat_type']
 
-    stat_type = models.ForeignKey(CharacterStatType, on_delete=models.RESTRICT)
+    stat_type = models.ForeignKey(CharacterStatType, on_delete=models.CASCADE)
     character = models.ForeignKey(Character, related_name="stats", on_delete=models.CASCADE)
     value = models.CharField(max_length=50, blank=True, default="")
 

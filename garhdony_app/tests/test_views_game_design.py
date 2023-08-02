@@ -4,8 +4,7 @@
     # url(r'^writing/([^/]+)/recent_changes/$', garhdony_app.views_game_design.recent_changes, name='recent_changes'),
     # url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify, name='sheets_grid_modify'),
 
-    # sheets - actual content part of it. Write, History tabs, Generate PDF, locks, plain html, etc
-    # Writing game home edits - metadata, stats, links, writers
+    # sheets - actual content part of it. Upload files, History tabs, Generate PDF, locks, plain html, etc
 
 from io import BytesIO
 import os
@@ -22,8 +21,8 @@ from garhdony_app.assign_writer_game import assign_writer_game
 from garhdony_app.tests.setup_test_db import setup_test_db
 from django.contrib.auth.models import User, Group
 
-def inline_edit_buttom_html(field):
-    return f"""<form action="" method="get" style="display:inline"><input type="hidden" name="Edit" value="{field}"><input class="edit_button" type="submit" value=Edit></form>"""
+def inline_edit_button_html(field, button_text="Edit"):
+    return f"""<form action="" method="get" style="display:inline"><input type="hidden" name="Edit" value="{field}"><input class="edit_button" type="submit" value={button_text}></form>"""
 
 class GameDesignNotLoggedInTest(TestCase):
     def test_not_logged_in(self):
@@ -144,6 +143,20 @@ class GameDesignViewsTest(GameDesignViewsTestCase):
         # check sidebar
         self.assert_writer_game_leftbar(response)
 
+        # Check right sidebar
+        for field, button_text in [("Metadata", "Edit"), ("stats", "Add/Edit"), ("info_links", "Add/Edit"), ("Writers", "Add")]:
+            self.assertContains(response, inline_edit_button_html(field=field, button_text=button_text), html=True)
+
+        stats = models.CharacterStatType.objects.filter(game=self.game)
+        assert len(stats) > 0, "Test game has no stats, not really testing anything."
+        for stat in stats:
+            self.assertContains(response, stat.name)
+
+        info_links = models.GameInfoLink.objects.filter(game=self.game)
+        assert len(info_links) > 0, "Test game has no info links, not really testing anything."
+        for info_link in info_links:
+            self.assertContains(response, f"""<a href="{info_link.link_url}">{info_link.label}</a>""", html=True)
+
     def test_writing_game_home_no_game(self):
         response = self.client.get("/writing/NonExistantGame/")
         self.assertEqual(response.status_code, 404)
@@ -154,6 +167,199 @@ class GameDesignViewsTest(GameDesignViewsTestCase):
         new_game.save()
         response = self.client.get("/writing/TestGameNew/")
         self.assertEqual(response.status_code, 404)
+
+    def test_writer_game_home_edit_metadata(self):
+        url = reverse("game_writer_home", args=[self.game.name])
+        response = self.client.get(url, {"Edit": "Metadata"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "id_name")
+        self.assertContains(response, "id_usernamesuffix")
+        self.assertContains(response, "id_preview_mode")
+        self.assertContains(response, "id_complete")
+
+        # check sidebar
+        self.assert_writer_game_leftbar(response)
+
+        # record original values
+        old_name = self.game.name
+        a_character = self.game.characters.filter(char_type="PC").first().cast()
+        old_username = a_character.user.username
+        old_media_dir = self.game.abs_media_directory
+
+        #Post some data
+        response = self.client.post(url, {
+            "Save": "Metadata", 
+            "name": "NewName", 
+            "usernamesuffix": "New", 
+            "preview_mode": "True",
+            "complete": "True"})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("game_writer_home", args=["NewName"]))
+
+        # Check the game was updated.
+        game = models.GameInstance.objects.get(name="NewName")
+        self.assertEqual(game.name, "NewName")
+        self.assertEqual(game.usernamesuffix, "New")
+        self.assertEqual(game.preview_mode, True)
+        self.assertEqual(game.complete, True)
+        self.assertEqual(models.GameInstance.objects.filter(name=old_name).count(), 0)
+
+        # Check the usernames changed
+        a_character.refresh_from_db()
+        self.assertNotEqual(a_character.user.username, old_username)
+        self.assertEqual(models.User.objects.filter(username=old_username).count(), 0)
+        self.assertEqual(models.User.objects.filter(username=a_character.user.username).count(), 1)
+
+        # Check the media moved
+        self.assertNotEqual(game.abs_media_directory, old_media_dir)
+        self.assertTrue(os.path.exists(game.abs_media_directory))
+        self.assertFalse(os.path.exists(old_media_dir))
+
+    def test_writer_game_home_edit_stats(self):
+        url = reverse("game_writer_home", args=[self.game.name])
+        response = self.client.get(url, {"Edit": "stats"})
+        self.assertEqual(response.status_code, 200)
+        previous_stats = models.CharacterStatType.objects.filter(game=self.game)
+        # check the form is there
+        for i, stat in enumerate(previous_stats):
+            self.assertContains(response, f"""<input type="text" name="form-{i}-name" value="{stat.name}" maxlength="50" id="id_form-{i}-name">""")
+        # check spot for new stat
+        n = len(previous_stats)
+        self.assertContains(response, f"""<input type="text" name="form-{n}-name" maxlength="50" id="id_form-{n}-name">""")
+
+        # submit some data
+        assert n == 2, "This test kind of assumes test game has 2 stats."
+        response = self.client.post(url, {
+            "Save": "stats",
+            "form-TOTAL_FORMS": n+1,
+            "form-INITIAL_FORMS": n,
+            "form-MIN_NUM_FORMS": 0,
+            "form-MAX_NUM_FORMS": 1000,
+            "form-0-game": self.game.id,  # this is a hidden field
+            "form-0-id": previous_stats[0].id,  # this is a hidden field
+            "form-0-name": "RenameStat",
+            "form-0-optional": True,
+            "form-0-DELETE": False,
+            "form-1-game": self.game.id,  # this is a hidden field
+            "form-1-id": previous_stats[1].id,  # this is a hidden field
+            "form-1-name": previous_stats[1].name,
+            "form-1-optional": False,
+            "form-1-DELETE": True,  # delete ths one.
+            "form-2-game": self.game.id,  # this is a hidden field
+            "form-2-id": "",  # this is a hidden field
+            "form-2-name": "NewStat2",
+            "form-2-optional": False,
+            "form-2-DELETE": False,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, url)
+
+        # check the stats were updated
+        self.assertEqual(models.CharacterStatType.objects.filter(game=self.game).count(), 2)
+
+        # First stat should be renamed
+        self.assertEqual(models.CharacterStatType.objects.filter(game=self.game, name="RenameStat").count(), 1)
+        self.assertEqual(models.CharacterStatType.objects.filter(game=self.game, name=previous_stats[0].name).count(), 0)
+        self.assertEqual(models.CharacterStatType.objects.get(game=self.game, name="RenameStat").optional, True)
+
+        # Second stat should be deleted
+        self.assertEqual(models.CharacterStatType.objects.filter(game=self.game, name=previous_stats[1].name).count(), 0)
+        # Along with all its values
+        self.assertEqual(models.CharacterStat.objects.filter(stat_type=previous_stats[1]).count(), 0)
+
+        # Third stat should be added
+        self.assertEqual(models.CharacterStatType.objects.filter(game=self.game, name="NewStat2").count(), 1)
+        # and have one instance per pc
+        self.assertEqual(models.CharacterStat.objects.filter(stat_type__name="NewStat2").count(), models.Character.objects.filter(game=self.game).count())
+    
+    def test_writer_game_home_edit_links(self):
+        url = reverse("game_writer_home", args=[self.game.name])
+        response = self.client.get(url, {"Edit": "info_links"})
+        self.assertEqual(response.status_code, 200)
+        previous_links = models.GameInfoLink.objects.filter(game=self.game)
+        # check the form is there
+        for i, link in enumerate(previous_links):
+            self.assertContains(response, f"""<input type="text" name="form-{i}-link_url" value="{link.link_url}" maxlength="200" id="id_form-{i}-link_url">""")
+            self.assertContains(response, f"""<input type="text" name="form-{i}-label" value="{link.label}" maxlength="50" id="id_form-{i}-label">""")
+
+        # check spot for new link
+        n = len(previous_links)
+        self.assertContains(response, f"""<input type="text" name="form-{n}-link_url" maxlength="200" id="id_form-{n}-link_url">""")
+        self.assertContains(response, f"""<input type="text" name="form-{n}-label" maxlength="50" id="id_form-{n}-label">""")
+
+        # submit some data
+        assert n == 2, "This test kind of assumes test game has 2 links."
+        response = self.client.post(url, {
+            "Save": "info_links",
+            "form-TOTAL_FORMS": n+1,
+            "form-INITIAL_FORMS": n,
+            "form-MIN_NUM_FORMS": 0,
+            "form-MAX_NUM_FORMS": 1000,
+            "form-0-game": self.game.id,  # this is a hidden field
+            "form-0-id": previous_links[0].id,  # this is a hidden field
+            "form-0-link_url": "http://newlink.com",
+            "form-0-label": "New Link",
+            "form-0-DELETE": False,
+            "form-1-game": self.game.id,  # this is a hidden field
+            "form-1-id": previous_links[1].id,  # this is a hidden field
+            "form-1-link_url": previous_links[1].link_url,
+            "form-1-label": previous_links[1].label,
+            "form-1-DELETE": True,  # delete ths one.
+            "form-2-game": self.game.id,  # this is a hidden field
+            "form-2-id": "",  # this is a hidden field
+            "form-2-link_url": "http://newlink2.com",
+            "form-2-label": "New Link 2",
+            "form-2-DELETE": False,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, url)
+
+        # check the links were updated
+        self.assertEqual(models.GameInfoLink.objects.filter(game=self.game).count(), 2)
+        
+        # First link should be updated
+        self.assertEqual(models.GameInfoLink.objects.filter(game=self.game, link_url="http://newlink.com").count(), 1)
+        self.assertEqual(models.GameInfoLink.objects.filter(game=self.game, link_url=previous_links[0].link_url).count(), 0)
+
+        # Second link should be deleted
+        self.assertEqual(models.GameInfoLink.objects.filter(game=self.game, link_url=previous_links[1].link_url).count(), 0)
+
+        # Third link should be added
+        self.assertEqual(models.GameInfoLink.objects.filter(game=self.game, link_url="http://newlink2.com").count(), 1)
+
+    def test_writer_game_home_edit_writers(self):
+        url = reverse("game_writer_home", args=[self.game.name])
+        # make some more writers
+        this_game_writer2 = User.objects.create_user(username="this_game_writer2", password="writer")
+        Group.objects.get(name='Writers').user_set.add(this_game_writer2)
+        assign_writer_game(this_game_writer2, self.game)
+                                              
+        other_game_writer1 = User.objects.create_user(username="other_game_writer1", password="writer")
+        Group.objects.get(name='Writers').user_set.add(other_game_writer1)
+        other_game_writer2 = User.objects.create_user(username="other_game_writer2", password="writer")
+        Group.objects.get(name='Writers').user_set.add(other_game_writer2)
+
+        response = self.client.get(url, {"Edit": "Writers"})
+        self.assertEqual(response.status_code, 200)
+        # check we can add writers
+        self.assertContains(response, "other_game_writer1")
+        self.assertContains(response, "other_game_writer2")
+        # but not existing writers
+        self.assertNotContains(response, "this_game_writer2", msg_prefix=response.content.decode())
+
+        # submit some data
+        response = self.client.post(url, {
+            "Save": "Writers",
+            "writers": [other_game_writer1.id],
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, url)
+        # check this writer has permission on this game
+        self.assertTrue(other_game_writer1.has_perm("writer", self.game))
+        # check other writers are in the right states still
+        self.assertFalse(other_game_writer2.has_perm("writer", self.game))
+        self.assertTrue(this_game_writer2.has_perm("writer", self.game))
+        self.assertTrue(self.writer.has_perm("writer", self.game))
 
     def test_writing_sheets_grid(self):
         response = self.client.get(f"/writing/{self.game.name}/sheetsgrid/")
@@ -355,9 +561,9 @@ class NPCEditingTest(GameDesignViewsTestCase):
         self.assertContains(response, character.notes)
 
         # edit forms
-        self.assertContains(response, inline_edit_buttom_html("notes"), html=True)
-        self.assertContains(response, inline_edit_buttom_html("photo"), html=True)
-        self.assertContains(response, inline_edit_buttom_html("Metadata"), html=True)
+        self.assertContains(response, inline_edit_button_html("notes"), html=True)
+        self.assertContains(response, inline_edit_button_html("photo"), html=True)
+        self.assertContains(response, inline_edit_button_html("Metadata"), html=True)
 
     def test_writing_npc_page_edit_notes(self):
         character = models.NonPlayerCharacter.objects.filter(game=self.game).first()
@@ -590,8 +796,8 @@ class SheetsTest(GameDesignViewsTestCase):
             if sheet.sheet_status:
                 self.assertContains(response, sheet.sheet_status.name)
 
-            self.assertContains(response, inline_edit_buttom_html("Metadata"), html=True)
-            self.assertContains(response, inline_edit_buttom_html("characters"), html=True)
+            self.assertContains(response, inline_edit_button_html("Metadata"), html=True)
+            self.assertContains(response, inline_edit_button_html("characters"), html=True)
             self.assertContains(response, "Write")
             self.assertContains(response, "History")
 

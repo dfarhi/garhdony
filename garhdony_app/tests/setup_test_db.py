@@ -23,6 +23,9 @@ def setup_test_db(game=True, sheets=True, characters=True):
     models.CharacterStatType(name="Stat1-optional", game=game, optional=True).save()
     models.CharacterStatType(name="Stat2-required", game=game, optional=False).save()
 
+    models.GameInfoLink(label="GameInfoLink1", game=game, link_url="http://www.google.com").save()
+    models.GameInfoLink(label="GameInfoLink2", game=game, link_url="http://www.example.com").save()
+
     if not sheets:
         return
     

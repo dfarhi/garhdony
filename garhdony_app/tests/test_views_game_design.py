@@ -4,8 +4,6 @@
     # url(r'^writing/([^/]+)/recent_changes/$', garhdony_app.views_game_design.recent_changes, name='recent_changes'),
     # url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify, name='sheets_grid_modify'),
 
-    # sheets - actual content part of it. Upload files, History tabs, Generate PDF, locks, plain html, etc
-
 from io import BytesIO
 import os
 

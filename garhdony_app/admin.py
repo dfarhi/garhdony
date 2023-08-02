@@ -5,9 +5,10 @@ You can get to it by going to /admin when logged in as admin or storyteller.
 """
 
 from django.contrib import admin
+from garhdony_app.LARPStrings import LARPTextField, LARPTextWidget
 from garhdony_app.models import Character, PlayerProfile, GameInstance, Sheet, SheetColor, SheetType, SheetStatus, LogisticalTask, \
     TravelProfile, Contact, GenderizedKeyword, GenderizedName, PlayerCharacter, NonPlayerCharacter, SheetRevision, CharacterStat, \
-    CharacterStatType, GameInfoLink, EmbeddedImage, GameTemplate, WebsiteAboutPage, QuizSubmission, TimelineEvent,TimelineEventCharacterDescription
+    CharacterStatType, GameInfoLink, EmbeddedImage, GameTemplate, WebsiteAboutPage, QuizSubmission, TimelineEvent,TimelineEventSheetDescription
 from django.contrib.auth.models import User, Group
 from django import forms
 from django.urls import re_path as url
@@ -259,12 +260,11 @@ class QuizSubmissionAdmin(admin.ModelAdmin):
 admin_site.register(QuizSubmission, QuizSubmissionAdmin)
 
 class TimelineEventAdmin(admin.ModelAdmin):
-    list_display = ('date', 'name', 'game',)
+    list_display = ('date', 'default_description', 'game',)
     list_filter = ('game__name',)
-    readonly_fields = ('game',)
     ordering = ('game', '-date',)
 admin_site.register(TimelineEvent, TimelineEventAdmin)
 
-class TimelineEventCharacterDescriptionAdmin(admin.ModelAdmin):
+class TimelineEventSheetDescriptionAdmin(admin.ModelAdmin):
     pass
-admin_site.register(TimelineEventCharacterDescription, TimelineEventCharacterDescriptionAdmin)
+admin_site.register(TimelineEventSheetDescription, TimelineEventSheetDescriptionAdmin)

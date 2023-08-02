@@ -245,7 +245,11 @@ class LARPTextFormField(forms.CharField):
 
     def set_game(self, game):
         self._game = game
-        self.widget.set_game(game)
+        if hasattr(self.widget, 'set_game'):
+            self.widget.set_game(game)
+        else:
+            # This happens for some reason when the form is being displayed in the admin.
+            pass
 
     @property
     def game(self):

@@ -109,3 +109,6 @@ def setup_test_db(game=True, sheets=True, characters=True):
     char2.sheets.add(models.Sheet.objects.get(name="In-Game Document 1"))
     char2.sheets.add(models.Sheet.objects.get(name="In-Game Document 2"))
     char2.save()
+
+    # Give characters some contacts
+    models.Contact(owner=char1, target=char2, display_name="Friend").save()

@@ -71,4 +71,5 @@ class AdminTest(TestCase):
             response = self.client.get(f'/admin/garhdony_app/{model_name.lower()}/{instance.id}/change/')
             self.assertEqual(response.status_code, 200, msg=f"Failed to load {model_name} edit page")
 
+            
 

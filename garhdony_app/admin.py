@@ -15,6 +15,19 @@ from django.urls import re_path as url
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.shortcuts import render
 
+class AdminModelFormLARPStringAware(forms.ModelForm):
+    """
+    Subclass this to avoid errors with "must call set_game() before using LARPTextField".
+    See e.g. ContactAdmin below.
+    """
+    def get_game(self):
+        return self.instance.game
+    
+    def __init__(self, *args, **kwargs):
+        super(AdminModelFormLARPStringAware, self).__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if hasattr(field, 'set_game'):
+                field.set_game(self.get_game())
 
 class DogmasAdminSite(admin.sites.AdminSite):
     def get_urls(self):
@@ -125,8 +138,14 @@ class NameInline(admin.TabularInline):
         return qs.none()
 
 
+class ContactAdminForm(AdminModelFormLARPStringAware):
+    class Meta:
+        model = Contact
+        exclude = []
+
 class ContactAdmin(admin.ModelAdmin):
     list_filter = ('owner__game__name', 'owner')
+    form = ContactAdminForm
 
 
 admin_site.register(Contact, ContactAdmin)
@@ -136,19 +155,26 @@ class ContactInline(admin.TabularInline):
     model = Contact
     fk_name = "owner"
 
-
+class PlayerCharacterAdminForm(AdminModelFormLARPStringAware):
+    class Meta:
+        model = PlayerCharacter
+        exclude = []
 class PlayerCharacterAdmin(admin.ModelAdmin):
     list_display = (str, 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
-
-
+    form = PlayerCharacterAdminForm
 admin_site.register(PlayerCharacter, PlayerCharacterAdmin)
 
+class NonPlayerCharacterAdminForm(AdminModelFormLARPStringAware):
+    class Meta:
+        model = NonPlayerCharacter
+        exclude = []
 class NonPlayerCharacterAdmin(admin.ModelAdmin):
     list_display = (str, 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
+    form = NonPlayerCharacterAdminForm
 admin_site.register(NonPlayerCharacter, NonPlayerCharacterAdmin)
 
 
@@ -160,11 +186,18 @@ class SimpleCharacterAdmin(admin.ModelAdmin):
 
 admin_site.register(Character, SimpleCharacterAdmin)
 
+class SheetRevisionAdminForm(AdminModelFormLARPStringAware):
+    class Meta:
+        model = SheetRevision
+        exclude = []
 
+    def get_game(self):
+        return self.instance.sheet.game
 class SheetRevisionAdmin(admin.ModelAdmin):
     list_display = ('sheet', 'created', 'author')
     list_filter = ('sheet__game__name', 'sheet__name')
     readonly_fields = ('sheet',)
+    form = SheetRevisionAdminForm
 
 
 admin_site.register(SheetRevision, SheetRevisionAdmin)
@@ -239,10 +272,15 @@ class WebsiteAboutPageAdmin(admin.ModelAdmin):
 
 admin_site.register(WebsiteAboutPage, WebsiteAboutPageAdmin)
 
+class SheetAdminForm(AdminModelFormLARPStringAware):
+    class Meta:
+        model = Sheet
+        exclude = []
 class AllSheetsAdmin(admin.ModelAdmin):
     list_display = ('name', 'color', 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
+    form = SheetAdminForm
 
 
 admin_site.register(Sheet, AllSheetsAdmin)

@@ -106,6 +106,9 @@ def larpstring_to_python(value, check_keywords=True):
     For taking a string, LARPstring, or None, and robustly making a LARPstring out of it.
     django often wants this sort of thing.
     """
+    if value == b'':
+        # Backwards compatibility for old database entries.
+        return None
     if isinstance(value, LARPstring):
         return value
     elif value is None:

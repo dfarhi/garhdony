@@ -282,6 +282,6 @@ class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):
     def get_game(self):
         return self.instance.event.game
 @admin.register(TimelineEventSheetDescription, site=admin_site)
-class TimelineEventSheetDescriptionAdmin(ModelAdminWithLARPStrings):
+class TimelineEventSheetDescriptionAdmin(admin.ModelAdmin):
     form = TimelineEventSheetDescriptionForm
     list_filter = ('event__game__name',)

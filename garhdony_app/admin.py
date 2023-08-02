@@ -21,13 +21,15 @@ class AdminModelFormLARPStringAware(forms.ModelForm):
     See e.g. ContactAdmin below.
     """
     def get_game(self):
-        return self.instance.game
+        if self.instance.id is not None:
+            return self.instance.game
+        return self.data['game']
     
-    def clean(self, *args, **kwargs):
+    def full_clean(self, *args, **kwargs):
         for name, field in self.fields.items():
             if hasattr(field, 'set_game'):
                 field.set_game(self.get_game())
-        super(AdminModelFormLARPStringAware, self).clean(*args, **kwargs)
+        super(AdminModelFormLARPStringAware, self).full_clean(*args, **kwargs)
 
 class DogmasAdminSite(admin.sites.AdminSite):
     def get_urls(self):
@@ -179,7 +181,9 @@ class SheetRevisionAdminForm(AdminModelFormLARPStringAware):
         exclude = []
 
     def get_game(self):
-        return self.instance.sheet.game
+        if self.instance.id is not None:
+            return self.instance.sheet.game
+        return Sheet.objects.get(pk=self.data['sheet']).game
 @admin.register(SheetRevision, site=admin_site)
 class SheetRevisionAdmin(admin.ModelAdmin):
     list_display = ('sheet', 'created', 'author')
@@ -280,7 +284,9 @@ class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):
         model = TimelineEventSheetDescription
         exclude = []
     def get_game(self):
-        return self.instance.event.game
+        if self.instance.id is not None:
+            return self.instance.event.game
+        return TimelineEvent.objects.get(pk=self.data['event']).game
 @admin.register(TimelineEventSheetDescription, site=admin_site)
 class TimelineEventSheetDescriptionAdmin(admin.ModelAdmin):
     form = TimelineEventSheetDescriptionForm

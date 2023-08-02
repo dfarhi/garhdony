@@ -92,39 +92,31 @@ class CharacterForm(forms.ModelForm):
             character.save()
         return character
 
-
+@admin.register(CharacterStat, site=admin_site)
 class CharacterStatAdmin(admin.ModelAdmin):
     list_display = ('stat_type', 'character', 'value')
     list_filter = ('character__game',)
     readonly_fields = ('character',)
 
 
-admin_site.register(CharacterStat, CharacterStatAdmin)
-
-
+@admin.register(CharacterStatType, site=admin_site)
 class CharacterStatTypeAdmin(admin.ModelAdmin):
     list_display = ('name', 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
 
-
-admin_site.register(CharacterStatType, CharacterStatTypeAdmin)
-
-
+@admin.register(GenderizedKeyword, site=admin_site)
 class GenderizedKeywordAdmin(admin.ModelAdmin):
     list_filter = ('category',)
 
 
-admin_site.register(GenderizedKeyword, GenderizedKeywordAdmin)
 
-
+@admin.register(GenderizedName, site=admin_site)
 class GenderizedNameAdmin(admin.ModelAdmin):
     list_display = (str, 'character')
     list_filter = ('character__game__name',)
     exclude = ["category"]
 
-
-admin_site.register(GenderizedName, GenderizedNameAdmin)
 
 
 class NameInline(admin.TabularInline):
@@ -142,12 +134,11 @@ class ContactAdminForm(AdminModelFormLARPStringAware):
         model = Contact
         exclude = []
 
+@admin.register(Contact, site=admin_site)
 class ContactAdmin(admin.ModelAdmin):
     list_filter = ('owner__game__name', 'owner')
     form = ContactAdminForm
 
-
-admin_site.register(Contact, ContactAdmin)
 
 
 class ContactInline(admin.TabularInline):
@@ -158,32 +149,29 @@ class PlayerCharacterAdminForm(AdminModelFormLARPStringAware):
     class Meta:
         model = PlayerCharacter
         exclude = []
+@admin.register(PlayerCharacter, site=admin_site)
 class PlayerCharacterAdmin(admin.ModelAdmin):
     list_display = (str, 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
     form = PlayerCharacterAdminForm
-admin_site.register(PlayerCharacter, PlayerCharacterAdmin)
 
 class NonPlayerCharacterAdminForm(AdminModelFormLARPStringAware):
     class Meta:
         model = NonPlayerCharacter
         exclude = []
+@admin.register(NonPlayerCharacter, site=admin_site)
 class NonPlayerCharacterAdmin(admin.ModelAdmin):
     list_display = (str, 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
     form = NonPlayerCharacterAdminForm
-admin_site.register(NonPlayerCharacter, NonPlayerCharacterAdmin)
 
-
+@admin.register(Character, site=admin_site)
 class SimpleCharacterAdmin(admin.ModelAdmin):
     list_display = (str, 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
-
-
-admin_site.register(Character, SimpleCharacterAdmin)
 
 class SheetRevisionAdminForm(AdminModelFormLARPStringAware):
     class Meta:
@@ -192,89 +180,72 @@ class SheetRevisionAdminForm(AdminModelFormLARPStringAware):
 
     def get_game(self):
         return self.instance.sheet.game
+@admin.register(SheetRevision, site=admin_site)
 class SheetRevisionAdmin(admin.ModelAdmin):
     list_display = ('sheet', 'created', 'author')
     list_filter = ('sheet__game__name', 'sheet__name')
     readonly_fields = ('sheet',)
     form = SheetRevisionAdminForm
 
-
-admin_site.register(SheetRevision, SheetRevisionAdmin)
-
-
+@admin.register(PlayerProfile, site=admin_site)
 class PlayerProfileAdmin(admin.ModelAdmin):
     list_display = ('name', 'character', 'confirmed')
     filter_horizontal = ('done_tasks',)
     save_on_top = True
     list_filter = ('character__game__name',)
 
-
-admin_site.register(PlayerProfile, PlayerProfileAdmin)
-
-
+@admin.register(LogisticalTask, site=admin_site)
 class LogisticalTaskAdmin(admin.ModelAdmin):
     list_display = ['name', 'sort_order', 'deadline', 'display_text', 'form_type']
     ordering = ['sort_order']
 
-
-admin_site.register(LogisticalTask, LogisticalTaskAdmin)
-
-
+@admin.register(GameInfoLink, site=admin_site)
 class GameInfoLinkAdmin(admin.ModelAdmin):
     list_display = (str, 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
-admin_site.register(GameInfoLink, GameInfoLinkAdmin)
 
+@admin.register(TravelProfile, site=admin_site)
 class TravelProfileAdmin(admin.ModelAdmin):
     pass
-admin_site.register(TravelProfile, TravelProfileAdmin)
 
-
+@admin.register(SheetColor, site=admin_site)
 class SheetColorAdmin(admin.ModelAdmin):
     list_display = ['name', 'description', 'color', 'sort_order']
     ordering = ['sort_order']
-admin_site.register(SheetColor, SheetColorAdmin)
 
-
+@admin.register(SheetType, site=admin_site)
 class SheetTypeAdmin(admin.ModelAdmin):
     list_display = ['name', 'description', 'sort_order']
     ordering = ['sort_order']
 
 
-admin_site.register(SheetType, SheetTypeAdmin)
-
-
+@admin.register(SheetStatus, site=admin_site)
 class SheetStatusAdmin(admin.ModelAdmin):
     list_display = ['name', 'description', 'sort_order', 'game']
     ordering = ['sort_order']
 
 
-admin_site.register(SheetStatus, SheetStatusAdmin)
-
+@admin.register(GameInstance, site=admin_site)
 class GameInstanceAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         return {}
-admin_site.register(GameInstance, GameInstanceAdmin)
 
 
-
+@admin.register(GameTemplate, site=admin_site)
 class GameTemplateAdmin(admin.ModelAdmin):
     pass
 
-
-admin_site.register(GameTemplate, GameTemplateAdmin)
-
-
+@admin.register(WebsiteAboutPage, site=admin_site)
 class WebsiteAboutPageAdmin(admin.ModelAdmin):
     pass
 
-admin_site.register(WebsiteAboutPage, WebsiteAboutPageAdmin)
 
 class SheetAdminForm(AdminModelFormLARPStringAware):
     class Meta:
         model = Sheet
         exclude = []
+@admin.register(Sheet, site=admin_site) 
 class AllSheetsAdmin(admin.ModelAdmin):
     list_display = ('name', 'color', 'game',)
     list_filter = ('game__name',)
@@ -282,30 +253,27 @@ class AllSheetsAdmin(admin.ModelAdmin):
     form = SheetAdminForm
 
 
-admin_site.register(Sheet, AllSheetsAdmin)
-
-
+@admin.register(EmbeddedImage, site=admin_site)
 class EmbeddedImageAdmin(admin.ModelAdmin):
     list_display = ('filename', 'sheets', 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
 
-admin_site.register(EmbeddedImage, EmbeddedImageAdmin)
-
+@admin.register(QuizSubmission, site=admin_site)
 class QuizSubmissionAdmin(admin.ModelAdmin):
     pass
-admin_site.register(QuizSubmission, QuizSubmissionAdmin)
+
 
 class TimelineEventForm(AdminModelFormLARPStringAware):
     class Meta:
         model = TimelineEvent
         exclude = []
+@admin.register(TimelineEvent, site=admin_site)
 class TimelineEventAdmin(admin.ModelAdmin):
     list_display = ('date', 'default_description', 'game',)
     list_filter = ('game__name',)
     ordering = ('game', '-date',)
     form = TimelineEventForm
-admin_site.register(TimelineEvent, TimelineEventAdmin)
 
 class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):
     class Meta:
@@ -313,8 +281,7 @@ class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):
         exclude = []
     def get_game(self):
         return self.instance.event.game
-class TimelineEventSheetDescriptionAdmin(admin.ModelAdmin):
+@admin.register(TimelineEventSheetDescription, site=admin_site)
+class TimelineEventSheetDescriptionAdmin(ModelAdminWithLARPStrings):
     form = TimelineEventSheetDescriptionForm
     list_filter = ('event__game__name',)
-
-admin_site.register(TimelineEventSheetDescription, TimelineEventSheetDescriptionAdmin)

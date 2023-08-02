@@ -20,15 +20,19 @@ class AdminModelFormLARPStringAware(forms.ModelForm):
     Subclass this to avoid errors with "must call set_game() before using LARPTextField".
     See e.g. ContactAdmin below.
     """
-    def get_game(self):
-        if self.instance.id is not None:
-            return self.instance.game
-        return self.data['game']
+    def get_game_from_instance(self, instance):
+        return instance.game
     
     def full_clean(self, *args, **kwargs):
         for name, field in self.fields.items():
             if hasattr(field, 'set_game'):
-                field.set_game(self.get_game())
+                # LARPTextField, needs its game set.
+                if self.instance.id is not None:
+                    game = self.get_game_from_instance(self.instance)
+                    field.set_game(game)
+                else:
+                    field.set_no_game()
+
         super(AdminModelFormLARPStringAware, self).full_clean(*args, **kwargs)
 
 class DogmasAdminSite(admin.sites.AdminSite):
@@ -180,10 +184,8 @@ class SheetRevisionAdminForm(AdminModelFormLARPStringAware):
         model = SheetRevision
         exclude = []
 
-    def get_game(self):
-        if self.instance.id is not None:
-            return self.instance.sheet.game
-        return Sheet.objects.get(pk=self.data['sheet']).game
+    def get_game_from_instance(self, instance):
+        return instance.sheet.game
 @admin.register(SheetRevision, site=admin_site)
 class SheetRevisionAdmin(admin.ModelAdmin):
     list_display = ('sheet', 'created', 'author')
@@ -283,10 +285,8 @@ class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):
     class Meta:
         model = TimelineEventSheetDescription
         exclude = []
-    def get_game(self):
-        if self.instance.id is not None:
-            return self.instance.event.game
-        return TimelineEvent.objects.get(pk=self.data['event']).game
+    def get_game(self, instance):
+        return instance.event.game
 @admin.register(TimelineEventSheetDescription, site=admin_site)
 class TimelineEventSheetDescriptionAdmin(admin.ModelAdmin):
     form = TimelineEventSheetDescriptionForm

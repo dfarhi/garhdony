@@ -239,7 +239,8 @@ class LARPTextFormField(forms.CharField):
     def __init__(self, *args, **kwargs):
         # Then init and set the game.
         super(LARPTextFormField, self).__init__(*args, **kwargs)
-        self.set_game(None)
+        self._game = None
+        self._explicit_no_game = False
 
         # All LarpTextFormFields keep a self.complete value, which decides whether this field needs gender correction.
         # If the form has WithComplete, then it will search these for False's, and if any are False, redisplay
@@ -254,9 +255,14 @@ class LARPTextFormField(forms.CharField):
             # This happens for some reason when the form is being displayed in the admin.
             pass
 
+    def set_no_game(self):
+        """ Admit that we fundamentally don't know what game this goes with, so can't check for gendered names."""
+        self._game = None
+        self._explicit_no_game = True
+
     @property
     def game(self):
-        assert self._game is not None, "LARPTextFormField must have its set_game method called before it is used."
+        assert self._game is not None or self._explicit_no_game, "LARPTextFormField must have its set_game method called before it is used, or call set_no_game if you really don't have a game tied to it."
         return self._game
     
     def to_python(self, value):
@@ -283,7 +289,8 @@ class LARPTextFormField(forms.CharField):
         if isinstance(value, LARPstring):
             # This happens for unbound forms, where this just gets passed the content.
             ls = value
-            ls.mark_unresolved_keywords(self.game)
+            if not self._explicit_no_game:
+                ls.mark_unresolved_keywords(self.game)
         else:
             # This happens for bound forms, where it gets passed the data.
             # Hopefully we remembered the scanned LARPstring computed in self.clean.
@@ -306,10 +313,10 @@ class LARPTextFormField(forms.CharField):
 
         # Next line removed to make IGNORE FOR NOW gender tag work. It might have been necessary for merge view stuff...
         # value.cleanup_temporary_markup()
-
-        broken = value.mark_unresolved_keywords(self.game)
-        self._remembered_cleaned_data = value
-        self.complete = not broken
+        if not self._explicit_no_game:
+            broken = value.mark_unresolved_keywords(self.game)
+            self.complete = not broken
+        self._remembered_cleaned_data = value        
         logger.debug(str(datetime.now())+": Done clean")
         return value
 

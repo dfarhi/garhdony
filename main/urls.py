@@ -89,6 +89,7 @@ urlpatterns = (
     url(r'^writing/([^/]+)/character/delete/$', garhdony_app.views_game_design.delete_character, name='delete_character'),
     url(r'^writing/([^/]+)/NPC/([^/]+)/$', garhdony_app.views_game_design.writing_npc, name='writing_npc'),
     url(r'^writing/([^/]+)/sheet/([^/]+)/$', garhdony_app.views_game_design.writer_sheet, name='writer_sheet'),
+    url(r'^writing/([^/]+)/sheet/([^/]+)/add_timeline_viewer$', garhdony_app.views_game_design.add_timeline_viewer, name='add_timeline_viewer'),
     url(r'^([^/]+)/character/([^/]+)/contacts/delete$', garhdony_app.views_game_design.character_contacts_delete,
         name='character_contacts_delete'),
     url(r'^add/title_obj/$', garhdony_app.views_game_design.add_title, name='add_title'),

@@ -97,3 +97,21 @@
 
 {% endblock %}
 
+{% block timeline %}
+  {% if sheet.timeline %}
+    {% writable_field "timeline" %}
+    <h1 id="sheet-timeline-header">Timeline {% edit_button %} </h1>
+    {% display %}
+
+    {% end_writable_field %}
+  {% else %}
+    {% if writer %}
+    <h1 id="sheet-timeline-header">Timeline</h1>
+        <form action={% url "add_timeline_viewer" game.name sheet.filename %} method="post"> {% csrf_token %}
+          <button type="submit" name="your_name" value="Add Timeline">Add Timeline</button>
+        </form>
+        <a href=>  </a> </h1>
+      <p> Players won't see a timeline on this sheet unless you add one. </p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

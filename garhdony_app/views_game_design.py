@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404, HttpResponse, JsonResponse
+from garhdony_app.models.timelines import TimelineViewer
 from garhdony_app.views_editable_pages import render_editable_page
 from garhdony_app.models import GameInstance, SheetRevision, NonPlayerCharacter, Contact, Sheet, PlayerCharacter
 from garhdony_app.forms_users import writer_home_form_getter
@@ -277,6 +278,20 @@ def writing_npc(request, game_name, npc_id):
                                     NPCEditingForm, 
                                     character)
     return auth.authenticate_resolve_and_callback(request, render_writing_npc, game_name, requires_writer = True)
+
+
+def add_timeline_viewer(request, run_name, filename):
+    def render_add_timeline_viewer(game, writer, sheet):
+        if request.method == 'POST':
+            # Form has no fields, we jsut do it.
+            assert sheet.timeline is None, f"Sheet {sheet} already has a timeline, but somehow we are adding a new one."
+            sheet.timeline = TimelineViewer.objects.create(timeline=game.timeline)
+            sheet.save()
+        else:
+            raise Http404  # Shouldn't ever get here
+        # Redirect to the sheet, but scrolled down to the #sheet-timeline-header div.
+        return HttpResponseRedirect(reverse("writer_sheet", args=[game.name, sheet.filename]) + "#sheet-timeline-header")
+    return auth.authenticate_resolve_and_callback(request, render_add_timeline_viewer, run_name, sheet=filename, requires_writer=True)
 
 
 def character_contacts_delete(request, run_name, username):

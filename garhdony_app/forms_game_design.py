@@ -173,7 +173,7 @@ class GameMetadataForm(WithComplete, forms.ModelForm):
     """ Simple ModelForm, edits all the actual fields. """
     class Meta:
         model = GameInstance
-        exclude = ["template"]
+        exclude = ["template", "timeline"]
 
 def stat_type_formset_maker(game):
     """

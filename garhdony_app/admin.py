@@ -5,10 +5,9 @@ You can get to it by going to /admin when logged in as admin or storyteller.
 """
 
 from django.contrib import admin
-from garhdony_app.LARPStrings import LARPTextField, LARPTextWidget
 from garhdony_app.models import Character, PlayerProfile, GameInstance, Sheet, SheetColor, SheetType, SheetStatus, LogisticalTask, \
     TravelProfile, Contact, GenderizedKeyword, GenderizedName, PlayerCharacter, NonPlayerCharacter, SheetRevision, CharacterStat, \
-    CharacterStatType, GameInfoLink, EmbeddedImage, GameTemplate, WebsiteAboutPage, QuizSubmission, TimelineEvent,TimelineEventSheetDescription
+    CharacterStatType, GameInfoLink, EmbeddedImage, GameTemplate, WebsiteAboutPage, QuizSubmission, TimelineEvent, TimelineEventDescription
 from django.contrib.auth.models import User, Group
 from django import forms
 from django.urls import re_path as url
@@ -274,20 +273,22 @@ class TimelineEventForm(AdminModelFormLARPStringAware):
     class Meta:
         model = TimelineEvent
         exclude = []
+    def get_game(self, instance: TimelineEvent):
+        return instance.timeline.game
 @admin.register(TimelineEvent, site=admin_site)
 class TimelineEventAdmin(admin.ModelAdmin):
-    list_display = ('date', 'default_description', 'game',)
-    list_filter = ('game__name',)
-    ordering = ('game', '-date',)
+    list_display = ('date', 'default_description', 'timeline',)
+    list_filter = ('timeline__name',)
+    ordering = ('timeline', '-date',)
     form = TimelineEventForm
 
 class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):
     class Meta:
-        model = TimelineEventSheetDescription
+        model = TimelineEventDescription
         exclude = []
-    def get_game(self, instance):
-        return instance.event.game
-@admin.register(TimelineEventSheetDescription, site=admin_site)
+    def get_game(self, instance: TimelineEventDescription):
+        return instance.event.timeline.game
+@admin.register(TimelineEventDescription, site=admin_site)
 class TimelineEventSheetDescriptionAdmin(admin.ModelAdmin):
     form = TimelineEventSheetDescriptionForm
-    list_filter = ('event__game__name',)
+    list_filter = ('event__timeline__name',)

@@ -11,6 +11,7 @@ import re
 from datetime import datetime
 from diff_match_patch import diff_match_patch
 from django.utils import timezone
+from garhdony_app.models.timelines import Timeline, TimelineViewer
 from garhdony_app.storage import DogmasFileSystemStorage
 import garhdony_app.utils as utils
 from garhdony_app.LARPStrings import LARPTextField, larpstring_to_python
@@ -100,6 +101,13 @@ class GameInstance(models.Model):
     # complete determines whether players can see all sheets.
     complete = models.BooleanField("Game Complete", default=False)
 
+    # Timeline
+    # Really shouldn't be null but migrations are hard.
+    timeline = models.OneToOneField(Timeline, null=True, on_delete=models.RESTRICT)
+
+    def __init__(self, *args, **kwargs):
+        super(GameInstance, self).__init__(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -177,7 +185,10 @@ class GameInstance(models.Model):
         else:
             change = False
 
-        # Do the normal stuff
+        # make a new timeline if we need to
+        if not change and not self.timeline:
+            self.timeline = Timeline.objects.create(name=self.name)
+
         super(GameInstance, self).save(*args, **kwargs)
         if change:
             if old_game.usernamesuffix != self.usernamesuffix:
@@ -189,7 +200,7 @@ class GameInstance(models.Model):
                 # If media_directory changed, we need to move files over
                 shutil.move(old_game.abs_media_directory, self.abs_media_directory)
         else:
-            # When creating a game we need to mae tha appropriate directories
+            # When creating a game we need to make tha appropriate directories
             os.makedirs(self.abs_sheets_directory)
             os.makedirs(self.abs_photo_directory)
 
@@ -198,7 +209,7 @@ class GameInstance(models.Model):
         Makes a clone of the entire game, including all characters and sheets.
         The idea is that after Dogmas 14, if we want to run Dogmas 15, we just clone it.
         """
-        # TODO: Might miss contacts? character stats?
+        # TODO: Might miss contacts? character stats? timeline events?
         new_game = GameInstance(name=new_name, usernamesuffix=new_suffix)
         new_game.save()
 
@@ -375,6 +386,8 @@ class Sheet(models.Model, Versioned):
     # No one has used png or pdf in a while, so they might not work 4/14
     content_type_choices = (('html', 'html'), ('application/pdf', 'pdf'), ('image/png', 'png'),)
     content_type = models.CharField(max_length=50, default='html', choices=content_type_choices)
+
+    timeline = models.OneToOneField(TimelineViewer, related_name='sheet', null=True, blank=True, on_delete=models.SET_NULL)
 
     # This field named "file" is probably unused? 4/14
     file = models.FileField(upload_to=sheetuploadpath, blank=True, storage=DogmasFileSystemStorage())
@@ -1343,36 +1356,6 @@ class Contact(models.Model):
         # We need one of these for render_editable_page to have the right automatic behavior;
         # see forms_game_design.EditingFieldFormClassGeneric
         return self.owner.game
-
-
-class TimelineEvent(models.Model):
-    # An event in the timeline
-    game = models.ForeignKey(GameInstance, related_name="timeline_events", on_delete=models.CASCADE)
-    date = models.DateField()
-    default_description = LARPTextField()
-    sheets = models.ManyToManyField(Sheet, through="TimelineEventSheetDescription")
-
-    def __str__(self):
-        return self.default_description.render()
-
-
-class TimelineEventSheetDescription(models.Model):
-    class Meta:
-        unique_together = ("event", "sheet")
-
-    event = models.ForeignKey(TimelineEvent, related_name="descriptions", on_delete=models.CASCADE)
-    sheet = models.ForeignKey(Sheet, related_name="event_descriptions", on_delete=models.CASCADE)
-    unique_description = LARPTextField()
-
-    def __str__(self):
-        return str(self.event) + " (" + self.sheet.filename + ")"
-
-    @property
-    def description(self):
-        if self.unique_description == "":
-            return self.event.default_description
-        else:
-            return self.unique_description
 
 
 def setup_database():

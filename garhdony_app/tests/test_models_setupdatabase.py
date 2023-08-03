@@ -7,11 +7,11 @@ class TestSetupDatabase(TestCase):
 
     def test_sheet_colors(self):
         available_colors = SheetColor.objects.all()
-        self.assertEqual(set(c.name for c in available_colors), {'Bluesheet', 'Yellowsheet', 'Greensheet', 'In-game Document'})
+        self.assertEqual(set(c.name for c in available_colors), {'Bluesheet', 'Yellowsheet', 'Greensheet'})
 
     def test_sheet_types(self):
         available_types = SheetType.objects.all()
-        self.assertEqual(set(t.name for t in available_types), {'Story', 'Details', 'Supplement'})
+        self.assertEqual(set(t.name for t in available_types), {'Story', 'Details', 'Supplement', 'In-Game Document', 'Public Sheet'})
 
     def test_genderized_names(self):
         self.assertGreater(GenderizedKeyword.objects.count(), 0)

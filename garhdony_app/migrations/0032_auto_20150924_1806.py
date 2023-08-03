@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sheetrevision',
             name='file',
-            field=models.FileField(upload_to=garhdony_app.models.sheetrevisionuploadpath, blank=True),
+            field=models.FileField(upload_to=garhdony_app.models.models.sheetrevisionuploadpath, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(

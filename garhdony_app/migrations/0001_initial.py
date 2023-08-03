@@ -133,7 +133,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('character_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='garhdony_app.Character', on_delete=models.CASCADE)),
                 ('notes', garhdony_app.LARPStrings.LARPTextField(default=b'', blank=True)),
-                ('photo', models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), null=True, upload_to=garhdony_app.models.getuploadpath, blank=True)),
+                ('photo', models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), null=True, upload_to=garhdony_app.models.models.getuploadpath, blank=True)),
                 ('npc_gender', models.CharField(default=b'M', max_length=2, choices=[(b'M', b'Male'), (b'F', b'Female')])),
             ],
             options={
@@ -159,7 +159,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=50)),
                 ('gender', models.CharField(default=b'M', max_length=1, choices=[(b'M', b'M'), (b'F', b'F')])),
-                ('picture', models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.getuploadpath, blank=True)),
+                ('picture', models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.models.getuploadpath, blank=True)),
                 ('email', models.CharField(max_length=100, verbose_name=b'What email address can we give to other players for contacting you?', blank=True)),
                 ('pregame_party_rsvp', models.NullBooleanField(verbose_name=b'Will you be attending?')),
                 ('snail_mail_address', models.CharField(max_length=300, verbose_name=b'If not, give us a snail mail address to send your packet to.', blank=True)),
@@ -180,7 +180,7 @@ class Migration(migrations.Migration):
                 ('name', garhdony_app.LARPStrings.LARPTextField(verbose_name=b'Printed Name')),
                 ('filename', models.CharField(max_length=300, verbose_name=b'Internal Name (unique)')),
                 ('content_type', models.CharField(default=b'html', max_length=50, choices=[(b'html', b'html'), (b'application/pdf', b'pdf'), (b'image/png', b'png')])),
-                ('file', models.FileField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.getuploadpath, blank=True)),
+                ('file', models.FileField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.models.getuploadpath, blank=True)),
                 ('hidden', models.BooleanField(default=True)),
                 ('preview_description', garhdony_app.LARPStrings.LARPTextField(default=b'', blank=True)),
                 ('last_printed', models.DateTimeField(default=datetime.datetime(2015, 4, 11, 11, 39, 29, 542862), null=True)),

@@ -17,19 +17,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='nonplayercharacter',
             name='photo',
-            field=models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), null=True, upload_to=garhdony_app.models.npcuploadpath, blank=True),
+            field=models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), null=True, upload_to=garhdony_app.models.models.npcuploadpath, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='playerprofile',
             name='picture',
-            field=models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.playerprofileuploadpath, blank=True),
+            field=models.ImageField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.models.playerprofileuploadpath, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='sheet',
             name='file',
-            field=models.FileField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.sheetuploadpath, blank=True),
+            field=models.FileField(storage=garhdony_app.storage.DogmasFileSystemStorage(), upload_to=garhdony_app.models.models.sheetuploadpath, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(

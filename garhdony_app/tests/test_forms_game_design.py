@@ -1,3 +1,5 @@
+import tempfile
+from django.conf import settings
 from django.test import TestCase
 from garhdony_app.forms_game_design import CharacterDeleteForm, CharacterNewForm, PlayerCharacterMetadataForm, SheetDeleteForm, SheetNewForm
 from garhdony_app.models import GameInstance, GenderizedKeyword, GenderizedName, NonPlayerCharacter, PlayerCharacter, Sheet, SheetColor, SheetType
@@ -6,6 +8,7 @@ from django.contrib.auth.models import User
 
 class TestFormsGameDesign(TestCase):
     def setUp(self):
+        settings.MEDIA_ROOT = tempfile.mkdtemp()
         setup_test_db()
 
     def test_new_sheet_valid(self):

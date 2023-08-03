@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('filename', models.CharField(unique=True, max_length=210)),
-                ('file', models.FileField(upload_to=garhdony_app.models.embeddedImageUploadTo)),
+                ('file', models.FileField(upload_to=garhdony_app.models.models.embeddedImageUploadTo)),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('game', models.ForeignKey(related_name='EmbeddedImages', to='garhdony_app.GameInstance', on_delete=models.CASCADE)),
             ],

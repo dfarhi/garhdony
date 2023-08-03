@@ -1,9 +1,12 @@
+import tempfile
+from django.conf import settings
 from django.test import TestCase
 from garhdony_app import models
 from garhdony_app.tests.setup_test_db import setup_test_db
 
 class PublicPagesTest(TestCase):
     def setUp(self):
+        settings.MEDIA_ROOT = tempfile.mkdtemp()
         models.setup_database()
         
     def test_home_page(self):
@@ -18,6 +21,7 @@ class PublicPagesTest(TestCase):
 
 class PublicGamePagesTest(TestCase):
     def setUp(self):
+        settings.MEDIA_ROOT = tempfile.mkdtemp()
         setup_test_db(game=True, sheets=False, characters=False)
 
     def test_game_home(self):

@@ -16,7 +16,7 @@ import garhdony_app.utils as utils
 from garhdony_app.LARPStrings import LARPTextField, larpstring_to_python
 from djiki.models import Versioned, Revision
 from django.shortcuts import render
-from .assign_writer_game import assign_writer_game
+from garhdony_app.assign_writer_game import assign_writer_game
 import logging
 import random
 
@@ -341,10 +341,6 @@ def sheetuploadpath(sheet, filename=''):
     ext = sheet.get_content_type_display()
     if ext == "html": ext = "pdf"  # html-type files still download pdfs from pdfs.
     return os.path.join(sheet.game.sheets_directory, sheet.filename + "." + ext)
-
-
-def infinite_past_func(): pass  # Migrations think this function has to exist. It doesn't do anything.
-
 
 class Sheet(models.Model, Versioned):
     # A Sheet represents like "History of Ambrus" from Dogmas 2014.
@@ -709,7 +705,6 @@ class GenderizedKeyword(models.Model):
 
     class Meta:
         ordering = ['male']
-        unique_together = ('male', 'female',)
 
     @property
     def is_name(self):
@@ -1353,25 +1348,24 @@ class Contact(models.Model):
 class TimelineEvent(models.Model):
     # An event in the timeline
     game = models.ForeignKey(GameInstance, related_name="timeline_events", on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
     date = models.DateField()
-    default_description = models.TextField()
-    characters = models.ManyToManyField(PlayerCharacter, through="TimelineEventCharacterDescription")
+    default_description = LARPTextField()
+    sheets = models.ManyToManyField(Sheet, through="TimelineEventSheetDescription")
 
     def __str__(self):
-        return self.name
+        return self.default_description.render()
 
 
-class TimelineEventCharacterDescription(models.Model):
+class TimelineEventSheetDescription(models.Model):
     class Meta:
-        unique_together = ("event", "character")
+        unique_together = ("event", "sheet")
 
     event = models.ForeignKey(TimelineEvent, related_name="descriptions", on_delete=models.CASCADE)
-    character = models.ForeignKey(PlayerCharacter, related_name="event_descriptions", on_delete=models.CASCADE)
-    unique_description = models.TextField(blank=True)
+    sheet = models.ForeignKey(Sheet, related_name="event_descriptions", on_delete=models.CASCADE)
+    unique_description = LARPTextField()
 
     def __str__(self):
-        return self.event.name + " (" + self.character.name() + ")"
+        return str(self.event) + " (" + self.sheet.filename + ")"
 
     @property
     def description(self):
@@ -1382,12 +1376,6 @@ class TimelineEventCharacterDescription(models.Model):
 
 
 def setup_database():
-    """
-    This is an old thing that we used at the very start,
-    when we were so incompetent that we frequently destroyed
-    and remade the database. It had better not be needed anymore.
-    But I don't have the guts to remove it.
-    """
     WebsiteAboutPage(content="This is the about page.").save()
 
     # Make writers group with permission garhdony_app.writer

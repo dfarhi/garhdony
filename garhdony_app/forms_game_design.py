@@ -16,65 +16,14 @@ import garhdony_app.assign_writer_game
 from django.forms.widgets import TextInput
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.template.loader import render_to_string
+from garhdony_app.forms_timelines import TimelineEventDescriptionFormSet
 from garhdony_app.models import EmbeddedImage, Character, GameInstance, Contact, GenderizedKeyword, GenderizedName, CharacterStat, PlayerCharacter, NonPlayerCharacter, Sheet, SheetColor, SheetType, CharacterStatType, GameInfoLink
 from django.contrib.auth.models import Group, User
-from garhdony_app.LARPStrings import LARPTextFormField, LARPTextField, LARPstring
+from garhdony_app.LARPStrings import LARPstring, WithComplete
 import os
 
-#######################################################
-###################### Utilities ######################
-#######################################################
+from garhdony_app.views_editable_pages import EditingFieldFormClassGeneric
 
-class WithComplete():
-    """
-    This is a class you should make any form inherit from if it's going to use LARPTextFormFields.
-    It adds a complete property, which asks whether all the fields are fully gender-ified
-    for use in determining whether to redisplay the form after saving.
-
-    This is different from redisplaying the form with errors; an incomplete form should be redisplay *after* saving.
-
-    Maybe this kind of thing is what a MixIn is?
-    """
-    def complete(self):
-        for name, field in self.fields.items():
-            if hasattr(field, 'complete'):
-                if not field.complete:
-                    return False
-        return True
-
-
-def EditingFieldFormClassGeneric(model_class, field_name):
-    """
-    If render_editable_page is used and a particular writable_field is very generic,
-    we can automatically generate the appropriate form.
-
-    This works if the writable_field's name (which gets passed to edit_field in the view and then field_name here)
-    is the name of a single field on the model.
-
-    Many of the form_getters use this for some of the possible field_names, and use custom complex forms for others.
-    """
-
-    class HelperEditingFieldForm(WithComplete, forms.ModelForm):
-        class Meta:
-            model = model_class
-            fields = [field_name]
-
-
-    # Now check to see if it's a LARPTextField, because if so, due to the issues explained in LARPString.py, it doesn't
-    # have the right default FormField.
-    field = model_class._meta.get_field(field_name)
-    if not isinstance(field, LARPTextField):
-        return HelperEditingFieldForm
-    else:
-        class LARPStringVersion(HelperEditingFieldForm):
-            def __init__(self, *args, **kwargs):
-                # Note: this assumes the thing it is passed has a ".game" attribute.
-                # So if you have a model with a LARPTextField, you want to give it a .game property.
-                super(LARPStringVersion, self).__init__(*args, **kwargs)
-                self.fields[field_name].set_game(self.instance.game)
-                self.fields[field_name].widget.attrs['style'] = "width:300;"
-
-        return LARPStringVersion
 
 class SelectWithPop(forms.Select):
     """
@@ -102,7 +51,7 @@ class GameCreationForm(forms.ModelForm):
     """ For creating games from scratch. """
     class Meta:
         model = GameInstance
-        exclude = ['preview_mode', 'complete']
+        exclude = ['preview_mode', 'complete', 'timeline']
 
     writers = forms.ModelMultipleChoiceField(queryset=User.objects.none())  # Set the queryset at init time, not startup time.
 
@@ -731,21 +680,16 @@ class SheetCharactersForm(WithComplete, forms.ModelForm):
             c.sheets.add(self.instance)
             c.save()
 
-sheet_editing_form_classes = {
-    "Metadata": SheetMetadataForm,
-    "characters": SheetCharactersForm
-}
-
-
-def SheetEditingFieldForm(request, field_name, data, files, sheet):
+def SheetEditingFieldForm(request, field_name, data, files, sheet: Sheet):
     """The thing that render_editable_page uses to pick which Form to use"""
-    if field_name in sheet_editing_form_classes.keys():
-        # Metadata and characters have special forms.
-        form_class = sheet_editing_form_classes[field_name]
+    if field_name == "Metadata":
+        return SheetMetadataForm(data=data, files=files, instance=sheet)
+    elif field_name == "characters":
+        return SheetCharactersForm(data=data, files=files, instance=sheet)
+    elif field_name == "timeline":
+        return TimelineEventDescriptionFormSet(data=data, files=files, instance=sheet.timeline, form_kwargs={'viewer': sheet.timeline})
     else:
-        # Currently nothing on the sheet has a generic form, but it's nice to be safe.
-        form_class = EditingFieldFormClassGeneric(Sheet, field_name)
-    return form_class(data=data, files=files, instance=sheet)
+        return EditingFieldFormClassGeneric(Sheet, field_name)(data=data, files=files, instance=sheet)
 
 
 ########################################################

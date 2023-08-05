@@ -127,7 +127,7 @@ body {
     list-style-type:none;
 }
 
-floater:hover {
+.floater:hover {
     height:auto
 }
 
@@ -175,6 +175,13 @@ floater:hover {
     background-color:#C99;
 }
 
+table.editable-field-save{
+    border:0px;
+    background-color:#FFF;
+    width:100%;
+    margin:0;
+    padding:0;
+}
 
 /*
 .edit-tab{

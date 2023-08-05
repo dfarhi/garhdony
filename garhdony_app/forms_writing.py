@@ -1,7 +1,7 @@
 from diff_match_patch import diff_match_patch
 from django import forms
 from garhdony_app.models import SheetRevision, EditLock
-from garhdony_app.forms_game_design import WithComplete
+from garhdony_app.LARPStrings import WithComplete
 from garhdony_app.LARPStrings import LARPTextWidget, LARPstring
 from datetime import datetime
 import logging

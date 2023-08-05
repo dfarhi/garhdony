@@ -127,7 +127,7 @@ body {
     list-style-type:none;
 }
 
-floater:hover {
+.floater:hover {
     height:auto
 }
 

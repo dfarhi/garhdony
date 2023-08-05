@@ -9,3 +9,25 @@
 #sheet-content .pagebreak {
     page-break-after: always;
 }
+
+table.timeline {
+    border-collapse: collapse;
+    border: 1px solid;
+}
+
+table.timeline  > tbody > tr > td {
+    border: 1px solid;
+}
+
+.timeline td.date {
+    text-align: right;
+    width: 20%;
+}
+
+form .timeline td.date > div {
+    display: block;
+}
+
+.timeline td.event-description {
+    width: 100%;
+}

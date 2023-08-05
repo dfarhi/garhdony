@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404, HttpResponse, JsonResponse
+from garhdony_app.forms_timelines import make_master_timeline_event_form
 from garhdony_app.models.timelines import TimelineViewer
 from garhdony_app.views_editable_pages import render_editable_page
 from garhdony_app.models import GameInstance, SheetRevision, NonPlayerCharacter, Contact, Sheet, PlayerCharacter
@@ -178,7 +179,14 @@ def writing_game_timeline(request, game_name):
     """
     def render_writing_game_timeline(game, writer):
         logger.debug(str(datetime.now())+": Loading Timelins")
-        return auth.callback_package('garhdony_app/writing_game_timeline.html', {'characters':list(game.pcs()), 'events':game.timeline_events.all()})
+        return render_editable_page(request, 
+                                    'garhdony_app/writing_game_timeline.html', 
+                                    {'characters':list(game.pcs()), 'timeline':game.timeline},
+                                    on_save_url_func=lambda:reverse('game_writer_timeline', args=[game.name],),
+                                    writer=writer,
+                                    edit_form_getter=make_master_timeline_event_form,
+                                    timeline=game.timeline)
+
     return auth.authenticate_resolve_and_callback(request, render_writing_game_timeline, game_name, requires_writer = True)
 
 
@@ -285,7 +293,7 @@ def add_timeline_viewer(request, run_name, filename):
         if request.method == 'POST':
             # Form has no fields, we jsut do it.
             assert sheet.timeline is None, f"Sheet {sheet} already has a timeline, but somehow we are adding a new one."
-            sheet.timeline = TimelineViewer.objects.create(timeline=game.timeline)
+            sheet.timeline = TimelineViewer.objects.create(timeline=game.timeline, name=sheet.filename)
             sheet.save()
         else:
             raise Http404  # Shouldn't ever get here

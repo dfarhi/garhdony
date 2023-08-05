@@ -2,46 +2,64 @@
 {% load garhdony_tags %}
 {% load static %}
 
+{% block title %}{{game.name}} Timeline{% endblock %}
+
 {% block morehead %}
-<script type="text/javascript" src={% static "garhdony_app/jquery-latest.js" %}></script>
-<script type="text/javascript" src={% static "garhdony_app/ajax.basics.js"%}></script>
-<script type="text/javascript" src={% static "garhdony_app/timeline.js"%}></script>
+<script src="{% static 'garhdony_app/timeline.js' %}"></script>
+<link rel="stylesheet" href="{% static 'garhdony_app/sheets.css' %}"> {# for the timeline styling #}
 {% endblock %}
 
 {% block content %}
-<h1>Game: {{game.name}}</h1>
-
-Mouse over a character to see their description of the event.
-<table style="border: 1px solid black; border-collapse: collapse;" id="timeline" border="1">
-<thead>
-  <tr>
-  <th>Year</th>
-  <th>Date</th>
-  <th>Name</th>
-  <th>Description</th>
-  <th>Characters</th>
-  </tr>
-</thead>
-
+Mouse over a sheet to see their description of the event.
+<table class='timeline' id="timeline">
 <tbody>
-  {% for event in events|dictsort:'date'%}
+  {% for event in timeline.events.all %}
     <tr data-event={{event.id}}>
-        <td class="year"> {{event.date|date:"o"}} </td>
-        <td class="date"> {{event.date|date:"N j"}} </td>
-        <td class="name"> {{event.name}} </td>
-        <td class="default-description"> {{event.default_description}} </td>
-        <td class="characters">
-            {% for charlink in event.descriptions.all|dictsort:"character.first_name" %}
-                <a href="{% url 'character_home' game.name charlink.character.username%}" title={{charlink.description}} class="individual-character">
-                    {{charlink.character.first_name}}
-                </a>
-                &nbsp;&nbsp;
-            {% endfor %}
+        <td class="date"> 
+          {% with field='event-'|concat:event.id|concat:'-date' %}
+          {% writable_field field %}
+          {% edit_button %}
+          {% display %}
+          {{event.date}}
+          {% edit %}
+          <div>
+            {{ edit_form.day }} {{ edit_form.day.errors }}
+          </div>
+          <div>
+            {{ edit_form.month }} {{ edit_form.month.errors }}
+          </div>
+          <div>
+            {{ edit_form.year }} {{ edit_form.year.errors }}
+          </div>
+          {% end_writable_field %}
+          {% endwith %}
         </td>
-    </tr>
-
+        <td class="name">
+          {% with field='event-'|concat:event.id|concat:'-internal_name' %}
+          {% writable_field field %}
+          {% edit_button %}
+          {% display %}
+          {{event.internal_name}}
+          {% edit %}
+          <div>
+            {{ edit_form.internal_name }} {{ edit_form.internal_name.errors }}
+          </div>
+          {% end_writable_field %}
+          {% endwith %}
+        </td>
+        <td class="sheets">
+          {% for desc in event.descriptions.all %}
+              <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}" title={{desc.description}} class="individual-sheet">
+                  {{desc.viewer.sheet.filename}}
+              </a>
+              {# Spacing them out #}
+              {% if not forloop.last %}
+                  <span class="sheet-separator">, </span>
+              {% endif %}
+          {% endfor %}
+      </td>
+    </tr>  
   {% endfor %}
-  </tbody>
+</tbody>
 </table>
 {% endblock %}
-

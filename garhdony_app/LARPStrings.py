@@ -101,6 +101,16 @@ class LARPstring():
         """
         self.tree.regex_replace(regex, replacement)
 
+    def __eq__(self, __value: object) -> bool:
+        """
+        For comparing LARPStrings, compare their raw strings.
+        For comparing to a string, check that the raw string is the same.
+        """
+        if isinstance(__value, LARPstring):
+            return self.raw() == __value.raw()
+        else:
+            return self.raw() == __value
+
 def larpstring_to_python(value, check_keywords=True):
     """
     For taking a string, LARPstring, or None, and robustly making a LARPstring out of it.
@@ -322,3 +332,25 @@ class LARPTextFormField(forms.CharField):
 
     def forget_cache(self):
         self._remembered_cleaned_data = None
+
+
+#######################################################
+###################### Utilities ######################
+#######################################################
+
+class WithComplete():
+    """
+    This is a class you should make any form inherit from if it's going to use LARPTextFormFields.
+    It adds a complete property, which asks whether all the fields are fully gender-ified
+    for use in determining whether to redisplay the form after saving.
+
+    This is different from redisplaying the form with errors; an incomplete form should be redisplay *after* saving.
+
+    Maybe this kind of thing is what a MixIn is?
+    """
+    def complete(self):
+        for name, field in self.fields.items():
+            if hasattr(field, 'complete'):
+                if not field.complete:
+                    return False
+        return True

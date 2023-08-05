@@ -277,9 +277,9 @@ class TimelineEventForm(AdminModelFormLARPStringAware):
         return instance.timeline.game
 @admin.register(TimelineEvent, site=admin_site)
 class TimelineEventAdmin(admin.ModelAdmin):
-    list_display = ('date', 'default_description', 'timeline',)
+    list_display = ('timeline', 'internal_name', 'year', 'month', 'day')
     list_filter = ('timeline__name',)
-    ordering = ('timeline', '-date',)
+    ordering = ('timeline', '-year', '-month', '-day')
     form = TimelineEventForm
 
 class TimelineEventSheetDescriptionForm(AdminModelFormLARPStringAware):

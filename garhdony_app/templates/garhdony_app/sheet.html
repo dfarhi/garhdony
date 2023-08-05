@@ -102,7 +102,67 @@
     {% writable_field "timeline" %}
     <h1 id="sheet-timeline-header">Timeline {% edit_button %} </h1>
     {% display %}
-
+      <table class="timeline">
+        {% for entry in sheet.timeline.descriptions.all %}
+          <tr>
+            <td class="date">{{entry.event.date}}</td>
+            <td class="event-description">{{entry.description}}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% edit %}
+      {# Note that form here is secretly a formset #}
+      {% if edit_form.errors %} 
+        <p style="color: red;">
+          Please correct the error{{ edit_form.errors|pluralize }} below.
+        </p>
+          {{ edit_form.non_field_errors }}
+      {% endif %}
+      {{ edit_form.management_form }}
+      <table class="timeline">
+        {% for entry_form in edit_form %}
+        <tr>
+          {{ entry_form.id }}
+          <td class="date">
+            <div>
+              {% if not entry_form.editable_event %} {{ entry_form.instance.event.day|default_if_none:"" }} {% endif %}
+              {{ entry_form.day }} {{ entry_form.day.errors }}
+            </div>
+            <div>
+              {% if not entry_form.editable_event %} {{ entry_form.instance.event.month|default_if_none:"" }} {% endif %}
+              {{ entry_form.month }} {{ entry_form.month.errors }}
+            </div>
+            <div>
+              {% if not entry_form.editable_event %} {{ entry_form.instance.event.year }} {% endif %}
+              {{ entry_form.year }} {{ entry_form.year.errors }}
+            </div>
+          </td>
+          <td>
+            <div>
+              {% if not entry_form.editable_event %} {{entry_form.instance.event}} [Shared event] {% endif %}
+              {{entry_form.event }} {{ entry_form.event.errors }}
+            </div>
+            <div>{{entry_form.internal_name }} {{ entry_form.internal_name.errors }}</div>
+          </td>
+          <td class="event-description">
+            <div>{{ entry_form.description }} {{ entry_form.description.errors }}</div>
+          </td>
+        </tr>
+        {% if entry_form.non_field_errors %}
+          <tr>
+            <td colspan="3" style="color: red;">
+              {{ entry_form.non_field_errors }}
+            </td>
+          </tr>
+        {% endif %}
+        {% endfor %}
+      </table>
+      {# Hidden event-date mapping for use in javascript #}
+      <div id="event-date-mapping" style="display: none;">
+        {% for entry in sheet.timeline.timeline.events.all %}
+          <div class="event-date-mapping" data-event-id="{{entry.id}}" data-year="{{entry.year}}" data-month="{{entry.month}}" data-day="{{entry.day}}"></div>
+        {% endfor %}
+      </div>
     {% end_writable_field %}
   {% else %}
     {% if writer %}
@@ -110,7 +170,7 @@
         <form action={% url "add_timeline_viewer" game.name sheet.filename %} method="post"> {% csrf_token %}
           <button type="submit" name="your_name" value="Add Timeline">Add Timeline</button>
         </form>
-        <a href=>  </a> </h1>
+        <a href=>  </a>
       <p> Players won't see a timeline on this sheet unless you add one. </p>
     {% endif %}
   {% endif %}

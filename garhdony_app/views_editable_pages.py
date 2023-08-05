@@ -6,10 +6,14 @@ Using the render_editable_page function is relatively easy; you just ue it like 
 and then in the template you can use the writable_field tag (defined and documented in garhdony_tags.py)
 """
 
+from garhdony_app.LARPStrings import LARPTextField
+from django import forms
 import garhdony_app.auth as auth
 from django.http import HttpResponseRedirect
 
-def render_editable_page(request, template, template_args, on_save_url_func, writer, edit_form_getter, *args):
+from garhdony_app.LARPStrings import WithComplete
+
+def render_editable_page(request, template, template_args, on_save_url_func, writer, edit_form_getter, *args, **kwargs):
     """
     Renders the template with arguments template_args (just like the render function).
     But also allows that template to use the {% writable_field %} tag.
@@ -37,14 +41,14 @@ def render_editable_page(request, template, template_args, on_save_url_func, wri
     :param args: Any extra args to pass to edit_form_getter.
     """
 
-    new_args = editable_page_update_args(request, writer, edit_form_getter, *args)
+    new_args = editable_page_update_args(request, writer, edit_form_getter, *args, **kwargs)
     if new_args=="SAVED":
         return HttpResponseRedirect(on_save_url_func())
     else:
         template_args.update(new_args)
         return auth.callback_package(template, template_args)
 
-def editable_page_update_args(request, writer, edit_form_getter, *args):
+def editable_page_update_args(request, writer, edit_form_getter, *args, **kwargs):
     """
     This does most of the logic.
 
@@ -65,7 +69,7 @@ def editable_page_update_args(request, writer, edit_form_getter, *args):
             raise ValueError(f"Not saving editable field; need 'Save' argument in POST dict.")
 
         # Make a form and check if it's valid.
-        form = edit_form_getter(request, edit_field, request.POST, request.FILES, *args)
+        form = edit_form_getter(request, edit_field, request.POST, request.FILES, *args, **kwargs)
         if form.is_valid():
             # LARPTextForms have an extra "complete" attribute,
             # Which indicates whether they need to be fixed up because of gender stuff.
@@ -93,11 +97,45 @@ def editable_page_update_args(request, writer, edit_form_getter, *args):
         if 'Edit' in request.GET:
             # The user has clicked the 'edit' button on one of the writable_field tags.
             edit_field = request.GET.get("Edit")
-            form = edit_form_getter(request, edit_field, None, None, *args)
+            form = edit_form_getter(request, edit_field, None, None, *args, **kwargs)
         else:
             # Regular view.
             return {'editable_page':True}
     return {'editing':edit_field, 'edit_form':form, 'editable_page':True}
+
+
+def EditingFieldFormClassGeneric(model_class, field_name):
+    """
+    If render_editable_page is used and a particular writable_field is very generic,
+    we can automatically generate the appropriate form.
+
+    This works if the writable_field's name (which gets passed to edit_field in the view and then field_name here)
+    is the name of a single field on the model.
+
+    Many of the form_getters use this for some of the possible field_names, and use custom complex forms for others.
+    """
+
+    class HelperEditingFieldForm(WithComplete, forms.ModelForm):
+        class Meta:
+            model = model_class
+            fields = [field_name]
+
+
+    # Now check to see if it's a LARPTextField, because if so, due to the issues explained in LARPString.py, it doesn't
+    # have the right default FormField.
+    field = model_class._meta.get_field(field_name)
+    if not isinstance(field, LARPTextField):
+        return HelperEditingFieldForm
+    else:
+        class LARPStringVersion(HelperEditingFieldForm):
+            def __init__(self, *args, **kwargs):
+                # Note: this assumes the thing it is passed has a ".game" attribute.
+                # So if you have a model with a LARPTextField, you want to give it a .game property.
+                super(LARPStringVersion, self).__init__(*args, **kwargs)
+                self.fields[field_name].set_game(self.instance.game)
+                self.fields[field_name].widget.attrs['style'] = "width:300;"
+
+        return LARPStringVersion
 
 
 

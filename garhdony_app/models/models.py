@@ -103,7 +103,7 @@ class GameInstance(models.Model):
 
     # Timeline
     # Really shouldn't be null but migrations are hard.
-    timeline = models.OneToOneField(Timeline, null=True, on_delete=models.RESTRICT)
+    timeline = models.OneToOneField(Timeline, null=True, on_delete=models.RESTRICT, related_name="game")
 
     def __init__(self, *args, **kwargs):
         super(GameInstance, self).__init__(*args, **kwargs)

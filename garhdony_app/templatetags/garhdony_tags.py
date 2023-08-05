@@ -40,6 +40,10 @@ def render_larpstring(ls, writer):
 register.filter("render_larpstring", render_larpstring)
 
 
+@register.filter
+def concat(arg1, arg2):
+    return str(arg1) + str(arg2)
+
 def edit_locks(user):
     # Lists all of a user's edit_locks.
     if not user.has_perm("garhdony_app.writer"):
@@ -263,7 +267,7 @@ class WritableFieldNode(template.Node):
             default_form_tag =  '<form action="" method="post" enctype="multipart/form-data">'
             csrf = template.defaulttags.CsrfTokenNode().render(context)
             default_start = default_form_tag + csrf
-            default_end = '<table><tr><td><input type="hidden" name="Save" value="%s"><input type="submit" value="Save"></td><td><a href="?"><button type="button">Cancel</button></a></td></tr></table></form> %s'%(self.name(context), template.Variable("edit_form.media").resolve(context))
+            default_end = '<table class="editable-field-save"><tr><td><input type="hidden" name="Save" value="%s"><input type="submit" value="Save"></td><td><a href="?"><button type="button">Cancel</button></a></td></tr></table></form> %s'%(self.name(context), template.Variable("edit_form.media").resolve(context))
 
             # Then either use the default (edit_form.as_table) or the given nodelist.
             if self.edit_nodelist is None:

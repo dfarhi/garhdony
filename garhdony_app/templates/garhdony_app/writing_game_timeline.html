@@ -48,6 +48,13 @@ Mouse over a sheet to see their description of the event.
           {% endwith %}
         </td>
         <td class="sheets">
+          {% if event.descriptions.count == 0 %}
+            {# ajax button to delete the event #}
+            <form action="{% url 'timeline_delete_event' game.name event.id %}" method="post" class="delete-event">
+              {% csrf_token %}
+              <button type="submit">Delete</button>
+            </form>
+          {% endif %}
           {% for desc in event.descriptions.all %}
               <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}" title={{desc.description}} class="individual-sheet">
                   {{desc.viewer.sheet.filename}}

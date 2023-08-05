@@ -139,13 +139,26 @@
           </td>
           <td>
             <div>
-              {% if not entry_form.editable_event %} {{entry_form.instance.event}} [Shared event] {% endif %}
+              {% if not entry_form.editable_event %} 
+                <div>{{entry_form.instance.event}}</div>
+                <div style="font-size: 0.6em;">
+                  <a href={% url "game_writer_timeline" game.name %}>[Edit shared event via master timeline]</a>
+                </div>
+              {% endif %}
               {{entry_form.event }} {{ entry_form.event.errors }}
             </div>
             <div>{{entry_form.internal_name }} {{ entry_form.internal_name.errors }}</div>
           </td>
           <td class="event-description">
             <div>{{ entry_form.description }} {{ entry_form.description.errors }}</div>
+          </td>
+          <td class="event-description"> 
+            {% if entry_form.DELETE %}
+            <div>
+              <div> REMOVE </div>
+              <div> {{ entry_form.DELETE }} {{ entry_form.DELETE.errors }} </div>
+            </div> 
+            {% endif %}
           </td>
         </tr>
         {% if entry_form.non_field_errors %}

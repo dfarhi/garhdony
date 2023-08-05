@@ -79,6 +79,8 @@ urlpatterns = (
         name='game_writer_sheets_grid'),
     url(r'^writing/([^/]+)/timeline/$', garhdony_app.views_game_design.writing_game_timeline,
         name='game_writer_timeline'),
+    url(r'^writing/([^/]+)/timeline/event/delete/([^/]+)$', garhdony_app.views_game_design.timeline_delete_event,
+        name='timeline_delete_event'),
     url(r'^writing/([^/]+)/sheetsgrid/modify/$', garhdony_app.views_game_design.sheets_grid_modify,
         name='sheets_grid_modify'),
     url(r'^writing/([^/]+)/characters/table/$', garhdony_app.views_game_design.writing_characters_table,

@@ -1,7 +1,7 @@
 from django.urls import reverse
 from django.http import HttpResponseRedirect, Http404, HttpResponse, JsonResponse
 from garhdony_app.forms_timelines import make_master_timeline_event_form
-from garhdony_app.models.timelines import TimelineViewer
+from garhdony_app.models.timelines import TimelineEvent, TimelineViewer
 from garhdony_app.views_editable_pages import render_editable_page
 from garhdony_app.models import GameInstance, SheetRevision, NonPlayerCharacter, Contact, Sheet, PlayerCharacter
 from garhdony_app.forms_users import writer_home_form_getter
@@ -190,6 +190,15 @@ def writing_game_timeline(request, game_name):
     return auth.authenticate_resolve_and_callback(request, render_writing_game_timeline, game_name, requires_writer = True)
 
 
+def timeline_delete_event(request, game_name, event_id):
+    """
+    Delete an event from the timeline
+    """
+    def render_delete_event(game, writer):
+        event = TimelineEvent.objects.get(pk=event_id)
+        event.delete()
+        return HttpResponseRedirect(reverse('game_writer_timeline', args=[game.name]))
+    return auth.authenticate_resolve_and_callback(request, render_delete_event, game_name, requires_writer = True)
 #######################################################
 ####### Creating/Deleting Sheets and Characters #######
 #######################################################

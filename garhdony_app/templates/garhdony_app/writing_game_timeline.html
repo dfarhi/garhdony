@@ -54,16 +54,63 @@ Mouse over a sheet to see their description of the event.
               {% csrf_token %}
               <button type="submit">Delete</button>
             </form>
+          {% else %}
+            {% with field='event-'|concat:event.id|concat:'-descriptions' %}
+            {% writable_field field %}
+            {% edit_button %}
+            {% display %}
+              <input type="checkbox" class="read-more-state" id="read-more-state-event-{{event.id}}" />
+              <div class="read-more-wrap">
+                <div class="read-more-compact">
+                  {% for desc in event.descriptions.all %}
+                  <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}" title={{desc.description}} class="individual-sheet">
+                      {{desc.viewer.sheet.filename}}
+                  </a>
+                  {# Spacing them out #}
+                  {% if not forloop.last %}
+                      <span class="sheet-separator">, </span>
+                  {% endif %}
+                  {% endfor %}
+                </div>
+                <table class="read-more-target"><tbody>
+                  {% for desc in event.descriptions.all %}
+                  <tr>
+                    <td>
+                      <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}"class="individual-sheet">
+                          {{desc.viewer.sheet.filename}}
+                      </a>
+                    </td>
+                    <td>
+                      {{desc.description}}
+                    </td>
+                  <tr>
+                  {% endfor %}
+                </tbody></table>
+              </div>
+              <label for="read-more-state-event-{{event.id}}" class="read-more-trigger"></label>
+            {% edit %}
+            {{edit_form.management_form}}
+            <table><tbody>
+              {% for desc_form in edit_form.forms %}
+              <tr>
+                <td>
+                  {{desc_form.id}}
+                  {{desc_form.viewer}}
+                  {{desc_form.viewer.errors}}
+                  {{desc_form.non_field_errors}}
+                </td>
+                <td>
+                  {{desc_form.description}} {{desc_form.description.errors}}
+                </td>
+                <td>
+                  {{desc_form.DELETE.label}} {{desc_form.DELETE}} {{desc_form.DELETE.errors}}
+                </td>
+              <tr>
+              {% endfor %}
+            </tbody></table>
+            {% end_writable_field %}
+            {% endwith %}
           {% endif %}
-          {% for desc in event.descriptions.all %}
-              <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}" title={{desc.description}} class="individual-sheet">
-                  {{desc.viewer.sheet.filename}}
-              </a>
-              {# Spacing them out #}
-              {% if not forloop.last %}
-                  <span class="sheet-separator">, </span>
-              {% endif %}
-          {% endfor %}
       </td>
     </tr>  
   {% endfor %}

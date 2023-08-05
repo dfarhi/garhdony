@@ -113,10 +113,6 @@ def login_sidebar(next):
     f = DogmasAuthenticationForm()
     return {'form': f, 'next':next}
 
-@register.inclusion_tag('writer_editable_field.html')
-def writer_editable_field(field_name, display, writer, editing, form):
-    return {'field_name':field_name, 'display':display, 'writer':writer, 'editing':editing,'form':form}
-
 @register.inclusion_tag('navbar.html', takes_context = True)
 def navbar(context, here, *entries_and_urls):
     mapping = [(entries_and_urls[2*i], entries_and_urls[2*i+1]) for i in range(int(len(entries_and_urls)/2))]

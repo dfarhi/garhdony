@@ -23,6 +23,8 @@ class TimelineViewer(models.Model):
     timeline = models.ForeignKey(Timeline, related_name="viewers", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.name
 
 class TimelineEvent(models.Model):
     """

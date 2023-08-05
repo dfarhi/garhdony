@@ -15,8 +15,9 @@ table.timeline {
     border: 1px solid;
 }
 
-table.timeline  > tbody > tr > td {
+table.timeline > tbody > tr > td {
     border: 1px solid;
+    position: relative;
 }
 
 .timeline td.date {
@@ -30,4 +31,10 @@ form .timeline td.date > div {
 
 .timeline td.event-description {
     width: 100%;
+}
+
+.timeline td .edit_button {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
 }

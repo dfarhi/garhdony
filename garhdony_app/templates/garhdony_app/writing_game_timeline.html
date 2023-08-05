@@ -18,9 +18,9 @@ Mouse over a sheet to see their description of the event.
         <td class="date"> 
           {% with field='event-'|concat:event.id|concat:'-date' %}
           {% writable_field field %}
-          {% edit_button %}
+          {% edit_button "✎" %}
           {% display %}
-          {{event.date}}
+          <div>{{event.date}}</div>
           {% edit %}
           <div>
             {{ edit_form.day }} {{ edit_form.day.errors }}
@@ -37,7 +37,7 @@ Mouse over a sheet to see their description of the event.
         <td class="name">
           {% with field='event-'|concat:event.id|concat:'-internal_name' %}
           {% writable_field field %}
-          {% edit_button %}
+          {% edit_button "✎" %}
           {% display %}
           {{event.internal_name}}
           {% edit %}
@@ -57,7 +57,7 @@ Mouse over a sheet to see their description of the event.
           {% else %}
             {% with field='event-'|concat:event.id|concat:'-descriptions' %}
             {% writable_field field %}
-            {% edit_button %}
+            {% edit_button "✎" %}
             {% display %}
               <input type="checkbox" class="read-more-state" id="read-more-state-event-{{event.id}}" />
               <div class="read-more-wrap">

@@ -13,6 +13,7 @@
 table.timeline {
     border-collapse: collapse;
     border: 1px solid;
+    width: 100%;
 }
 
 table.timeline > tbody > tr > td {

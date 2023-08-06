@@ -174,7 +174,29 @@ $(document).ready(function() {
         $('input').each(function() {
             $(this).prop('disabled', false);
         });
-    }
-    );
+    });
+
+    // Separately, handle ajax requests to delete events from master timeline
+    $('.delete-event-form').submit(function(e) {
+        // preventing from page reload and default actions
+        e.preventDefault();
+        // serialize the data for sending the form data.
+        var serializedData = $(this).serialize();
+        // make POST ajax call
+        $.ajax({
+            type: 'POST',
+            url: this.action,
+            data: serializedData,
+            success: function (response) {
+                // remove this row from the table
+                var row = $(e.target).closest('tr');
+                row.remove();
+            },
+            error: function (response) {
+                // alert the error if any error occured
+                alert(response["responseJSON"]["error"]);
+            }
+        })
+    })
 });
 

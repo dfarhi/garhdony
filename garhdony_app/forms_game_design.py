@@ -59,6 +59,7 @@ class GameCreationForm(forms.ModelForm):
         super(GameCreationForm, self).__init__(*args, **kwargs)
         self.fields['writers'].queryset = Group.objects.get(name="Writers").user_set.all()
         self.fields['writers'].initial = [user] # Default to the user being a writer.
+        self.fields['template'].required = False
 
     def save(self, *args, **kwargs):
         super(GameCreationForm, self).save(*args, **kwargs)

@@ -104,7 +104,7 @@
     {% display %}
       <table class="timeline">
         {% for entry in sheet.timeline.descriptions.all %}
-          <tr>
+          <tr id="row-event-{{entry.event.id}}">
             <td class="date">{{entry.event.date}}</td>
             <td class="event-description">{{entry.description}}</td>
           </tr>
@@ -121,7 +121,7 @@
       {{ edit_form.management_form }}
       <table class="timeline">
         {% for entry_form in edit_form %}
-        <tr>
+        <tr id="row-event-{{entry_form.instance.event.id}}">
           {{ entry_form.id }}
           <td class="date">
             <div>
@@ -142,7 +142,7 @@
               {% if not entry_form.editable_event %} 
                 <div>{{entry_form.instance.event}}</div>
                 <div style="font-size: 0.6em;">
-                  <a href={% url "game_writer_timeline" game.name %}>[Edit shared event via master timeline]</a>
+                  <a href={% url "game_writer_timeline" game.name %}#row-event-{{entry_form.instance.event.id}}>[Edit shared event via master timeline]</a>
                 </div>
               {% endif %}
               {{entry_form.event }} {{ entry_form.event.errors }}

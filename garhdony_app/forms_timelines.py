@@ -41,9 +41,9 @@ class TimelineEventDescriptionForm(forms.ModelForm):
 
         else:
             self.fields['event'].queryset = self.viewer.timeline.events.all().order_by('year', 'month', 'day')
-            self.fields['event'].empty_label = "[Internal Name]"
+            self.fields['event'].empty_label = "[New Event]"
         self.fields['description'].set_game(self.viewer.timeline.game)
-        self.fields['internal_name'].widget.attrs['placeholder'] = '[New Event]'
+        self.fields['internal_name'].widget.attrs['placeholder'] = '[Internal Name]'
         # Add classes so the js can find them
         self.fields['event'].widget.attrs['class'] = 'event-select'
         self.fields['internal_name'].widget.attrs['class'] = 'event-name'

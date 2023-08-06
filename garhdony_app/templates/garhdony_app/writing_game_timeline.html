@@ -14,7 +14,7 @@ Mouse over a sheet to see their description of the event.
 <table class='timeline' id="timeline">
 <tbody>
   {% for event in timeline.events.all %}
-    <tr data-event={{event.id}}>
+    <tr data-event={{event.id}} id="row-event-{{event.id}}">
         <td class="date"> 
           {% with field='event-'|concat:event.id|concat:'-date' %}
           {% writable_field field %}
@@ -49,8 +49,8 @@ Mouse over a sheet to see their description of the event.
         </td>
         <td class="sheets">
           {% if event.descriptions.count == 0 %}
-            {# ajax button to delete the event #}
-            <form action="{% url 'timeline_delete_event' game.name event.id %}" method="post" class="delete-event">
+            {# todo - make this ajax, make it keep your scrolling place #}
+            <form action="{% url 'timeline_delete_event' game.name event.id %}" method="post" class="delete-event-form">
               {% csrf_token %}
               <button type="submit">Delete</button>
             </form>
@@ -63,7 +63,7 @@ Mouse over a sheet to see their description of the event.
               <div class="read-more-wrap">
                 <div class="read-more-compact">
                   {% for desc in event.descriptions.all %}
-                  <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}" title={{desc.description}} class="individual-sheet">
+                  <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}#row-event-{{event.id}}" title="{{desc.description}}" class="individual-sheet">
                       {{desc.viewer.sheet.filename}}
                   </a>
                   {# Spacing them out #}

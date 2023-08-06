@@ -1,3 +1,6 @@
+def is_ajax(request):
+    return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+
 def regex_join(lst):
     """
     Joins a bunch fo regexes with or's ('|'), ignoring any that are the empty string.

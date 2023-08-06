@@ -242,10 +242,11 @@ class WritableFieldNode(template.Node):
     def edit_button(self, context):
         # The html of the edit button itself.
         # The hidden input tells the render_editable_page view what field was edited
-        return '<form action="" method="get" style="display:inline">' \
-                    '<input type="hidden" name="Edit" value="%s">' \
-                    '<input class="edit_button" type="submit" value=%s>' \
-                '</form>'%(self.name(context), self.edit_button_name)
+        field_name = self.name(context)
+        return f'<form action="#edit-{field_name}" id="edit-{field_name}" method="get" style="display:inline">' \
+                    f'<input type="hidden" name="Edit" value="{field_name}">' \
+                    f'<input class="edit_button" type="submit" value={self.edit_button_name}>' \
+                f'</form>'
     def writer(self, context):
         # This looks in the templates context and decides if the user is a writer
             # (and thus we should display edit buttons).
@@ -260,10 +261,11 @@ class WritableFieldNode(template.Node):
     def render_edit_nodelist(self, context):
         # In edit mode, first put the universal <form> tag, the csrf thing, and the save/cancel buttons.
         if 'edit_form' in context:
-            default_form_tag =  '<form action="" method="post" enctype="multipart/form-data">'
+            field_name = self.name(context)
+            default_form_tag =  f'<form action="#edit-{field_name}" method="post" id="edit-{field_name}" enctype="multipart/form-data">'
             csrf = template.defaulttags.CsrfTokenNode().render(context)
             default_start = default_form_tag + csrf
-            default_end = '<table class="editable-field-save"><tr><td><input type="hidden" name="Save" value="%s"><input type="submit" value="Save"></td><td><a href="?"><button type="button">Cancel</button></a></td></tr></table></form> %s'%(self.name(context), template.Variable("edit_form.media").resolve(context))
+            default_end = f'<table class="editable-field-save"><tr><td><input type="hidden" name="Save" value="{field_name}"><input type="submit" value="Save"></td><td><a href="?#edit-{field_name}"><button type="button">Cancel</button></a></td></tr></table></form> {template.Variable("edit_form.media").resolve(context)}'
 
             # Then either use the default (edit_form.as_table) or the given nodelist.
             if self.edit_nodelist is None:

@@ -198,6 +198,7 @@ def timeline_delete_event(request, game_name, event_id):
         event = TimelineEvent.objects.get(pk=event_id)
         event.delete()
         return HttpResponseRedirect(reverse('game_writer_timeline', args=[game.name]))
+    assert request.method == 'POST' and utils.is_ajax(request), "This view is only for AJAX POSTs"
     return auth.authenticate_resolve_and_callback(request, render_delete_event, game_name, requires_writer = True)
 #######################################################
 ####### Creating/Deleting Sheets and Characters #######

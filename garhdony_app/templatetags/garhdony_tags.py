@@ -243,7 +243,7 @@ class WritableFieldNode(template.Node):
         # The html of the edit button itself.
         # The hidden input tells the render_editable_page view what field was edited
         field_name = self.name(context)
-        return f'<form action="#edit-{field_name}" id="edit-{field_name}" method="get" style="display:inline">' \
+        return f'<form action="#{field_name}" id="edit-{field_name}" method="get" style="display:inline">' \
                     f'<input type="hidden" name="Edit" value="{field_name}">' \
                     f'<input class="edit_button" type="submit" value={self.edit_button_name}>' \
                 f'</form>'
@@ -262,10 +262,10 @@ class WritableFieldNode(template.Node):
         # In edit mode, first put the universal <form> tag, the csrf thing, and the save/cancel buttons.
         if 'edit_form' in context:
             field_name = self.name(context)
-            default_form_tag =  f'<form action="#edit-{field_name}" method="post" id="edit-{field_name}" enctype="multipart/form-data">'
+            default_form_tag =  f'<form action="#{field_name}" method="post" enctype="multipart/form-data">'
             csrf = template.defaulttags.CsrfTokenNode().render(context)
             default_start = default_form_tag + csrf
-            default_end = f'<table class="editable-field-save"><tr><td><input type="hidden" name="Save" value="{field_name}"><input type="submit" value="Save"></td><td><a href="?#edit-{field_name}"><button type="button">Cancel</button></a></td></tr></table></form> {template.Variable("edit_form.media").resolve(context)}'
+            default_end = f'<table class="editable-field-save"><tr><td><input type="hidden" name="Save" value="{field_name}"><input type="submit" value="Save"></td><td><a href="?#{field_name}"><button type="button">Cancel</button></a></td></tr></table></form> {template.Variable("edit_form.media").resolve(context)}'
 
             # Then either use the default (edit_form.as_table) or the given nodelist.
             if self.edit_nodelist is None:
@@ -297,5 +297,5 @@ class WritableFieldNode(template.Node):
                 main = self.display_nodelist.render(context)
 
         #string them all together and return it.
-        return preamble_pre_edit+edit_button+preamble_post_edit+main
+        return f'''<span id="{self.name(context)}"> {preamble_pre_edit}{edit_button}{preamble_post_edit}{main}</span>'''
 

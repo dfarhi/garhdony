@@ -1,4 +1,5 @@
 from django import forms
+from garhdony_app.LARPStrings import BaseInlineFormsetWithComplete, WithComplete
 
 from garhdony_app.models.timelines import MONTHS, Timeline, TimelineEvent, TimelineEventDescription, TimelineViewer
 from garhdony_app.views_editable_pages import EditingFieldFormClassGeneric
@@ -19,7 +20,7 @@ class MasterTimelineEventFormDate(forms.ModelForm):
         cleaned_data['month'] = cleaned_data['month'] if cleaned_data['month'] else None
         return cleaned_data
 
-class MasterTimelineEventDescriptionForm(forms.ModelForm):
+class MasterTimelineEventDescriptionForm(forms.ModelForm, WithComplete):
     class Meta:
         model = TimelineEventDescription
         fields = ['description', 'viewer']
@@ -38,6 +39,7 @@ MasterTimelineEventDescriptionFormSet = forms.inlineformset_factory(
     TimelineEvent,
     TimelineEventDescription,
     form=MasterTimelineEventDescriptionForm,
+    formset=BaseInlineFormsetWithComplete,
     fields=('description', 'viewer'),
     extra=5,
     can_delete=True,
@@ -58,7 +60,7 @@ def make_master_timeline_event_form(request, field_name, data, files, timeline: 
         raise Exception(f"Invalid field name {field_name}")
     
 
-class TimelineEventDescriptionForm(MasterTimelineEventFormDate):
+class TimelineEventDescriptionForm(MasterTimelineEventFormDate, WithComplete):
     """
     Inherits from MasterTimelineEventFormDate to share the formatting of date fields
     But it's otherwise different.
@@ -168,6 +170,7 @@ TimelineEventDescriptionFormSet = forms.inlineformset_factory(
     TimelineViewer,
     TimelineEventDescription,
     form=TimelineEventDescriptionForm,
+    formset=BaseInlineFormsetWithComplete,
     fields=('description', 'year', 'month', 'day', 'event'),
     extra=5,
     can_delete=True,

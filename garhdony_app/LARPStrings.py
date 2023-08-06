@@ -354,3 +354,12 @@ class WithComplete():
                 if not field.complete:
                     return False
         return True
+
+class BaseInlineFormsetWithComplete(forms.BaseInlineFormSet):
+    def complete(self):
+        # Only check the forms that are not marked for deletion and are not empty.
+        for form in self.forms:
+            if not form.cleaned_data.get('DELETE', False) and form.has_changed():
+                if not form.complete():
+                    return False
+        return True

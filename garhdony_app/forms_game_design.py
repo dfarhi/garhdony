@@ -11,6 +11,7 @@ form_getter(request, field_name, data, files, *extra_args_for_this_page)
 This could perhaps be abstracted a bit, since many of them are pretty similar in structure?
 """
 
+from typing import Any, Dict
 from django import forms
 import garhdony_app.assign_writer_game
 from django.forms.widgets import TextInput
@@ -757,6 +758,20 @@ class NewTitleForm(forms.ModelForm):
         super(NewTitleForm, self).__init__(*args, **kwargs)
         self.fields['category'].initial = "title" # Always make titles.
 
+    def clean(self) -> Dict[str, Any]:
+        # check for uniqueness of the male/female pair among existing genderized keywords
+        # todo would be nice to do this with a unique constraint on the model, but that's hard because of the
+        # 'type' field (we dont want uniqueness when type=name)
+        cleaned_data = super(NewTitleForm, self).clean()
+        male = cleaned_data['male']
+        female = cleaned_data['female']
+        if GenderizedKeyword.objects.filter(male=male, female=female).exists():
+            raise forms.ValidationError(
+                f"Genderized Keyword {male}/{female} already exists."
+            )
+        return cleaned_data
+
+        
 class NewEmbeddedImageForm(forms.ModelForm):
     class Meta:
         model = EmbeddedImage

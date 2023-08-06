@@ -317,6 +317,9 @@ class SheetColor(models.Model):
     # Order it appears in players' lists.
     sort_order = models.IntegerField()
 
+    class Meta:
+        ordering = ['sort_order']
+
     def __str__(self):
         return self.name
 
@@ -327,6 +330,9 @@ class SheetType(models.Model):
     name = models.CharField(max_length=30)
     description = models.CharField(max_length=1000)
     sort_order = models.IntegerField()
+
+    class Meta:
+        ordering = ['sort_order']
 
     def __str__(self):
         return self.name
@@ -339,6 +345,9 @@ class SheetStatus(models.Model):
     description = models.CharField(max_length=1000)
     sort_order = models.IntegerField()
     game = models.ForeignKey(GameInstance, related_name='sheet_status', on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['sort_order']
 
     def __str__(self):
         return self.name
@@ -1347,6 +1356,9 @@ class Contact(models.Model):
     # The owner's contacts are listed sorted by the order_number field.
     # Writers can edit this to optimize the semantic ordering.
     order_number = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['order_number']
 
     def __str__(self):
         return str(self.owner) + "  ->  " + str(self.display_name)

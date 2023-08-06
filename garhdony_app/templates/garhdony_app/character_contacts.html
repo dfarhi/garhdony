@@ -15,7 +15,7 @@
   <center>
     <table>
       <tr class="no-page-break-inside">
-	{% for contact in character.contacts.all|dictsort:'order_number' %}
+	{% for contact in character.contacts.all %}
 	<td style="width:200;height:300;border:solid 1px;text-align:center">
 	  {% writable_field contact.pk%}
 	  {% edit_button %} 	

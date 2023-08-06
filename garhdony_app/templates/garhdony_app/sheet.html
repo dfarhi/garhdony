@@ -129,7 +129,7 @@
               {{ entry_form.day }} {{ entry_form.day.errors }}
             </div>
             <div>
-              {% if not entry_form.editable_event %} {{ entry_form.instance.event.month|default_if_none:"" }} {% endif %}
+              {% if not entry_form.editable_event %} {{ entry_form.instance.event.month_str }} {% endif %}
               {{ entry_form.month }} {{ entry_form.month.errors }}
             </div>
             <div>

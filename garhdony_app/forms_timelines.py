@@ -1,3 +1,4 @@
+from typing import Any
 from django import forms
 from garhdony_app.LARPStrings import BaseInlineFormsetWithComplete, WithComplete
 
@@ -163,7 +164,8 @@ class TimelineEventDescriptionForm(MasterTimelineEventFormDate, WithComplete):
         else:
             raise Exception("This should never happen")
 
-        return super().save(*args, **kwargs)
+        self.instance = super().save(*args, **kwargs)
+        return self.instance
 
 
 TimelineEventDescriptionFormSet = forms.inlineformset_factory(

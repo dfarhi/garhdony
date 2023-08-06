@@ -43,6 +43,14 @@ class TimelineEvent(models.Model):
     def __str__(self):
         return self.internal_name
 
+    def month_str(self):
+        """
+        Return the month of the event as a string.
+        """
+        if self.month is None:
+            return ""
+        return MONTHS[self.month - 1]
+
     def date(self):
         """
         Return the date of the event as a string.

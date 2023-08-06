@@ -85,9 +85,11 @@ def editable_page_update_args(request, writer, edit_form_getter, *args, **kwargs
                 form.save()
 
             # If needs_fix, we want to redirect you back to the same form, so you can fix up the gender words.
-            # We set the 'fixing' argument, in case templates want that.
+            # Make a fresh form so its __init__ method gets called again on the bewly saved data.
+            # This is important for newly added ntries in the timlines inlineformsets.
+            fresh_form = edit_form_getter(request, edit_field, None, None, *args, **kwargs)
             if needs_fix:
-                return {'editing':edit_field, 'edit_form':form, 'fixing':'True', 'editable_page':True}
+                return {'editing':edit_field, 'edit_form':fresh_form, 'fixing':'True', 'editable_page':True}
             else:
                 return "SAVED"
         # If form is not valid, you fall through to the edit-mode display at the end.

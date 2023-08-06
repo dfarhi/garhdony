@@ -4,10 +4,65 @@ from garhdony_app.models.timelines import MONTHS, Timeline, TimelineEvent, Timel
 from garhdony_app.views_editable_pages import EditingFieldFormClassGeneric
 
 
-class TimelineEventDescriptionForm(forms.ModelForm):
+class MasterTimelineEventFormDate(forms.ModelForm):
     year = forms.IntegerField(widget=forms.NumberInput(attrs={'style': 'width: 4em;'}))
     month = forms.ChoiceField(choices = [(None, "--")] + [(i, month) for i, month in enumerate(MONTHS, 1)],  required=False)
     day = forms.ChoiceField(choices = [(None, "--")] + [(i, i) for i in range(1, 32)], required=False)
+    class Meta:
+        model = TimelineEvent
+        fields = ['year', 'month', 'day']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # replace '' with None
+        cleaned_data['day'] = cleaned_data['day'] if cleaned_data['day'] else None
+        cleaned_data['month'] = cleaned_data['month'] if cleaned_data['month'] else None
+        return cleaned_data
+
+class MasterTimelineEventDescriptionForm(forms.ModelForm):
+    class Meta:
+        model = TimelineEventDescription
+        fields = ['description', 'viewer']
+
+    def __init__(self, *args, **kwargs):
+        self.event = kwargs.pop('event')
+        super().__init__(*args, **kwargs)
+        self.fields['viewer'].queryset = TimelineViewer.objects.filter(timeline=self.event.timeline)
+        self.fields['viewer'].empty_label = "[Add to sheet]"
+        self.fields['description'].set_game(self.event.timeline.game)
+
+        if self.instance and self.instance.pk:
+            self.fields['viewer'].widget.attrs['disabled'] = True
+
+MasterTimelineEventDescriptionFormSet = forms.inlineformset_factory(
+    TimelineEvent,
+    TimelineEventDescription,
+    form=MasterTimelineEventDescriptionForm,
+    fields=('description', 'viewer'),
+    extra=5,
+    can_delete=True,
+    can_delete_extra=False,
+)
+
+def make_master_timeline_event_form(request, field_name, data, files, timeline: Timeline):
+    # field_name is "event-{id}-{date/name}"
+    _, id, field_name = field_name.split('-')
+    timeline_event = timeline.events.get(pk=id)
+    if field_name == 'date':
+        return MasterTimelineEventFormDate(data, files, instance=timeline_event)
+    elif field_name == 'internal_name':
+        return EditingFieldFormClassGeneric(TimelineEvent, field_name='internal_name')(data, files, instance=timeline_event)
+    elif field_name == 'descriptions':
+        return MasterTimelineEventDescriptionFormSet(data, files, instance=timeline_event, form_kwargs={'event': timeline_event})
+    else:
+        raise Exception(f"Invalid field name {field_name}")
+    
+
+class TimelineEventDescriptionForm(MasterTimelineEventFormDate):
+    """
+    Inherits from MasterTimelineEventFormDate to share the formatting of date fields
+    But it's otherwise different.
+    """
     internal_name = forms.CharField(max_length=300, required=False)    
     class Meta:
         model = TimelineEventDescription
@@ -85,8 +140,8 @@ class TimelineEventDescriptionForm(forms.ModelForm):
         # Case 1: This is an existing description for an existing event
         if self.instance.pk and self.instance.event:
             self.instance.event.year = self.cleaned_data['year']
-            self.instance.event.month = self.cleaned_data['month'] if self.cleaned_data['month'] else None
-            self.instance.event.day = self.cleaned_data['day'] if self.cleaned_data['day'] else None
+            self.instance.event.month = self.cleaned_data['month']
+            self.instance.event.day = self.cleaned_data['day']
             self.instance.event.internal_name = self.cleaned_data['internal_name']
             self.instance.event.save()
 
@@ -97,8 +152,8 @@ class TimelineEventDescriptionForm(forms.ModelForm):
         # Case 3: This is a new description for a new event
         elif not self.instance.pk and self.cleaned_data['event'] is None:
             year = self.cleaned_data['year']
-            month = self.cleaned_data['month'] if self.cleaned_data['month'] else None
-            day = self.cleaned_data['day'] if self.cleaned_data['day'] else None
+            month = self.cleaned_data['month']
+            day = self.cleaned_data['day']
             internal_name = self.cleaned_data['internal_name']
             self.instance.event = TimelineEvent.objects.create(year=year, month=month, day=day, timeline=self.viewer.timeline, internal_name=internal_name)
             self.instance.event.save()
@@ -118,55 +173,3 @@ TimelineEventDescriptionFormSet = forms.inlineformset_factory(
     can_delete=True,
     can_delete_extra=False,
 )
-
-
-class MasterTimelineEventFormDate(forms.ModelForm):
-    year = forms.IntegerField(widget=forms.NumberInput(attrs={'style': 'width: 4em;'}))
-    month = forms.ChoiceField(choices = [(None, "--")] + [(i, month) for i, month in enumerate(MONTHS, 1)],  required=False)
-    day = forms.ChoiceField(choices = [(None, "--")] + [(i, i) for i in range(1, 32)], required=False)
-    class Meta:
-        model = TimelineEvent
-        fields = ['year', 'month', 'day']
-        widgets = {
-            'year': forms.NumberInput(attrs={'class': 'event-year'}),
-            'month': forms.NumberInput(attrs={'class': 'event-month'}),
-            'day': forms.NumberInput(attrs={'class': 'event-day'}),
-        }
-
-class MasterTimelineEventDescriptionForm(forms.ModelForm):
-    class Meta:
-        model = TimelineEventDescription
-        fields = ['description', 'viewer']
-
-    def __init__(self, *args, **kwargs):
-        self.event = kwargs.pop('event')
-        super().__init__(*args, **kwargs)
-        self.fields['viewer'].queryset = TimelineViewer.objects.filter(timeline=self.event.timeline)
-        self.fields['viewer'].empty_label = "[Add to sheet]"
-        self.fields['description'].set_game(self.event.timeline.game)
-
-        if self.instance and self.instance.pk:
-            self.fields['viewer'].widget.attrs['disabled'] = True
-
-MasterTimelineEventDescriptionFormSet = forms.inlineformset_factory(
-    TimelineEvent,
-    TimelineEventDescription,
-    form=MasterTimelineEventDescriptionForm,
-    fields=('description', 'viewer'),
-    extra=5,
-    can_delete=True,
-    can_delete_extra=False,
-)
-
-def make_master_timeline_event_form(request, field_name, data, files, timeline: Timeline):
-    # field_name is "event-{id}-{date/name}"
-    _, id, field_name = field_name.split('-')
-    timeline_event = timeline.events.get(pk=id)
-    if field_name == 'date':
-        return MasterTimelineEventFormDate(data, files, instance=timeline_event)
-    elif field_name == 'internal_name':
-        return EditingFieldFormClassGeneric(TimelineEvent, field_name='internal_name')(data, files, instance=timeline_event)
-    elif field_name == 'descriptions':
-        return MasterTimelineEventDescriptionFormSet(data, files, instance=timeline_event, form_kwargs={'event': timeline_event})
-    else:
-        raise Exception(f"Invalid field name {field_name}")

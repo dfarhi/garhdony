@@ -525,43 +525,46 @@ Used by master timeline, but could be used elsewhere.
 */
 .read-more-state {
     display: none;
-  }
-  
-  .read-more-target {
-    opacity: 0;
-    max-height: 0;
-    font-size: 0;
-    transition: .25s ease;
-  }
-  
-  .read-more-state:checked ~ .read-more-wrap .read-more-target {
-    opacity: 1;
-    font-size: inherit;
-    max-height: 999em;
-  }
+}
 
-  .read-more-compact {
+.read-more-target {
+    opacity: 0;
+    max-height: 0;
+    font-size: 0;
+    visibility: collapse;
+    transition: .25s ease;
+}
+
+.read-more-state:checked ~ .read-more-wrap .read-more-target {
+    opacity: 1;
+    font-size: inherit;
+    max-height: 999em;
+    visibility: visible;
+}
+
+.read-more-compact {
     opacity: 1;
     max-height: 999em;
     font-size: inherit;
     transition: .25s ease;
-  }
-  
-  .read-more-state:checked ~ .read-more-wrap .read-more-compact {
+}
+
+.read-more-state:checked ~ .read-more-wrap .read-more-compact {
     opacity: 0;
     font-size: 0;
     max-height: 0;
-  }
-  
-  .read-more-state ~ .read-more-trigger:before {
+    visibility: collapse;
+    }
+
+.read-more-state ~ .read-more-trigger:before {
     content: '+';
-  }
-  
-  .read-more-state:checked ~ .read-more-trigger:before {
+}
+
+.read-more-state:checked ~ .read-more-trigger:before {
     content: '-';
-  }
-  
-  .read-more-trigger {
+}
+
+.read-more-trigger {
     cursor: pointer;
     display: inline-block;
     padding: 0 .2em;
@@ -572,7 +575,3 @@ Used by master timeline, but could be used elsewhere.
     border-radius: .25em;
   }
   
-  /* Other style */ 
-  body {
-    padding: 2%;
-  }

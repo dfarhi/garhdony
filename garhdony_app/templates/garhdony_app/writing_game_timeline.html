@@ -57,22 +57,13 @@
             {% writable_field field %}
             {% edit_button "✎" %}
             {% display %}
-              <input type="checkbox" class="read-more-state" id="read-more-state-event-{{event.id}}" />
+              {% if event.descriptions.count > 2 %}
+                <input type="checkbox" class="read-more-state" id="read-more-state-event-{{event.id}}" />
+              {% endif %}
               <div class="read-more-wrap">
-                <div class="read-more-compact">
+              <table><tbody>
                   {% for desc in event.descriptions.all %}
-                  <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}#row-event-{{event.id}}" class="individual-sheet">
-                      {{desc.viewer.sheet.filename}}
-                  </a>
-                  {# Spacing them out #}
-                  {% if not forloop.last %}
-                      <span class="sheet-separator">, </span>
-                  {% endif %}
-                  {% endfor %}
-                </div>
-                <table class="read-more-target"><tbody>
-                  {% for desc in event.descriptions.all %}
-                  <tr>
+                  <tr {% if forloop.counter0 >= 2 %}class="read-more-target"{% endif %}>
                     <td>
                       <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}"class="individual-sheet">
                           {{desc.viewer.sheet.filename}}
@@ -81,11 +72,13 @@
                     <td>
                       {{desc.description}}
                     </td>
-                  <tr>
+                  </tr>
                   {% endfor %}
-                </tbody></table>
+              </tbody></table>
               </div>
-              <label for="read-more-state-event-{{event.id}}" class="read-more-trigger"></label>
+              {% if event.descriptions.count > 2 %}
+                <label for="read-more-state-event-{{event.id}}" class="read-more-trigger"></label>
+              {% endif %}
             {% edit %}
             {{edit_form.management_form}}
             <table><tbody>

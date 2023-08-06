@@ -19,11 +19,12 @@ table.timeline {
 table.timeline > tbody > tr > td {
     border: 1px solid;
     position: relative;
+    /* pad on the right to make room for the edit button */
+    padding: 2px 32px 2px 2px;
 }
 
 .timeline td.date {
     text-align: right;
-    width: 20%;
 }
 
 form .timeline td.date > div {
@@ -36,6 +37,7 @@ form .timeline td.date > div {
 
 .timeline td .edit_button {
     position: absolute;
-    bottom: 2px;
+    top: 2px;
     right: 2px;
+    width: 28px;
 }

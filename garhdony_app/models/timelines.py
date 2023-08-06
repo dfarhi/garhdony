@@ -20,6 +20,9 @@ class TimelineViewer(models.Model):
     One subset of the events with particular descriptions.
     Will be held by a single sheet.
     """
+    class Meta:
+        ordering = ["timeline", "name"]
+
     timeline = models.ForeignKey(Timeline, related_name="viewers", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
 
@@ -71,7 +74,7 @@ class TimelineEventDescription(models.Model):
     """
     class Meta:
         unique_together = ("event", "viewer")
-        ordering = ["event__timeline", "event__year", "event__month", "event__day"]
+        ordering = ["event__timeline", "event__year", "event__month", "event__day", "viewer__name"]
 
     event = models.ForeignKey(TimelineEvent, related_name="descriptions", on_delete=models.CASCADE)
     viewer = models.ForeignKey(TimelineViewer, related_name="descriptions", on_delete=models.CASCADE)

@@ -25,10 +25,11 @@
 
       Make sure to check out the <a href="{% url 'character_logistics'  character.game.name character.username %}">logistics</a> in the other tab.
         {% writable_field "costuming_hint" %}
-          <p>{% edit_button %}{% display %}<b>Costuming Hint:</b> 
+        	<p>
+			{% edit_button %}{% display %}<b>Costuming Hint:</b> 
             {{character.costuming_hint.inline}}
-	{% end_writable_field	%}
-      </p>
+			</p>
+		{% end_writable_field	%}
     </td>
     <td style="width:200;text-align:right">
       <a href="{% url 'character_logistics_task' character.game.name character.username 'photo'%}">

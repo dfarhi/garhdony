@@ -97,8 +97,8 @@
 
 
 <h2>Character Stats</h2>
-<table id="sideformbox">
 {% writable_field "stats" %}
+<table id="sideformbox">
 <tr><th colspan="3">{% edit_button "Add/Edit" %}</th></tr>
 {% display %}
   {% for s in game.character_stat_types.all %}
@@ -143,8 +143,8 @@
 
 
 <h2>Game Links</h2>
-<table id="sideformbox">
 {% writable_field "info_links" %}
+<table id="sideformbox">
 <tr><th colspan="3">{% edit_button "Add/Edit" %}</th></tr>
 {% display %}
   {% for il in game.info_links.all %}

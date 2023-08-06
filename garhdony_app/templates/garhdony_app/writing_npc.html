@@ -15,16 +15,15 @@
 
         {% writable_field "notes" %}
           <b>{% edit_button %}{% display %}Notes:</b><br>
-	  {{character.notes}}
+          {{character.notes}}
         {% end_writable_field   %}
     </td>
     <td style="width:200;text-align:right">
       {% writable_field "photo" %}
         {% edit_button %}
         {% display %}
-            <img src='{{character.photo_url}}' style="max-width:200;max-height:200">
-	    
-	{% end_writable_field %}
+        <img src='{{character.photo_url}}' style="max-width:200;max-height:200">
+      {% end_writable_field %}
     </td>
 </tr></table>
 

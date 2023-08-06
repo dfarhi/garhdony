@@ -20,7 +20,7 @@ from garhdony_app.tests.setup_test_db import setup_test_db
 from django.contrib.auth.models import User, Group
 
 def inline_edit_button_html(field, button_text="Edit"):
-    return f"""<form action="" method="get" style="display:inline"><input type="hidden" name="Edit" value="{field}"><input class="edit_button" type="submit" value={button_text}></form>"""
+    return f"""<form action="#{field}" id="edit-{field}" method="get" style="display:inline"><input type="hidden" name="Edit" value="{field}"><input class="edit_button" type="submit" value={button_text}></form>"""
 
 class GameDesignNotLoggedInTest(TestCase):
     def test_not_logged_in(self):

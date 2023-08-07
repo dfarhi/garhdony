@@ -23,3 +23,6 @@ scp user@garhdony.com:/home/django/forkbomb-3.0-master/data/garhdony.db data/gar
 * python manage.py test garhdony_app.tests --parallel
 # Run the server: 
 * python manage.py runserver
+for remote access:
+* sudo ufw allow 8000
+* python manage.py runserver 0.0.0.0:8000

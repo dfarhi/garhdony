@@ -85,6 +85,7 @@
 
 .jquery-notebook.bubble ul li {
     display: inline;
+    vertical-align: top;
 }
 
 .jquery-notebook.bubble button {

@@ -16,7 +16,8 @@
 <form method='post'>
   {% csrf_token %}
   {{ clone_form.as_p }}
-  <input type="submit" name="Clone" value="Clone">
+  {# run the LOADING_WHEEL_ON js function on submission of this form because it takes a while. #}
+  <input type="submit" value="Clone" name="Clone" onclick="LOADING_WHEEL_ON('Cloning');">
 </form>
 </td></tr></table>
 {% endblock %}

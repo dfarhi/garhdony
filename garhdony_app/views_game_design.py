@@ -302,9 +302,7 @@ def add_timeline_viewer(request, run_name, filename):
     def render_add_timeline_viewer(game, writer, sheet):
         if request.method == 'POST':
             # Form has no fields, we jsut do it.
-            assert sheet.timeline is None, f"Sheet {sheet} already has a timeline, but somehow we are adding a new one."
-            sheet.timeline = TimelineViewer.objects.create(timeline=game.timeline, name=sheet.filename)
-            sheet.save()
+            sheet.add_timeline()
         else:
             raise Http404  # Shouldn't ever get here
         # Redirect to the sheet, but scrolled down to the #sheet-timeline-header div.

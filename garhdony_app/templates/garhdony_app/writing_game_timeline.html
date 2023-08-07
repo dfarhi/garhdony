@@ -65,7 +65,7 @@
                   {% for desc in event.descriptions.all %}
                   <tr {% if forloop.counter0 >= 2 %}class="read-more-target"{% endif %}>
                     <td>
-                      <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}"class="individual-sheet">
+                      <a href="{% url 'writer_sheet' game.name desc.viewer.sheet.filename%}#row-event-{{desc.event.id}}" class="individual-sheet">
                           {{desc.viewer.sheet.filename}}
                       </a>
                     </td>

@@ -11,7 +11,7 @@ import re
 from datetime import datetime
 from diff_match_patch import diff_match_patch
 from django.utils import timezone
-from garhdony_app.models.timelines import Timeline, TimelineViewer
+from garhdony_app.models.timelines import Timeline, TimelineEvent, TimelineEventDescription, TimelineViewer
 from garhdony_app.storage import DogmasFileSystemStorage
 import garhdony_app.utils as utils
 from garhdony_app.LARPStrings import LARPTextField, larpstring_to_python
@@ -209,7 +209,6 @@ class GameInstance(models.Model):
         Makes a clone of the entire game, including all characters and sheets.
         The idea is that after Dogmas 14, if we want to run Dogmas 15, we just clone it.
         """
-        # TODO: Might miss contacts? character stats? timeline events?
         new_game = GameInstance(name=new_name, usernamesuffix=new_suffix)
         new_game.save()
 
@@ -218,25 +217,59 @@ class GameInstance(models.Model):
             new_cst.save()
 
 
+        # Timeline events
+        event_mapping = {}
+        for event in self.timeline.events.all():
+            new_event = TimelineEvent(
+                timeline=new_game.timeline,
+                internal_name=event.internal_name,
+                year=event.year,
+                month=event.month,
+                day=event.day,
+            )
+            new_event.save()
+            event_mapping[event] = new_event
+
         # Copy all sheets, keeping a mapping dictionary for later use in assigning characters
         sheet_mapping = {}
         for sheet in self.sheets.all():
             new_sheet = sheet.clone(new_game)
             sheet_mapping[sheet] = new_sheet
+            if sheet.timeline:
+                new_sheet.add_timeline()
+                for event_desc in sheet.timeline.descriptions.all():
+                    TimelineEventDescription(viewer=new_sheet.timeline, event=event_mapping[event_desc.event],
+                                             description=event_desc.description).save()
 
         # Clone all the characters. Character cloning doesn't copy sheets,
         # so we don't need to remove old sheets.
+        # Mapping of the superclass Character objects, not the subclass PlayerCharacter objects.
+        character_mapping = {}
         for character in self.pcs():
             new_character = character.clone(new_game)
             for s in character.sheets.all():
                 new_character.sheets.add(sheet_mapping[s])
             new_character.save()
             new_character.set_stats_from_dict(character.stats_dict())
+            character_mapping[character.character_ptr_id] = new_character.character_ptr_id
         for character in self.npcs():
             character.clone(new_game)
+            character_mapping[character.character_ptr_id] = new_character.character_ptr_id
 
         for w in self.writers():
             assign_writer_game(w, new_game)
+
+        # Contacts
+        for pc in self.pcs():
+            for contact in pc.contacts.all():
+                new_contact = Contact(
+                    owner=Character.objects.get(id=character_mapping[pc.id]), 
+                    target=Character.objects.get(id=character_mapping[contact.target.id]), 
+                    description = contact.description,
+                    display_name = contact.display_name,
+                    order_number = contact.order_number,
+                )
+                new_contact.save()
 
         return new_game
 
@@ -347,7 +380,7 @@ class SheetStatus(models.Model):
     game = models.ForeignKey(GameInstance, related_name='sheet_status', on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ['sort_order']
+        ordering = ['game', 'sort_order']
 
     def __str__(self):
         return self.name
@@ -374,7 +407,7 @@ class Sheet(models.Model, Versioned):
 
     class Meta:
         # This tells django what to do whenever someone wants to sort sheets.
-        ordering = ['name']
+        ordering = ['game', 'name']
 
     @property
     def full_path(self):
@@ -554,6 +587,11 @@ class Sheet(models.Model, Versioned):
             os.remove(self.full_path)
         super(Sheet, self).delete(*args, **kwargs)
 
+    def add_timeline(self):
+        assert self.timeline is None, f"Sheet {self} already has a timeline, but somehow we are adding a new one."
+        self.timeline = TimelineViewer.objects.create(timeline=self.game.timeline, name=self.filename)
+        self.save()
+
     new_sheet_content = larpstring_to_python('You\'ve made a sheet! Here it is. It has some words in it. ' \
                         'Probably you can think of better words to put in it. ' \
                         'I bet you\'ve already thought of lots of ways to improve these words. ' \
@@ -726,7 +764,7 @@ class GenderizedKeyword(models.Model):
     category = models.CharField(max_length=10, choices=category_choices, blank=True)
 
     class Meta:
-        ordering = ['male']
+        ordering = ['category', 'male']
 
     @property
     def is_name(self):
@@ -842,7 +880,7 @@ class Character(models.Model):
 
     class Meta:
         # Sort by char_type (with PC before NPC) then by last name.
-        ordering = ['-char_type', 'last_name']
+        ordering = ['game', '-char_type', 'last_name']
 
     # title and first_name both point to GenderizedKeywords; last_name is just a text field. Don't genderize your last names please?
     # Because first_name is a Name which has a pointer to a character, these have a circular reference
@@ -1192,7 +1230,7 @@ class CharacterStatType(models.Model):
     """A Game has a few of these, like 'Age' and 'Patron' and 'MP'"""
 
     class Meta:
-        ordering = ['name']
+        ordering = ['game', 'name']
 
     game = models.ForeignKey(GameInstance, related_name="character_stat_types", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
@@ -1358,7 +1396,7 @@ class Contact(models.Model):
     order_number = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['order_number']
+        ordering = ['owner', 'order_number']
 
     def __str__(self):
         return str(self.owner) + "  ->  " + str(self.display_name)

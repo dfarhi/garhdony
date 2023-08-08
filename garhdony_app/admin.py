@@ -260,7 +260,7 @@ class AllSheetsAdmin(admin.ModelAdmin):
 
 @admin.register(EmbeddedImage, site=admin_site)
 class EmbeddedImageAdmin(admin.ModelAdmin):
-    list_display = ('filename', 'sheets', 'game',)
+    list_display = ('file', 'sheets', 'game',)
     list_filter = ('game__name',)
     readonly_fields = ('game',)
 

@@ -791,12 +791,16 @@ class NewEmbeddedImageForm(forms.ModelForm):
             split_name = ['image', split_name[-1]]
 
         self.instance.filename = original_name
-        # Adds a number to the filename to make it unique.
+        # Adds a number to the filename to make it unique (by checking if self.instance.aboslute_path exists as a file).
         n = 0
-        while os.path.exists(self.instance.absolute_path):
+        while os.path.exists(self.instance.absolute_path) or n == 0:
             n+=1
             self.instance.filename = split_name[0] +'__'+str(n)+'.'+split_name[-1]
         super(NewEmbeddedImageForm, self).save(commit)
+        # Make sure the filename field is actually the path that was used.
+        if commit:
+            self.instance.filename = os.path.basename(self.instance.file.name)
+            self.instance.save()
 
 
 ########################################################

@@ -148,7 +148,9 @@
               {% if not entry_form.editable_event %} 
                 <div>{{entry_form.instance.event}}</div>
                 <div style="font-size: 0.6em;">
-                  <a href={% url "game_writer_timeline" game.name %}#row-event-{{entry_form.instance.event.id}}>[Edit shared event via master timeline]</a>
+                  <a target="_blank" href={% url "game_writer_timeline" game.name %}?Edit=event-{{entry_form.instance.event.id}}-date#row-event-{{entry_form.instance.event.id}}>
+                    [Edit shared event via master timeline]
+                  </a>
                 </div>
               {% endif %}
               {{entry_form.event }} {{ entry_form.event.errors }}

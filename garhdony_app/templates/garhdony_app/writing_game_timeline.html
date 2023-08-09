@@ -13,7 +13,7 @@
 <table class='timeline master-timeline' id="timeline">
 <tbody>
   {% for event in timeline.events.all %}
-    <tr data-event={{event.id}} id="row-event-{{event.id}}">
+    <tr data-event={{event.id}} id="row-event-{{event.id}}" {% if 'event-'|concat:event.id|concat:'-' in editing %} class="highlighted-row"{% endif %}>
         <td class="date"> 
           {% with field='event-'|concat:event.id|concat:'-date' %}
           {% writable_field field %}

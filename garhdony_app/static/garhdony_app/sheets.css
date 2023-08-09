@@ -26,6 +26,11 @@ table.master-timeline > tbody > tr > td {
     padding: 2px 32px 2px 2px;
 }
 
+table.master-timeline > tbody > tr.highlighted-row {
+    background-color: #DDD;
+}
+
+
 .timeline td.date {
     text-align: right;
 }

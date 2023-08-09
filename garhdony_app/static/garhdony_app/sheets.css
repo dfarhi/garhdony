@@ -19,6 +19,9 @@ table.timeline {
 table.timeline > tbody > tr > td {
     border: 1px solid;
     position: relative;
+}
+
+table.master-timeline > tbody > tr > td {
     /* pad on the right to make room for the edit button */
     padding: 2px 32px 2px 2px;
 }

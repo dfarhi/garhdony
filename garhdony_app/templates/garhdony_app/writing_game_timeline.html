@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block content %}
-<table class='timeline' id="timeline">
+<table class='timeline master-timeline' id="timeline">
 <tbody>
   {% for event in timeline.events.all %}
     <tr data-event={{event.id}} id="row-event-{{event.id}}">

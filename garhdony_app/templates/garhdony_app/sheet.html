@@ -18,8 +18,10 @@
 
 {% block floats %}
 {% if not editing %}
-<div class="floater green">
-  <img src="{% static 'garhdony_app/download.png'%}" height="50">
+<div class="floater">
+  <div class="green hover-button">
+    <img src="{% static 'garhdony_app/download.png'%}" height="50">
+  </div>
   <ul>
     {% if sheet.content_type == 'html' %}
     <li>
@@ -47,8 +49,10 @@
 {% if sheet.current_lock.author == request.user %}
 <a href="release">
 {% endif %}
-<div class="floater red {% if sheet.current_lock.author == request.user %} clickable {% endif %}"> {#style="background-image:url({% static 'garhdony_app/lock.png'%});background-repeat:no-repeat;vertical-align:middle">#}
-  <img src="{% static 'garhdony_app/lock.png'%}" height="30">
+<div class="floater {% if sheet.current_lock.author == request.user %} clickable {% endif %}"> {#style="background-image:url({% static 'garhdony_app/lock.png'%});background-repeat:no-repeat;vertical-align:middle">#}
+  <div class="red hover-button">
+    <img src="{% static 'garhdony_app/lock.png'%}" height="30">
+  </div>
     {{sheet.current_lock.author}}
 </div>
 {% if sheet.current_lock.author == request.user %}
@@ -58,15 +62,17 @@
 
 {% if not editing and writer and sheet.content_type == 'html'%}
   <a href="export">
-    <div class="floater {% if sheet.needs_exporting %} red {% else %} green {% endif %} clickable">
-      Generate<br>PDF<br>
-      <span style="font-size:8">
-         {% if sheet.needs_exporting %}
-           Last: {{sheet.current_revision.created|date:'M d'}}
-         {% else %}
-           no changes detected
-         {% endif %}
-      </span>
+    <div class="floater">
+      <div class="{% if sheet.needs_exporting %} red {% else %} green {% endif %} hover-button clickable">
+        Generate<br>PDF<br>
+        <span style="font-size:8">
+          {% if sheet.needs_exporting %}
+            Last: {{sheet.current_revision.created|date:'M d'}}
+          {% else %}
+            no changes detected
+          {% endif %}
+        </span>
+      </div>
     </div>
   </a>
 {% endif %}

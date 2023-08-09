@@ -141,10 +141,11 @@ $(document).ready(function() {
             }
         }
         // Now update the event select widget to hide other events
+        // Remember to show the blank option
         event_select.find('option').each(function() {
             var option = $(this);
             var event_id = option.val();
-            if (matching_events.indexOf(event_id) == -1) {
+            if (matching_events.indexOf(event_id) == -1 && event_id != '') {
                 option.hide();
             } else {
                 option.show();

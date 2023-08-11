@@ -33,6 +33,7 @@ table.master-timeline > tbody > tr.highlighted-row {
 
 .timeline td.date {
     text-align: right;
+    text-wrap: nowrap;
 }
 
 form .timeline td.date > div {
@@ -48,4 +49,11 @@ form .timeline td.date > div {
     top: 2px;
     right: 2px;
     width: 28px;
+}
+
+.timeline td.sheets td.sheet-name {
+    text-wrap: nowrap;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

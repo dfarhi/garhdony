@@ -115,10 +115,6 @@ class TimelineEventDescriptionForm(MasterTimelineEventFormDate, WithComplete):
         cleaned_data = super().clean()
         event = cleaned_data.get("event")
         internal_name = cleaned_data.get("internal_name")
-        if event and internal_name and event.internal_name != internal_name:
-            raise forms.ValidationError(
-                "You must either select an existing event or enter a new event name, not both."
-            )
         if not event and not internal_name:
             raise forms.ValidationError(
                 "You must either select an existing event or enter a new event name."
@@ -142,11 +138,12 @@ class TimelineEventDescriptionForm(MasterTimelineEventFormDate, WithComplete):
 
         # Case 1: This is an existing description for an existing event
         if self.instance.pk and self.instance.event:
-            self.instance.event.year = self.cleaned_data['year']
-            self.instance.event.month = self.cleaned_data['month']
-            self.instance.event.day = self.cleaned_data['day']
-            self.instance.event.internal_name = self.cleaned_data['internal_name']
-            self.instance.event.save()
+            if self.editable_event:
+                self.instance.event.year = self.cleaned_data['year']
+                self.instance.event.month = self.cleaned_data['month']
+                self.instance.event.day = self.cleaned_data['day']
+                self.instance.event.internal_name = self.cleaned_data['internal_name']
+                self.instance.event.save()
 
         # Case 2: This is a new description for an existing event
         elif not self.instance.pk and self.cleaned_data['event']:

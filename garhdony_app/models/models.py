@@ -995,6 +995,13 @@ class Character(models.Model):
             dic[s.stat_type.name] = s.value
         return dic
 
+    def get_stat(self, stat_name):
+        """
+        stat_name had better be the name of a CharacterStat corresponding to this game.
+        """
+        stat_obj = CharacterStat.objects.get(character=self, stat_type__name=stat_name)
+        return stat_obj.value
+
     def set_stat(self, stat_name, value):
         """
         Set my stat by stat_name.

@@ -759,12 +759,21 @@ def newGenderAlternateNode():
 
 
 def newGenderSwitchNode(name, gender):
-    """ See newGenderAlternateNode """
-    attrs = {'class':'gender-switch', 'data-larp-action':'gender-switch', 'contenteditable':'false', 'data-keyword':str(name.id), 'data-default-gender':gender, 'data-character':str(name.character.id)}
+    """ New gender switch node from a character's first name """
+    return newGenderSwitchNodeGeneric(name, name.character, gender)
+
+def newGenderSwitchNodeGeneric(keyword, character, gender, capitalize=False):
+    """ New gender switch node from a general keyword """
+    attrs = {'class':'gender-switch', 'data-larp-action':'gender-switch', 'contenteditable':'false', 'data-keyword':str(keyword.id), 'data-default-gender':gender, 'data-character':str(character.id)}
     node =  GenderSwitchNode(attrs)
-    main = node.add(TextNode(name.resolve(gender)))
+    main_text = keyword.resolve(gender)
+    alternate_text = keyword.resolve(utils.other_gender(gender))
+    if capitalize:
+        main_text = main_text.capitalize()
+        alternate_text = alternate_text.capitalize()
+    main = node.add(TextNode(main_text))
     alt = node.add(newGenderAlternateNode())
-    alt.add(TextNode(name.resolve(utils.other_gender(gender))))
+    alt.add(TextNode(alternate_text))
     node.done_parsing()
     return node
 
@@ -953,6 +962,22 @@ class WritersNode(SpanNode):
                 else:
                     return self.children[0]
 
+    @staticmethod
+    def new_html(type, visible_text, hover_title, hover_text):
+        date_str = datetime.now().strftime("%a %b %d %Y")
+        return f"""
+        <span data-larp-action="{type}" class="writers-bubble {type}" contenteditable="false">
+            &nbsp;
+            <span contenteditable="true">{visible_text}</span>
+            <span data-larp-action="writers-bubble-inner" class="writers-bubble-inner">
+                <table class="{type} triangle-pointer" contenteditable="true"><tbody>
+                    <tr><th colspan="2">{hover_title}</th><th class="button-cell" style="text-align:right"></th></tr>
+                    <tr><td colspan="3" class="writers-bubble-content">{hover_text}</td></tr>
+                    <tr><th>auto</th><th width="40"></th><th style="text-align:right">{date_str}</th></tr></tbody></table>
+            </span>
+            &nbsp;
+        </span>
+        """
 
 class WritersBubbleInnerNode(WritersNode):
     """The secret part of an stnote or todo, this never appears to non-writers."""

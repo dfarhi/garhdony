@@ -409,6 +409,7 @@ class Sheet(models.Model, Versioned):
     class Meta:
         # This tells django what to do whenever someone wants to sort sheets.
         ordering = ['game', 'name']
+        unique_together = ('game', 'filename')
 
     @property
     def full_path(self):
@@ -999,8 +1000,11 @@ class Character(models.Model):
         """
         stat_name had better be the name of a CharacterStat corresponding to this game.
         """
-        stat_obj = CharacterStat.objects.get(character=self, stat_type__name=stat_name)
-        return stat_obj.value
+        try:
+            stat_obj = CharacterStat.objects.get(character=self, stat_type__name=stat_name)
+            return stat_obj.value
+        except CharacterStat.DoesNotExist:
+            raise Exception("Character " + self.name() + " has no stat named " + stat_name)
 
     def set_stat(self, stat_name, value):
         """

@@ -572,6 +572,9 @@ class GenderStaticNode(LarpActionNode):
     """
     pass
 
+def newGenderStaticNode(contents):
+    return f"""<span data-larp-action="gender-static" class="gender-static">{contents}</span>"""
+
 class GenderNode(LarpActionNode):
     """
     A node that changes based on something. Before outputting anything, always update yourself.
@@ -587,6 +590,11 @@ class GenderNode(LarpActionNode):
         self.update()
         return super(GenderNode, self).raw()
 
+def inlineAsideHTML(content, label="Out of character note: "):
+    """
+    This is what the js editor produces when you click "insert OOC note" button.
+    """
+    return f"""<span class='player-inline-aside'>[<span class='player-inline-aside-label'>{label}</span>{content}]</span>"""
 
 ##############################################################
 ################# Normal Gender Switch Nodes #################
@@ -1082,3 +1090,24 @@ class ComplexGenderSwitchNode(GenderSwitchNode):
         self.update() # Need to do this like a good GenderNode
         return self.main_span().render(tagify=False, writer=writer)
 
+def newComplexGenderSwitchNodeHTML(character, m_version, f_version) -> ComplexGenderSwitchNode:
+    gender = character.gender()
+    cur_version = m_version if gender == "M" else f_version
+    alt_version = f_version if gender == "M" else m_version
+    return f"""<span data-larp-action="gender" class="writers-bubble gender" contenteditable="false" data-character="{character.id}" data-default-gender="{gender}">
+            &nbsp;
+            <span contenteditable="true">
+                {cur_version} 
+            </span>
+            <span data-larp-action="writers-bubble-inner" class="writers-bubble-inner"> 
+                <table class="gender triangle-pointer" contenteditable="false">
+                    <tr><th colspan="2">Complex Gender Switch</th><th class="button-cell" style="text-align:right"></th></tr>
+                    <tr><td colspan="3" class="writers-bubble-content">
+                        <span contenteditable="true" data-larp-action="alt-gender">
+                            {alt_version} 
+                        </span></td></tr>
+                    <tr><th colspan="3" class="complex-gender-character-select">If <select class="character-dropdown"></select> were {"Female" if gender=="M" else "Male"}</th></tr>
+                </table>
+            </span>
+            &nbsp;
+        </span>"""

@@ -255,7 +255,13 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
     		        var contents = range.extractContents();
 	    	        elem.appendChild(contents);
     	    	    range.insertNode(elem);
-	    	    }
+	    	    },
+                setSelection: function(range) {
+                    // Sets the selection to be at position pos in elem.
+                    var selection = w.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                },
             }, // selection utils
             validation: {
                 isUrl: function(url) {
@@ -800,6 +806,16 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
 	                document.execCommand('insertHTML', false, html);
 	            }
 	        },
+            insertInlineSidenote: function(){
+                var sidenote = $("<span class='player-inline-aside'>[<span class='player-inline-aside-label'>Out of character note: </span> Lorem Ipsum ]</span>");
+                actions.insert(sidenote.get(0));
+                /* focus on the sidenote content, i.e. the part right after the label */
+                var range = document.createRange();
+                text_sibling = sidenote.find('.player-inline-aside-label').get(0).nextSibling;
+                range.setStart(text_sibling, 0);
+                range.setEnd(text_sibling, text_sibling.length - 1);
+                utils.selection.setSelection(range);
+            },
 	        insertSectionBreak: function() {
 	            //TODO: Might be nice to let this be an abstract markup tag whose appearance we can change later in a clean abstract way.
 	            var sectionbreak = String.fromCharCode(13)+String.fromCharCode(13)+"<br><br><center>* * *</center><br>"+String.fromCharCode(13)+String.fromCharCode(13);
@@ -889,7 +905,12 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
         		var insert_menu_buttons = $('<ul></ul>');
                 insert_menu.append(insert_menu_buttons);
 
-        		var section_break_button = $('<li class="editor-button editor-button-label">***</li>');
+                var player_aside_button = $('<li class="editor-button editor-button-label">ooc</li>');
+		        player_aside_button.on('click', actions.insertInlineSidenote);
+		        player_aside_button.attr('title','Insert out of character note.')
+        		insert_menu_buttons.append(player_aside_button);
+
+                var section_break_button = $('<li class="editor-button editor-button-label">***</li>');
 		        section_break_button.on('click', actions.insertSectionBreak);
 		        section_break_button.attr('title','Press Cmd+8 or Cmd+Shift+8 to insert section break.')
         		insert_menu_buttons.append(section_break_button);
@@ -1233,6 +1254,11 @@ function modifyImageClosePopup(popupwindow, url, id, changeall){
         },
         events = {
             commands: {
+                inlineAside: function(e) {
+                    e.preventDefault();
+                    actions.insertInlineSidenote()
+                    events.change.call(this);
+                },
                 stNote: function(e){
                     e.preventDefault();
                     writersBubble.create('stnote', 'Storyteller Note', true, false);

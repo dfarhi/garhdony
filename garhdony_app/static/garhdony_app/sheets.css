@@ -10,6 +10,17 @@
     page-break-after: always;
 }
 
+.player-inline-aside {
+    /* nomral text but highlighted to be obviously slightly different */
+    background-color: #EEE;
+    color: #111;
+
+}
+
+.player-inline-aside-label {
+    font-style: italic;
+}
+
 table.timeline {
     border-collapse: collapse;
     border: 1px solid;

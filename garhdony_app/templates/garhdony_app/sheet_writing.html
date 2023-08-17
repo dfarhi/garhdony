@@ -3,7 +3,8 @@
 {% load static %}
 
 {% block morehead %}
-    {% if not intervening_locks %}
+  <link rel="stylesheet" type="text/css" href="{% static 'garhdony_app/sheets.css' %}">
+  {% if not intervening_locks %}
         {# Only do the caching stuff on the normal edit page. #}
         {# Because we don't want o accidentally cache the half-merged thing #}
         <script type="text/javascript" src="{% static 'garhdony_app/edit_caching.js'%}"></script>

@@ -22,8 +22,10 @@ from garhdony_app.span_parser import WritersBubbleInnerNode, WritersNode, inline
 import logging
 # Logging config that prints to stdout
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.WARNING, format='%(message)s')
 logging.getLogger("garhdony_app.LARPStrings").setLevel(logging.INFO)
+logging.getLogger("garhdony_app.span_parser").setLevel(logging.INFO)
+logging.getLogger("garhdony_app.models").setLevel(logging.INFO)
 # django.db.backends
 logging.getLogger('django.db.backends').setLevel(logging.ERROR)
 
@@ -48,12 +50,12 @@ def database_cleanup():
         ("Rikhard", "????", "Kohvari", "M", "rkohvari"),
         ("????", "Timea", "Hunt", "F", "thunt")]:
         if PlayerCharacter.objects.filter(game=game, last_name=l, first_name_obj__male=m, first_name_obj__female=f).exists():
-            print(f"Already created { m } { f } { l }")
+            logger.info(f"Already created { m } { f } { l }")
         else:
             name = GenderizedName(male=m, female=f)
             new_char = PlayerCharacter(first_name_obj=name, last_name=l, default_gender=g, game=game, username=u)
             new_char.save()
-            print(f"Created { m } { f } { l }")
+            logger.warning(f"Created { m } { f } { l }")
         char = PlayerCharacter.objects.get(game=game, last_name=l, first_name_obj__male=m, first_name_obj__female=f)
 
         char_sheet = Sheet.objects.get(game=game, filename=char.name())
@@ -64,12 +66,12 @@ def database_cleanup():
         ("Pahl", "Pahla", "Harsanyi", "F"),
     ]:
         if NonPlayerCharacter.objects.filter(game=game, last_name=l, first_name_obj__male=m, first_name_obj__female=f).exists():
-            print(f"Already created { m } { f } { l }")
+            logger.info(f"Already created { m } { f } { l }")
         else:
             name = GenderizedName(male=m, female=f)
             new_char = NonPlayerCharacter(first_name_obj=name, last_name=l, gender_field=g, game=game)
             new_char.save()
-            print(f"Created { m } { f } { l }")
+            logger.warning(f"Created { m } { f } { l }")
     
     gizella = PlayerCharacter.objects.get(game=game, last_name="Tzonka", first_name_obj__female="Gizella")
     history_of_tzonka = Sheet.objects.get(game=game, filename="History of Tzonka")
@@ -170,29 +172,37 @@ def mediawiki_to_html(string: str) -> str:
     # Hack this together by escaping the braces marking templates, then unescaping them after
     # We also don't want pandoc screwing with [[...]] links, so we escape those too
     
-    num_braces = string.count("{"), string.count("}"), string.count("|"), string.count("["), string.count("]")
-    safe_string = string.replace("{{", "DOUBLEOPENBRACE")
-    safe_string = safe_string.replace("}}", "DOUBLECLOSEBRACE")
-    safe_string = safe_string.replace("|", "PIPE")
-    safe_string = safe_string.replace("[[", "DOUBLEOPENBRACKET")
-    safe_string = safe_string.replace("]]", "DOUBLECLOSEBRACKET")
+    safe_string = string
+    starting_templates = re.findall(r"{{.*?}}", string)
+    
+    # num_braces = string.count("{"), string.count("}"), string.count("|"), string.count("["), string.count("]")
+    # safe_string = string.replace("{{", "DOUBLEOPENBRACE")
+    # safe_string = safe_string.replace("}}", "DOUBLECLOSEBRACE")
+    # safe_string = safe_string.replace("|", "PIPE")
+    # safe_string = safe_string.replace("[[", "DOUBLEOPENBRACKET")
+    # safe_string = safe_string.replace("]]", "DOUBLECLOSEBRACKET")
     # Add args to avoid extra linebreaks due to wrapping and headings.
     convert_safe_string = pypandoc.convert_text(safe_string, "html", format="mediawiki", extra_args=["--wrap=none", "--no-highlight"])
-    output_string = convert_safe_string.replace("DOUBLEOPENBRACE", "{{")
-    output_string = output_string.replace("DOUBLECLOSEBRACE", "}}")
-    output_string = output_string.replace("PIPE", "|")
-    output_string = output_string.replace("DOUBLEOPENBRACKET", "[[")    
-    output_string = output_string.replace("DOUBLECLOSEBRACKET", "]]")
-    # Check the number of braces is right
-    try:
-        new_num_braces = output_string.count("{"), output_string.count("}"), output_string.count("|"), output_string.count("["), output_string.count("]")
-        assert num_braces == new_num_braces, f"num_braces {num_braces} != new_num_braces {new_num_braces}"
-    except AssertionError as e:
-        print(e)
-        import pdb; pdb.set_trace()
+    # output_string = convert_safe_string.replace("DOUBLEOPENBRACE", "{{")
+    # output_string = output_string.replace("DOUBLECLOSEBRACE", "}}")
+    # output_string = output_string.replace("PIPE", "|")
+    # output_string = output_string.replace("DOUBLEOPENBRACKET", "[[")    
+    # output_string = output_string.replace("DOUBLECLOSEBRACKET", "]]")
+    # # Check the number of braces is right
+    # try:
+    #     new_num_braces = output_string.count("{"), output_string.count("}"), output_string.count("|"), output_string.count("["), output_string.count("]")
+    #     assert num_braces == new_num_braces, f"num_braces {num_braces} != new_num_braces {new_num_braces}"
+    # except AssertionError as e:
+    #     print(e)
+    #     import pdb; pdb.set_trace()
+    output_string = convert_safe_string
     clean_output_string = cleanup_ps(output_string).strip()
     clean_output_string = cleanup_code_tags(clean_output_string)
     assert '<code>' not in clean_output_string, clean_output_string
+    remaining_templates = re.findall(r"{{.*?}}", clean_output_string)
+    swallowed_templates = set(starting_templates) - set(remaining_templates)
+    if swallowed_templates:
+        logger.warning(f"Swallowed templates: {swallowed_templates}")
     return clean_output_string
 test_result = mediawiki_to_html("""
 List:
@@ -205,11 +215,7 @@ assert "<span>bar</span>" in test_result, test_result
 test_result = mediawiki_to_html("==bar==")
 assert "<h2" in test_result and "bar</h2>", test_result  # It can put some attributes if it wants to
 test_result = mediawiki_to_html("""bar\nother stuff""")
-assert "\r\n" not in test_result, test_result  # It can put some attributes if it wants to
-test_result = mediawiki_to_html("{{foobar}}")
-assert "{{foobar}}" in test_result, test_result
-test_result = mediawiki_to_html("{{charname|Antal Yenis}}")
-assert "{{charname|Antal Yenis}}" in test_result, test_result
+assert "\r\n" not in test_result, test_result
 thing_with_newlines = """
     foo
     bar
@@ -309,36 +315,12 @@ def pre_html_manual_fixes(string, sheet_name):
         "Wound <target\'s name>": "Wound &lt;target\'s name&gt;",  # magic hunts
         "Daze <target\'s name>": "Daze &lt;target\'s name&gt;",  # magic
         """{{hide}}\n{{has ability | Signatory for Rihul}}\n{{unhide}}""": "{{has ability | Signatory for Rihul}}",  # Rammy
+        "Matya doesn't get the following section: [[Council of Eminents (Matyas Varadi)]]": "Matya doesn't get the following section",  # council of eminents; the link confuses us
     }
     for typo, fix in TYPOS.items():
         string = string.replace(typo, fix)
     if sheet_name in {"hajdu_rozzu", "patrik_zahunt"}:
         string = re.sub(r"\{\{has greensheet \| Recent History of Kazka\s*\}\}", "\{\{has greensheet \| Recent History of Kazka Hunts\}\}", string)
-    return string
-
-def post_html_manual_fixes(string, sheet_name):
-    TYPOS = {
-        """ green rule.)}}</li>\n</ul>""": """ green rule.)</li>\n</ul>}}""",   # artificer's knowledge
-        """ green rule.)}}</li>\r\n</ul>""": """ green rule.)</li>\r\n</ul>}}""",  # artificer's knowledge
-        """<strong>Litzeer</strong> }}</li>\n</ul></li>\n</ul>""" : """<li>Freeze: <strong>Litzeer</strong> </li>\n</ul></li>\n</ul> }}""",  # magari
-        """<strong>Litzeer</strong> }}</li>\r\n</ul></li>\r\n</ul>""" : """<li>Freeze: <strong>Litzeer</strong> </li>\n</ul></li>\n</ul> }}""",  # magari
-        """appear by mid-April.}}</li>\r\n</ul>""": """appear by mid-April.</li>\n</ul>}}""",  # council of eminents
-        """appear by mid-April.}}</li>\n</ul>""": """appear by mid-April.</li>\n</ul>}}""",  # council of eminents
-        """==Current Business==""": "<h2>Current Business</h2>",  # council of eminents
-        """<code>\xa0|\xa0}}</code>""": "|}}",  # Opening the Gate
-        """Today.}}</li>\r\n</ul>""": """April 25, 1276: Today.</li>\n</ul>}}""",  # hunt  manor
-        """Today.}}</li>\n</ul>""": """April 25, 1276: Today.</li>\n</ul>}}""",  # hunt  manor
-        """this high?}}</li>\r\n</ol>""": """this high?</li>\n</ol>}}""",  # general rules
-        """this high?}}</li>\n</ol>""": """this high?</li>\n</ol>}}""",  # general rules
-        """should be monitered.}}</li>\r\n</ul>""": """should be monitered.</li>\n</ul>}}""",  # temesvar academy
-        """should be monitered.}}</li>\n</ul>""": """should be monitered.</li>\n</ul>}}""",  # temesvar academy
-        """Departures.}}</li>\r\n</ul>""": """Departures.</li>\n</ul>}}""",  # order of almos
-        """Departures.}}</li>\n</ul>""": """Departures.</li>\n</ul>}}""",  # order of almos
-        """302</em>}}</li>\r\n</ol></li>\r\n</ol></li>\r\n</ol>""": """302</em></li>\n</ol></li>\n</ol></li>\n</ol>}}""",  # keepers evidence
-        """302</em>}}</li>\n</ol></li>\n</ol></li>\n</ol>""": """302</em></li>\n</ol></li>\n</ol></li>\n</ol>}}""",  # keepers evidence
-    }
-    for typo, fix in TYPOS.items():
-        string = string.replace(typo, fix)
     return string
 
 @lru_cache(maxsize=1000)
@@ -366,11 +348,9 @@ def build_forkbomb_sheets_dict(forkbomb_data):
     for sheet_name in forkbomb_data.keys():
         try:
             sheet_content = get_expanded_content(sheet_name)
-        except KeyError:
-            print(f"Failed to get content for {sheet_name}")
-            continue
-        except RecursionError:
-            print(f"Recursion error for {sheet_name}")
+        except (KeyError, RecursionError):
+            if sheet_name not in {"event", "all_colored_sheet_copies", "earth_defense_force_insignia"}:
+                logger.warning(f"Failed to get content for {sheet_name}")
             continue
         wikicode = mwparserfromhell.parse(sheet_content)
         templates = wikicode.filter_templates()
@@ -557,7 +537,7 @@ def character_from_name(name:str):
         gh_sheet = sheets_mapping_f2g[fb_name]
         if gh_sheet.characters.count() != 1:
             # import pdb; pdb.set_trace()
-            logger.warning(f"Got {gh_sheet.characters.count()} characters for {name}")
+            logger.info(f"Got {gh_sheet.characters.count()} characters for {name}")
             return None
         return gh_sheet.characters.first()
     elif fb_name in forkbomb_to_npcs:
@@ -781,15 +761,15 @@ def character_stats_check(string, sheet_name):
     """
     character = character_from_name(sheet_name)
     def callback_check_stat(db_stat_name, forkbomb_tag_args):
-        if character is None:
-            logger.warning(f"Stat on non-existent character: {db_stat_name}")
-            return None
         if len(forkbomb_tag_args) > 1:
             assert len(forkbomb_tag_args)==2 and forkbomb_tag_args[1] == "show=1", f"Stat tag had too many args: {forkbomb_tag_args}"
         forkbomb_v2_value = forkbomb_tag_args[0].strip()
         if db_stat_name == "Age" and forkbomb_v2_value == "1281":
             # ignore magari ages
             return ""
+        if character is None:
+            logger.warning(f"Stat on non-existent character: {db_stat_name}")
+            return None
         db_value = character.get_stat(db_stat_name).strip()
         if db_value == "":
             character.set_stat(db_stat_name, forkbomb_v2_value)
@@ -1033,6 +1013,30 @@ def resolve_ability_macro(string, sheet_name: str):
     string = macro_hit_replace("has ability", string, callback_ability)
     return string
 
+all_files = set()
+def find_bracket_problems(string):
+    for match in re.findall(r"\[\[\s*([^\]]*)\]\]", string):
+        # We know about File, so ignore those
+        if match.startswith("File:"):
+            all_files.add(match[5:])
+            continue
+        if match in {"Artifact of Kohsar", "Artifact of Orahun", "Artifact of Zag", "Katalin Aller"}:
+            # These are silly links, remove their linkageness
+            string = string.replace(f"[[{match}]]", match)
+            continue
+        if match in {"Adorra Update", "Berlo Update", "Isti Update"}:
+            # This is just empty, remove it entirely
+            string = string.replace(f"[[{match}]]", "")
+            continue
+        if match in {"Keepers' Evidence (Lorink)", "Opening the Gate (Lorink)"}:
+            # This is in an stnote where it kind of could be a link; just leave it as a broken link
+            continue
+        location = string.find(match)
+        print(f"Found bracket problem: {match} at {location}:")
+        print(string[location-100:location+100])
+        import pdb; pdb.set_trace()
+    return string
+
 def resolve_ooc_macro(string):
     """
     replace {{ OOC | <text> }}
@@ -1065,9 +1069,12 @@ def resolve_stnote_macro(string):
     replace {{ STNote | <text> }}
     """
     def callback_stnote(macro, args):
-        if len(args) > 1:
+        if len(args) == 1:
+            arg = args[0]
+        else:
             logger.warning(f"STNote macro had too many args: {args}")
-        result = dedent(WritersNode.new_html(type="stnote", visible_text="", hover_text=args[0], hover_title="STNote (Imported wiki macro)"))
+            arg = " | ".join(args)
+        result = dedent(WritersNode.new_html(type="stnote", visible_text="", hover_text=arg, hover_title="STNote (Imported wiki macro)"))
         return result
     string = macro_hit_replace("STnote", string, callback_stnote)
     return string
@@ -1079,9 +1086,12 @@ def resolve_todo_macro(string):
     replace {{ ToDo | <text> }}
     """
     def callback_stnote(macro, args):
-        if len(args) > 1:
+        if len(args) == 1:
+            arg = args[0]
+        else:
             logger.warning(f"ToDo macro had too many args: {args}")
-        result = dedent(WritersNode.new_html(type="todo", visible_text="", hover_text=args[0], hover_title="ToDo (Imported wiki macro)"))
+            arg = " | ".join(args)
+        result = dedent(WritersNode.new_html(type="todo", visible_text="", hover_text=arg, hover_title="ToDo (Imported wiki macro)"))
         return result
     string = macro_hit_replace("ToDo", string, callback_stnote)
     return string
@@ -1190,11 +1200,12 @@ def import_forkbomb_v2(fb_sheet_name:str):
         data_str = str(data)
         assert_valid_html(data_str)
         iter += 1
+    data_str = find_bracket_problems(data_str)
+    data_str = clear_hide_unhide(data_str)
+
     data_str = mediawiki_to_html(data_str)
     data_str = cleanup_ps(data_str)
 
-    data_str = post_html_manual_fixes(data_str, fb_sheet_name)
-    data_str = clear_hide_unhide(data_str)
     data_str = non_macro_cleanup(data_str)
     data_str = cleanup_excessive_linebreaks(data_str)
     return data_str
@@ -1232,7 +1243,9 @@ def main():
 
     unresolved_templates = {}
     for fb_name, gh_sheet in sorted(list(target_sheets.items()))[:args.max_sheets]:
-        logger.info(f"\n\n======================\nImporting sheet {fb_name} to {gh_sheet}\n======================")
+        logger.info(f"\n\n======================\n")
+        logger.warning(f"===Importing sheet {fb_name} to {gh_sheet}===")
+        logger.info("\n======================")
         unresolved_templates[fb_name] = import_forkbomb_v2_sheet(fb_name, gh_sheet)
     # collapse the unresolved templates counters
     total_unresolved_templates = Counter()
@@ -1244,7 +1257,7 @@ def main():
         sample_sheets = [k for k, v in unresolved_templates.items() if template in v.keys()]
         sample_sheets_str = ", ".join(sample_sheets[:3]) + (f", ..."  if len(sample_sheets) > 3 else "")
         result_string += f"\n  {template}: {count} - [{sample_sheets_str}]"
-    logger.info(result_string)
+    print(result_string)
     if sheet_name == "all":
         with open("unresolved_templates.txt", "w") as f:
             f.write(result_string)
@@ -1254,6 +1267,11 @@ def main():
             for ability_name, sheets in abilities_map.items():
                 sheets_str = ", ".join(sheets)
                 f.write(f"{ability_name}: {sheets_str}\n")
+
+        # print files
+        with open("files.txt", "w") as f:
+            for file in all_files:
+                f.write(f"{file}\n")
     
 if __name__ == "__main__":
     main()

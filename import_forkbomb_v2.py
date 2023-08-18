@@ -107,7 +107,7 @@ database_cleanup()
 def dedent(string):
     return "\n".join([line.strip() for line in string.split("\n")])
 
-forkbomb_v2_csv_path = "data/forkbomb_v2.csv"
+forkbomb_v2_csv_path = "data/forkbomb_with_namespace.csv"
 """
 The v2 csv has three columns:
 - sheet name with underscores instead of spaces
@@ -123,7 +123,7 @@ def standardize_name(name):
 def load_forkbomb_v2_csv():
     with open(forkbomb_v2_csv_path, encoding='utf-8') as f:
         reader = csv.reader(f)
-        forkbomb_v2_csv = {standardize_name(row[0]): row[2] for row in reader}
+        forkbomb_v2_csv = {standardize_name(row[1]): row[3] for row in reader}
 
     return forkbomb_v2_csv
 forkbomb_v2_csv = load_forkbomb_v2_csv()
@@ -316,6 +316,7 @@ def pre_html_manual_fixes(string, sheet_name):
         "Daze <target\'s name>": "Daze &lt;target\'s name&gt;",  # magic
         """{{hide}}\n{{has ability | Signatory for Rihul}}\n{{unhide}}""": "{{has ability | Signatory for Rihul}}",  # Rammy
         "Matya doesn't get the following section: [[Council of Eminents (Matyas Varadi)]]": "Matya doesn't get the following section",  # council of eminents; the link confuses us
+        "\n\n&#149; ": "\n* ",  # bullet points
     }
     for typo, fix in TYPOS.items():
         string = string.replace(typo, fix)
@@ -1008,7 +1009,22 @@ def resolve_ability_macro(string, sheet_name: str):
         assert len(args) == 1
         ability_name = resolve_arg_name_to_sheet(args[0])
         abilities_map[ability_name].add(sheet_name)
-        return f"* {args[0]}"
+        ability_content = get_expanded_content(ability_name)
+        parse = mwparserfromhell.parse(ability_content)
+        title = None
+        card_text = None
+        for template in parse.filter_templates():
+            if template.name.matches("ability info"):
+                try:
+                    title = template.get("title").value
+                except ValueError:
+                    title = ability_name.replace("_", " ").title()
+                continue
+            if template.name.matches("card text"):
+                assert len(template.params) == 1
+                card_text = template.params[0].value
+        html = f"<div class='ability'><h3>{title}</h3>{card_text}</div>"
+        return html
         
     string = macro_hit_replace("has ability", string, callback_ability)
     return string
@@ -1125,6 +1141,9 @@ def non_macro_cleanup(string):
 def cleanup_excessive_linebreaks(string):
     """ replace any number of <br>s greater than two, with only two."""
     string = re.sub(r"<br\s*/?>\s*(<br\s*/?>\s*)+", "<br><br>\n\n", string)
+
+    # Also remove any amount of whitespace and brs at the start of the string
+    string = re.sub(r"^\s*(<br\s*/?>\s*)+", "", string)
     return string
 
 def assert_valid_html(string, pdb=True):
@@ -1135,6 +1154,8 @@ def assert_valid_html(string, pdb=True):
         parser.parse(wrapped_string)
     except Exception as e:
         if pdb:
+            print(f"Failed to parse html: {string[:200]}")
+            print(f"error: {e}")
             import pdb; pdb.set_trace()
         raise e
 test_result = assert_valid_html("<p>foo</p>", pdb=False)
@@ -1170,16 +1191,19 @@ def iterated_processing(data, fb_sheet_name:str):
     braces_count = data.count("{{")
     logger.info(f"  Found {braces_count} templates in {fb_sheet_name}")
 
+    # Probbaly don't need to be iterated; could pull these out
     data = resolve_charname_and_charnicks(data)
+    data = replace_genderized_keywords(data)
+    data = resolve_pagebreak_macro(data)
+    data = resolve_chapter_macro(data)
+
+    # Can be nested in complicated ways; important to iterate
     data = resolve_ifiam_macro(data, fb_sheet_name)
-    data = replace_genderized_keywords(data)  # Creates html
-    data = resolve_pagebreak_macro(data)  # Creates html
-    data = resolve_chapter_macro(data)  # Creates html?
-    data = resolve_ooc_macro(data)  # Creates html
-    data = resolve_commentout_macro(data)  # Creates html
-    data = resolve_stnote_macro(data)  # Creates html
-    data = resolve_todo_macro(data)  # Creates html
-    data = resolve_g_macros(data) # Creates html
+    data = resolve_ooc_macro(data)
+    data = resolve_commentout_macro(data)
+    data = resolve_stnote_macro(data)
+    data = resolve_todo_macro(data)
+    data = resolve_g_macros(data)
     return data
 
 def import_forkbomb_v2(fb_sheet_name:str):

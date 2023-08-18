@@ -21,7 +21,19 @@
     /* nomral text but highlighted to be obviously slightly different */
     background-color: #EEE;
     color: #111;
+}
 
+#sheet-content div.ability {
+    border: 3px solid #888;
+    margin: 5px;
+    padding: 10px;
+
+}
+
+#sheet-content div.ability h3 {
+    /* ability title: center */
+    text-align: center;
+    font-size: 14pt;
 }
 
 .player-inline-aside-label {

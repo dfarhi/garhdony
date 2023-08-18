@@ -1011,28 +1011,25 @@ def all_processing(data: str, fb_sheet_name:str) -> str:
 
     data = mwparserfromhell.parse(data)
     data = resolve_you_macro(data, fb_sheet_name)
-    data = replace_genderized_keywords(data)  # Creates html
     data = character_stats_check(data, fb_sheet_name)
     data = character_stats_show(data, fb_sheet_name)
     data = check_has_greensheets(data, fb_sheet_name)
     data = resolve_var_owner_macro(data)
     data = resolve_ifeq(data)
     data = clear_unused_tags(data)
-    data = resolve_pagebreak_macro(data)  # Creates html
-    data = resolve_chapter_macro(data)  # Creates html?
     data = resolve_charname_and_charnicks(data)
     data = resolve_ifcastle_macro(data)
     data = resolve_date1276_macro(data)
     data = resolve_ifiam_macro(data, fb_sheet_name)
+    data = replace_genderized_keywords(data)  # Creates html
+    data = resolve_pagebreak_macro(data)  # Creates html
+    data = resolve_chapter_macro(data)  # Creates html?
     data = resolve_ooc_macro(data)  # Creates html
     data = resolve_commentout_macro(data)  # Creates html
     data = resolve_stnote_macro(data)  # Creates html
     data = resolve_todo_macro(data)  # Creates html
     data = resolve_g_macros(data) # Creates html
-    data = str(data)
-    data = clear_hide_unhide(data)
-    data = non_macro_cleanup(data)
-    return data
+    return str(data)
 
 def import_forkbomb_v2(fb_sheet_name:str):
     data = get_expanded_content(fb_sheet_name, convert_html=True)
@@ -1044,6 +1041,8 @@ def import_forkbomb_v2(fb_sheet_name:str):
         data = all_processing(data, fb_sheet_name)
         iter += 1
     data = cleanup_ps(data)
+    data = clear_hide_unhide(data)
+    data = non_macro_cleanup(data)
     return data
 
 def import_forkbomb_v2_sheet(fb_sheet_name: str, garhdony_sheet: Sheet):

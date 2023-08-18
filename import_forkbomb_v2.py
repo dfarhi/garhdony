@@ -548,7 +548,12 @@ def macro_hit_replace(macro_name:str, wikicode, callback:Callable[[str, List[str
 
     Replace with callback([arg1, arg2, ...])
     """
+    hits_replaced = set()
     for template in wikicode.filter_templates():
+        template_str = str(template)
+        if template_str in hits_replaced:
+            # We've already replaced this earlier in the loop
+            continue
         template_macro = template.name.strip()
         if re.match(macro_name, template_macro, re.IGNORECASE):
             args = [arg.strip() for arg in template.params]
@@ -560,7 +565,8 @@ def macro_hit_replace(macro_name:str, wikicode, callback:Callable[[str, List[str
             if replacement is not None:
                 # replace the entire template node with the replacement
                 try:
-                    wikicode.replace(template, replacement)
+                    wikicode.replace(template_str, replacement)
+                    hits_replaced.add(template_str)
                 except ValueError:
                     # print(f"Failed to replace {template} with '{replacement}'")
                     # Can try to continue; maybe we already removed it due to an outer macro
@@ -1005,21 +1011,26 @@ def non_macro_cleanup(string):
         string = re.sub(r"\s*<strong>Age:</strong>", "", string)
     return string
 
-def all_processing(data: str, fb_sheet_name:str) -> str:
+def oneshot_processing(data, fb_sheet_name:str):
     braces_count = data.count("{{")
     logger.info(f"  Found {braces_count} templates in {fb_sheet_name}")
 
-    data = mwparserfromhell.parse(data)
+    data = clear_unused_tags(data)
+    data = resolve_ifcastle_macro(data)
+    data = resolve_date1276_macro(data)
+    data = resolve_var_owner_macro(data)
+    data = resolve_ifeq(data)
     data = resolve_you_macro(data, fb_sheet_name)
     data = character_stats_check(data, fb_sheet_name)
     data = character_stats_show(data, fb_sheet_name)
     data = check_has_greensheets(data, fb_sheet_name)
-    data = resolve_var_owner_macro(data)
-    data = resolve_ifeq(data)
-    data = clear_unused_tags(data)
+    return data
+
+def iterated_processing(data, fb_sheet_name:str):
+    braces_count = data.count("{{")
+    logger.info(f"  Found {braces_count} templates in {fb_sheet_name}")
+
     data = resolve_charname_and_charnicks(data)
-    data = resolve_ifcastle_macro(data)
-    data = resolve_date1276_macro(data)
     data = resolve_ifiam_macro(data, fb_sheet_name)
     data = replace_genderized_keywords(data)  # Creates html
     data = resolve_pagebreak_macro(data)  # Creates html
@@ -1029,21 +1040,26 @@ def all_processing(data: str, fb_sheet_name:str) -> str:
     data = resolve_stnote_macro(data)  # Creates html
     data = resolve_todo_macro(data)  # Creates html
     data = resolve_g_macros(data) # Creates html
-    return str(data)
+    return data
 
 def import_forkbomb_v2(fb_sheet_name:str):
-    data = get_expanded_content(fb_sheet_name, convert_html=True)
-    old_data = None
+    data_str = get_expanded_content(fb_sheet_name, convert_html=True)
+    data = mwparserfromhell.parse(data_str)
+    old_data_str = None
+
+    data = oneshot_processing(data, fb_sheet_name)
+
     iter = 0
-    while old_data != data:
+    while old_data_str != data_str:
         logger.info(f"=== Iteration {iter} ===")
-        old_data = data
-        data = all_processing(data, fb_sheet_name)
+        old_data_str = data_str
+        data = iterated_processing(data, fb_sheet_name)
+        data_str = str(data)
         iter += 1
-    data = cleanup_ps(data)
-    data = clear_hide_unhide(data)
-    data = non_macro_cleanup(data)
-    return data
+    data_str = cleanup_ps(data_str)
+    data_str = clear_hide_unhide(data_str)
+    data_str = non_macro_cleanup(data_str)
+    return data_str
 
 def import_forkbomb_v2_sheet(fb_sheet_name: str, garhdony_sheet: Sheet):
     data = import_forkbomb_v2(fb_sheet_name)

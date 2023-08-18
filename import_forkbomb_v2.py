@@ -850,9 +850,28 @@ def check_has_greensheets(string, sheet_name: str):
         if new:
             logger.info(f"Adding sheet '{gh_name}' to new character {sheet_name}")
             character.sheets.add(gh_sheet)
-        return gh_name
+        return f"* {gh_name}"
     string = macro_hit_replace("has (greensheet|document|yellowsheet|whitesheet|appendix)", string, has_greensheet_callback)
+    return string
 
+def resolve_has_item_macro(string):
+    """
+    {{ has_item | item name}}
+    """
+    def callback_has_item(macro, args):
+        assert len(args) == 1
+        item_name = resolve_arg_name_to_sheet(args[0])
+        item_sheet_content = get_expanded_content(item_name)
+        titles = re.findall(r"\|\s*title\s*=\s*([^\|\{\}]*)", item_sheet_content)
+        if len(titles) == 0:
+            title = item_name.replace("_", " ").title()
+        elif len(titles) > 1:
+            logger.warning(f"Item has multiple titles: {item_name}")
+            return None
+        else:
+            title = titles[0].strip()
+        return f"* {title}"
+    string = macro_hit_replace("has item", string, callback_has_item)
     return string
 
 def resolve_var_owner_macro(string):
@@ -1083,6 +1102,7 @@ def oneshot_processing(data, fb_sheet_name:str):
     data = character_stats_check(data, fb_sheet_name)
     data = character_stats_show(data, fb_sheet_name)
     data = check_has_greensheets(data, fb_sheet_name)
+    data = resolve_has_item_macro(data)
     return data
 
 def iterated_processing(data, fb_sheet_name:str):
@@ -1102,7 +1122,7 @@ def iterated_processing(data, fb_sheet_name:str):
     return data
 
 def import_forkbomb_v2(fb_sheet_name:str):
-    data_str = get_expanded_content(fb_sheet_name, convert_html=True)
+    data_str = get_expanded_content(fb_sheet_name, convert_html=False)
     assert_valid_html(data_str)
     data = mwparserfromhell.parse(data_str)
     old_data_str = None
@@ -1111,6 +1131,9 @@ def import_forkbomb_v2(fb_sheet_name:str):
     data_str = str(data)
     assert_valid_html(data_str)
 
+    data_str = mediawiki_to_html(data_str)
+    assert_valid_html(data_str)
+    data = mwparserfromhell.parse(data_str)
     iter = 0
     while old_data_str != data_str:
         logger.info(f"=== Iteration {iter} ===")

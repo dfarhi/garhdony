@@ -102,6 +102,9 @@ def database_cleanup():
 
 database_cleanup()
 
+def dedent(string):
+    return "\n".join([line.strip() for line in string.split("\n")])
+
 forkbomb_v2_csv_path = "data/forkbomb_v2.csv"
 """
 The v2 csv has three columns:
@@ -134,21 +137,24 @@ def cleanup_ps(string: str) -> str:
     string = re.sub(r"<p>\s*</p>", "", string)
     
     # Now replace the rest
-    string = string.replace("</p>", "<br><br>\n\n")
-    string = string.replace("<p>", "")
+    string = re.sub(r"</p>\s*<p>", "<br><br>\n\n", string)
+    string = re.sub(r"<p>", "", string)
+    string = re.sub(r"</p>", "", string)
     return string
 
 def cleanup_code_tags(string: str) -> str:
     """
     The parser often puts things like this:
-    <code>&nbsp;&nbsp;This&nbsp;was&nbsp;indented&nbsp;with&nbsp;spaces&nbsp;but&nbsp;the&nbsp;parser&nbsp;doesn't&nbsp;like&nbsp;that</code>
+    <code>&nbsp;&nbsp;This&nbsp;was&nbsp;indented&nbsp;with&nbsp;spaces&nbsp;but&nbsp;the&nbsp;parser&nbsp;doesn't&nbsp;like&nbsp;that</code><br />
     We want to return it to:
         This was indented with spaces but the parser doesn't like that
     Ideally without removing any other nbsp's that aren't inside a <code> offender
     """
-    blocks = re.findall(r"<code>.*?</code>", string)
+    blocks = re.findall(r"<code>.*?</code>(?:<br />)?", string, re.DOTALL)
     for block in blocks:
-        string = string.replace(block, block.replace("\xa0", " ").replace("<code>", "").replace("</code>", ""))
+        sane_block = block.replace("\xa0", " ").replace("<code>", "").replace("</code>", "")
+        string = string.replace(block, sane_block)
+    string = string.replace("<br />", "")
     return string
 
 def mediawiki_to_html(string: str) -> str:
@@ -204,10 +210,28 @@ test_result = mediawiki_to_html("{{foobar}}")
 assert "{{foobar}}" in test_result, test_result
 test_result = mediawiki_to_html("{{charname|Antal Yenis}}")
 assert "{{charname|Antal Yenis}}" in test_result, test_result
-test_result = mediawiki_to_html("""
-                                foo
-                                bar
-                                """)
+thing_with_newlines = """
+    foo
+    bar
+    baz
+    
+    bop"""
+test_result = mediawiki_to_html(thing_with_newlines)
+
+
+# table = """
+# <table><tbody>
+# <tr><th>hover</th></tr>
+# </tbody></table>"""
+# # stnote_block = "<pre>" + stnote_block + "</pre>"
+# test_result = mediawiki_to_html(table)
+# assert test_result == table, f"{test_result}\n\n!=\n\n{table}"
+
+# stnote_block = dedent(WritersNode.new_html(type="stnote", visible_text="vis", hover_title="hover", hover_text="hover"))
+# # stnote_block = "<pre>" + stnote_block + "</pre>"
+# test_result = mediawiki_to_html(stnote_block)
+# assert test_result == stnote_block, f"{test_result}\n\n!=\n\n{stnote_block}"
+
 
 RECURSIVE_INCLUDE_PAGES = ["Kelemen's Message", "timeline", "goals", "contacts", "packet", "AWhile"]
 def resolve_arg_name_to_sheet(arg_name: str) -> str:
@@ -265,15 +289,35 @@ def escape_spells(string: str) -> str:
     """
     Replace <T: ... > with &lt;T: ... &gt;
     """
-    return re.sub(r"<([TtDd]):([^>]*)>", r"&lt;\1:\2&gt;", string)
+    return re.sub(r"<([TtDdRr]):([^>]*)>", r"&lt;\1:\2&gt;", string)
 test_result = escape_spells("(heal / <D:infinity> / <T:H> / <T:B> / <T:N> /<T:I> /<T:blood> / (heal / <T:blood>x3))")
 assert test_result == "(heal / &lt;D:infinity&gt; / &lt;T:H&gt; / &lt;T:B&gt; / &lt;T:N&gt; /&lt;T:I&gt; /&lt;T:blood&gt; / (heal / &lt;T:blood&gt;x3))", test_result
 
-def manual_fixes(string, sheet_name):
+def pre_html_manual_fixes(string, sheet_name):
     TYPOS = {
         "{{charname | Matya Varadi}}": "{{charname | Matyas Varadi}}",  # gizella tzonka
         "{{charnick|Antal}}": "{{charnick|Antal Yenis}}",   # 
         "{{charname|Aleksander ZaHunt|alias=1|aliasnick=1}}": "{{charname|Aleksander ZaHunt|nick=1}}",   # some hunts
+        """{{g|Ramestor Rihul|princes and princesses|prince and princesses}}""": """{{g|Ramehstor Rihul|princes and princesses|prince and princesses}}""", # Matyas
+        "{{#show: Artifact of Zag | ?title}}": "Plates of Zag",  # Venz hajnal
+        "{{has document | Spellbook}}": "{{has item | Spellbook}}",  # Adorran salom
+        "{{has document | Writ of Safe Passage}}": "{{has item | Writ of Safe Passage}}",  # Orrun Ambrus
+        "{{has greensheet | Kazkan Greensheet}}": "{{has greensheet | Recent History of Kazka}}",  # Many Kazkans
+        "{{has greensheet | Tzonkan Greensheet}}": "{{has greensheet | Recent History of Tzonka}}",  # Tiborc
+        "{{ has greensheet | Ambran Greensheet}}": "{{has greensheet | Recent History of Ambrus}}",  # Katalin
+        "Wound <name>": "Wound &lt;name&gt;",  # st guide
+        "Wound <target\'s name>": "Wound &lt;target\'s name&gt;",  # magic hunts
+        "Daze <target\'s name>": "Daze &lt;target\'s name&gt;",  # magic
+        """{{hide}}\n{{has ability | Signatory for Rihul}}\n{{unhide}}""": "{{has ability | Signatory for Rihul}}",  # Rammy
+    }
+    for typo, fix in TYPOS.items():
+        string = string.replace(typo, fix)
+    if sheet_name in {"hajdu_rozzu", "patrik_zahunt"}:
+        string = re.sub(r"\{\{has greensheet \| Recent History of Kazka\s*\}\}", "\{\{has greensheet \| Recent History of Kazka Hunts\}\}", string)
+    return string
+
+def post_html_manual_fixes(string, sheet_name):
+    TYPOS = {
         """ green rule.)}}</li>\n</ul>""": """ green rule.)</li>\n</ul>}}""",   # artificer's knowledge
         """ green rule.)}}</li>\r\n</ul>""": """ green rule.)</li>\r\n</ul>}}""",  # artificer's knowledge
         """<strong>Litzeer</strong> }}</li>\n</ul></li>\n</ul>""" : """<li>Freeze: <strong>Litzeer</strong> </li>\n</ul></li>\n</ul> }}""",  # magari
@@ -281,7 +325,6 @@ def manual_fixes(string, sheet_name):
         """appear by mid-April.}}</li>\r\n</ul>""": """appear by mid-April.</li>\n</ul>}}""",  # council of eminents
         """appear by mid-April.}}</li>\n</ul>""": """appear by mid-April.</li>\n</ul>}}""",  # council of eminents
         """==Current Business==""": "<h2>Current Business</h2>",  # council of eminents
-        """{{hide}} {{has ability | Signatory for Rihul}} {{unhide}}""": "{{has ability | Signatory for Rihul}}",  # Rammy
         """<code>\xa0|\xa0}}</code>""": "|}}",  # Opening the Gate
         """Today.}}</li>\r\n</ul>""": """April 25, 1276: Today.</li>\n</ul>}}""",  # hunt  manor
         """Today.}}</li>\n</ul>""": """April 25, 1276: Today.</li>\n</ul>}}""",  # hunt  manor
@@ -293,19 +336,9 @@ def manual_fixes(string, sheet_name):
         """Departures.}}</li>\n</ul>""": """Departures.</li>\n</ul>}}""",  # order of almos
         """302</em>}}</li>\r\n</ol></li>\r\n</ol></li>\r\n</ol>""": """302</em></li>\n</ol></li>\n</ol></li>\n</ol>}}""",  # keepers evidence
         """302</em>}}</li>\n</ol></li>\n</ol></li>\n</ol>""": """302</em></li>\n</ol></li>\n</ol></li>\n</ol>}}""",  # keepers evidence
-        """{{g|Ramestor Rihul|princes and princesses|prince and princesses}}""": """{{g|Ramehstor Rihul|princes and princesses|prince and princesses}}""", # Matyas
-        "{{#show: Artifact of Zag | ?title}}": "Plates of Zag",  # Venz hajnal
-        "{{has document | Spellbook}}": "{{has item | Spellbook}}",  # Adorran salom
-        "{{has document | Writ of Safe Passage}}": "{{has item | Writ of Safe Passage}}",  # Orrun Ambrus
-        "{{has greensheet | Kazkan Greensheet}}": "{{has greensheet | Recent History of Kazka}}",  # Many Kazkans
-        "{{has greensheet | Tzonkan Greensheet}}": "{{has greensheet | Recent History of Tzonka}}",  # Tiborc
-        "{{ has greensheet | Ambran Greensheet}}": "{{has greensheet | Recent History of Ambrus}}",  # Katalin
-        "Wound <name>": "Wound &lt;name&gt;",  # st guide
     }
     for typo, fix in TYPOS.items():
         string = string.replace(typo, fix)
-    if sheet_name in {"hajdu_rozzu", "patrik_zahunt"}:
-        string = re.sub(r"\{\{has greensheet \| Recent History of Kazka\s*\}\}", "\{\{has greensheet \| Recent History of Kazka Hunts\}\}", string)
     return string
 
 @lru_cache(maxsize=1000)
@@ -320,7 +353,7 @@ def get_expanded_content(sheet_name, convert_html=False):
 
     content = escape_spells(content)
 
-    content = manual_fixes(content, sheet_name)
+    content = pre_html_manual_fixes(content, sheet_name)
     return content
 
 def build_forkbomb_sheets_dict(forkbomb_data):
@@ -985,6 +1018,21 @@ assert test_result == "you said", test_result
 test_result = resolve_ifiam_macro(mwparserfromhell.parse("{{said | Bob}}"), "Alice")
 assert test_result == "said {{charnick|Bob}}", test_result
 
+abilities_map = defaultdict(set)
+def resolve_ability_macro(string, sheet_name: str):
+    """
+    {{ ability | <ability name> }}
+    collate who has which abilities, but for now just leave the text
+    """
+    def callback_ability(macro, args):
+        assert len(args) == 1
+        ability_name = resolve_arg_name_to_sheet(args[0])
+        abilities_map[ability_name].add(sheet_name)
+        return f"* {args[0]}"
+        
+    string = macro_hit_replace("has ability", string, callback_ability)
+    return string
+
 def resolve_ooc_macro(string):
     """
     replace {{ OOC | <text> }}
@@ -1008,7 +1056,7 @@ def resolve_commentout_macro(string):
             hover_text = args[0]
         else:
             import pdb; pdb.set_trace()
-        return WritersNode.new_html(type="hidden", visible_text=visible_text, hover_text=hover_text, hover_title="CommentOut (Imported wiki macro)")
+        return dedent(WritersNode.new_html(type="hidden", visible_text=visible_text, hover_text=hover_text, hover_title="CommentOut (Imported wiki macro)"))
     string = macro_hit_replace("CommentOut", string, callback_commentout)
     return string
 
@@ -1019,7 +1067,7 @@ def resolve_stnote_macro(string):
     def callback_stnote(macro, args):
         if len(args) > 1:
             logger.warning(f"STNote macro had too many args: {args}")
-        result = WritersNode.new_html(type="stnote", visible_text="", hover_text=args[0], hover_title="STNote (Imported wiki macro)")
+        result = dedent(WritersNode.new_html(type="stnote", visible_text="", hover_text=args[0], hover_title="STNote (Imported wiki macro)"))
         return result
     string = macro_hit_replace("STnote", string, callback_stnote)
     return string
@@ -1033,7 +1081,8 @@ def resolve_todo_macro(string):
     def callback_stnote(macro, args):
         if len(args) > 1:
             logger.warning(f"ToDo macro had too many args: {args}")
-        return WritersNode.new_html(type="todo", visible_text="", hover_text=args[0], hover_title="ToDo (Imported wiki macro)")
+        result = dedent(WritersNode.new_html(type="todo", visible_text="", hover_text=args[0], hover_title="ToDo (Imported wiki macro)"))
+        return result
     string = macro_hit_replace("ToDo", string, callback_stnote)
     return string
 
@@ -1047,7 +1096,8 @@ def resolve_g_macros(string):
         else:
             raise ValueError(f"g macro had wrong number of args: {args}")
         character = character_from_name(charname)
-        return newComplexGenderSwitchNodeHTML(character=character, m_version=m_version, f_version=f_version)
+        result = newComplexGenderSwitchNodeHTML(character=character, m_version=m_version, f_version=f_version)
+        return result
     string = macro_hit_replace("g", string, callback_g)
     return string
 
@@ -1103,6 +1153,7 @@ def oneshot_processing(data, fb_sheet_name:str):
     data = character_stats_show(data, fb_sheet_name)
     data = check_has_greensheets(data, fb_sheet_name)
     data = resolve_has_item_macro(data)
+    data = resolve_ability_macro(data, fb_sheet_name)
     return data
 
 def iterated_processing(data, fb_sheet_name:str):
@@ -1131,9 +1182,6 @@ def import_forkbomb_v2(fb_sheet_name:str):
     data_str = str(data)
     assert_valid_html(data_str)
 
-    data_str = mediawiki_to_html(data_str)
-    assert_valid_html(data_str)
-    data = mwparserfromhell.parse(data_str)
     iter = 0
     while old_data_str != data_str:
         logger.info(f"=== Iteration {iter} ===")
@@ -1142,7 +1190,10 @@ def import_forkbomb_v2(fb_sheet_name:str):
         data_str = str(data)
         assert_valid_html(data_str)
         iter += 1
+    data_str = mediawiki_to_html(data_str)
     data_str = cleanup_ps(data_str)
+
+    data_str = post_html_manual_fixes(data_str, fb_sheet_name)
     data_str = clear_hide_unhide(data_str)
     data_str = non_macro_cleanup(data_str)
     data_str = cleanup_excessive_linebreaks(data_str)
@@ -1198,6 +1249,11 @@ def main():
         with open("unresolved_templates.txt", "w") as f:
             f.write(result_string)
 
+        # print the abilities:
+        with open("abilities.txt", "w") as f:
+            for ability_name, sheets in abilities_map.items():
+                sheets_str = ", ".join(sheets)
+                f.write(f"{ability_name}: {sheets_str}\n")
     
 if __name__ == "__main__":
     main()

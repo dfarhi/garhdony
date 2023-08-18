@@ -69,7 +69,35 @@ def database_cleanup():
             new_char = NonPlayerCharacter(first_name_obj=name, last_name=l, gender_field=g, game=game)
             new_char.save()
             print(f"Created { m } { f } { l }")
-        
+    
+    gizella = PlayerCharacter.objects.get(game=game, last_name="Tzonka", first_name_obj__female="Gizella")
+    history_of_tzonka = Sheet.objects.get(game=game, filename="History of Tzonka")
+    gizella.sheets.add(history_of_tzonka)
+    gizella.save()
+
+    venz = PlayerCharacter.objects.get(game=game, last_name="Hajnal", first_name_obj__male="Venz")
+    wriitngs = Sheet.objects.get(game=game, filename="Writings of Sir Retel Verhdas")
+    venz.sheets.add(wriitngs)
+    venz.save()
+
+
+    for filename, new_display_name in {
+        "Magic (Hunts)": "Magic",
+        "Magic (Temesvar)": "Magic",
+        "Magar Possession (non-hell)": "Magar Possession",
+        "How to Summon Demons": "Notes about Boring Things",
+        "Priesthood Leadership (Matya)": "Priesthood Leadership",
+        "Kazka Hunts": "Rangers' Reports",
+        "Hunt Manor Map": "Map of Hunt Manor",
+        "Hunt Wood Map Public": "Hunt Wood Map",
+        "Hunt Manor Map (Timea)": "Map of Hunt Manor",
+        "Orrun Ambrus": "Orrun Ambrus III",
+        "Imre Tzonka": "Imre Tzonka IX",
+        "Order of Almos (Hunts)": "Order of Almos",
+    }.items():
+        sheet = Sheet.objects.get(game=game, filename=filename)
+        sheet.name = LARPstring(new_display_name)
+        sheet.save()
 
 database_cleanup()
 
@@ -213,7 +241,7 @@ def recursively_include_pages(string:str):
         string = re.sub(r"\{\{\s*" + page_name + r"\s*\}\}", resolved_content, string)
     return string
 
-def manual_fixes(string):
+def manual_fixes(string, sheet_name):
     TYPOS = {
         "{{charname | Matya Varadi}}": "{{charname | Matyas Varadi}}",  # gizella tzonka
         "{{charnick|Antal}}": "{{charnick|Antal Yenis}}",   # 
@@ -238,9 +266,17 @@ def manual_fixes(string):
         """302</em>}}</li>\r\n</ol></li>\r\n</ol></li>\r\n</ol>""": """302</em></li>\n</ol></li>\n</ol></li>\n</ol>}}""",  # keepers evidence
         """302</em>}}</li>\n</ol></li>\n</ol></li>\n</ol>""": """302</em></li>\n</ol></li>\n</ol></li>\n</ol>}}""",  # keepers evidence
         """{{g|Ramestor Rihul|princes and princesses|prince and princesses}}""": """{{g|Ramehstor Rihul|princes and princesses|prince and princesses}}""", # Matyas
+        "{{#show: Artifact of Zag | ?title}}": "Plates of Zag",  # Venz hajnal
+        "{{has document | Spellbook}}": "{{has item | Spellbook}}",  # Adorran salom
+        "{{has document | Writ of Safe Passage}}": "{{has item | Writ of Safe Passage}}",  # Orrun Ambrus
+        "{{has greensheet | Kazkan Greensheet}}": "{{has greensheet | Recent History of Kazka}}",  # Many Kazkans
+        "{{has greensheet | Tzonkan Greensheet}}": "{{has greensheet | Recent History of Tzonka}}",  # Tiborc
+        "{{ has greensheet | Ambran Greensheet}}": "{{has greensheet | Recent History of Ambrus}}",  # Katalin
         }
     for typo, fix in TYPOS.items():
         string = string.replace(typo, fix)
+    if sheet_name in {"hajdu_rozzu", "patrik_zahunt"}:
+        string = re.sub(r"\{\{has greensheet \| Recent History of Kazka\s*\}\}", "\{\{has greensheet \| Recent History of Kazka Hunts\}\}", string)
     return string
 
 @lru_cache(maxsize=1000)
@@ -252,7 +288,7 @@ def get_expanded_content(sheet_name, convert_html=False):
     content = recursively_include_pages(content)
     if convert_html:
         content = mediawiki_to_html(content)
-    content = manual_fixes(content)
+    content = manual_fixes(content, sheet_name)
     return content
 
 def build_forkbomb_sheets_dict(forkbomb_data):
@@ -290,15 +326,19 @@ forkbomb_sheets = build_forkbomb_sheets_dict(forkbomb_v2_csv)
 FORKBOMB_OBSOLETE_SHEETS = {
     'ambran_greensheet', 'kazkan_greensheet', 'kazkan_greensheet_berlo', 'rihul_greensheet', 'tzonkan_greensheet', 'varga_greensheet',
     'erszi_bakos', 'ambrus_writings', 'council_of_eminents:_current_business', 'history_of_garhdony', "mahdzo's_demons", "dogmas_succession_hunts",
-    'lorink_toggle_x', 'ritual_to_locate_prophet_detector', 'rihulian_economy', 'janna_kohvari_run2',
-    # these aren't obsolete but they are interior templates or just pngs
+    'lorink_toggle_x', 'rihulian_economy', 'janna_kohvari_run2', 'vargan_economic_notes', 
+    # these aren't obsolete but they are interior templates
     'herbology', 'dogmas_magic_cheat_sheet', 
-    'garhdony_map', 'hunt_manor_map_hunts', 'hunt_wood_map', 'hunt_wood_map_hunts', 'vargan_economic_notes', 'runebook'
     }
 OK_UNMAPPED_GARHDONY = {
+    # Produced outside forkbomb
     'ambran_economic_notes', 'kazkan_economic_notes', 'tzonkan_economic_notes', 'temesvar_economic_plans', 'cathedral_of_kelemen_construction_plans', 'cathedral_of_sandor_construction_plans', 'church_maintenance_plans', "spider's_notes",\
     'teaser_story', 'vargan_teaser_story', 'the_rules_of_tzikka',
-    'map_of_garhdony', 'hunt_manor_map', 'hunt_wood_map', 'hunt_wood_map_public', 'old_map_of_hunt_wood', 'standard_temesvar_runebook',
+    'old_map_of_hunt_wood',
+    }
+DONT_MIGRATE = {
+    # pdfs, pngs, etc
+    'garhdony_map', 'hunt_manor_map_hunts', 'hunt_manor_map_timea', 'hunt_wood_map', 'hunt_wood_map_hunts', 'runebook'
     }
 MANUAL_MAP = {
     'adorra_magic_sheet': 'adorran_magic_sheet', 
@@ -318,9 +358,16 @@ MANUAL_MAP = {
     'demon_summoning_spell': 'how_to_summon_demons',
     'council_of_eminents': 'priesthood_leadership',
     'council_of_eminents_matyas_varadi': 'priesthood_leadership_matya',
+
+    # Possibly bad titles
     'recent_history_of_kazka_hunts': 'kazka_hunts',
     'opening_the_gate': 'opening_the_gate_of_the_gods',
+    'runebook': 'standard_temesvar_runebook',
+    'hunt_manor_map_hunts': 'hunt_manor_map',
+    'hunt_wood_map': 'hunt_wood_map_public',
+    'hunt_wood_map_hunts': 'hunt_wood_map',
 }
+
 MANUAL_MAP_NONSHEET_FORKBOMB_PAGE = {
     'costuming': 'costuming_advice',
     'general_rules': 'general_rules',
@@ -419,8 +466,21 @@ def construct_sheet_mapping():
     return forkbomb_to_garhdony, garhdony_to_forkbomb, forkbomb_to_npcs
 sheets_mapping_f2g, sheets_mapping_g2f, forkbomb_to_npcs = construct_sheet_mapping()
 
+# Check all the dont_migrates names are typed right
+for fb_name in DONT_MIGRATE:
+    assert fb_name in sheets_mapping_f2g, f"Missing sheet {fb_name}"
 
-SPECIAL_NAME_MAP = {"Mister Nicalao": "Nicalao Gazpahr", "Janna Kohvari": "Rikhard Kohvari", "Ramehstor Rihul": "Ramestor Rihul"}
+for fb, gh in sheets_mapping_f2g.items():
+    if fb not in forkbomb_sheets:
+        logger.warning(f"Missing sheet metadata {fb}")
+        continue
+    fb_name = forkbomb_sheets[fb].get('title', forkbomb_sheets[fb].get('name', None))
+    if fb_name != gh.name.render():
+        # logger.warning(f"Title mismatch: {fb} ({fb_name}) vs {gh.name.render()}")
+        pass
+
+NEW_CHARACTERS = ["Rikhard Kohvari", "Sammi Ehroz", "Timea Hunt", "Katalin Aller", "Domnika Zhell"]
+
 POSSESSION_MAP = {"Zofiya": ("Isti Majoras", "F"), "Sandor": ("Adorra Salom", "M"), "Marika": ("Venz Hajnal", "F")}
 @lru_cache(maxsize=1000)
 def character_from_name(name:str):
@@ -656,6 +716,9 @@ def character_stats_check(string, sheet_name):
         if len(forkbomb_tag_args) > 1:
             assert len(forkbomb_tag_args)==2 and forkbomb_tag_args[1] == "show=1", f"Stat tag had too many args: {forkbomb_tag_args}"
         forkbomb_v2_value = forkbomb_tag_args[0].strip()
+        if db_stat_name == "Age" and forkbomb_v2_value == "1281":
+            # ignore magari ages
+            return ""
         db_value = character.get_stat(db_stat_name).strip()
         if db_value == "":
             character.set_stat(db_stat_name, forkbomb_v2_value)
@@ -727,6 +790,7 @@ def check_has_greensheets(string, sheet_name: str):
     character = character_from_name(sheet_name)
     if character is not None:
         sheets = set(s.name.render() for s in character.sheets.all())
+        new = (character.name() in NEW_CHARACTERS)
     def has_greensheet_callback(macro, args):
         if character is None:
             logger.warning(f"Sheet check on non-existent character: {sheet_name}")
@@ -734,18 +798,22 @@ def check_has_greensheets(string, sheet_name: str):
         assert len(args) == 1
         greensheet_page_name = resolve_arg_name_to_sheet(args[0])
         try:
-            greensheet_data = forkbomb_sheets[greensheet_page_name]
+            gh_sheet = sheets_mapping_f2g[greensheet_page_name]
         except KeyError:
             logger.warning(f"Failed to find sheet {greensheet_page_name} for {sheet_name}")
             return None
-        greensheet_name = greensheet_data["title"]
-        if greensheet_name not in sheets:
-            logger.warning(f"Sheet '{greensheet_name}' not found on character {sheet_name}; has {sheets}")
-        return greensheet_name
-    string = macro_hit_replace("has greensheet", string, has_greensheet_callback)
-    string = macro_hit_replace("has document", string, has_greensheet_callback)
-    string = macro_hit_replace("has yellowsheet", string, has_greensheet_callback)
-    string = macro_hit_replace("has whitesheet", string, has_greensheet_callback)
+        gh_name = gh_sheet.name.render()
+        if gh_name not in sheets and not new:
+            if gh_name == 'Writings of Sir Retel Verhdas' and sheet_name == 'tiborc_kertehsz':
+                # special case, here I think it's fine not to have it,
+                return ""            
+            logger.warning(f"Sheet '{gh_name}' not found on character {sheet_name}; has {sheets}")
+            return None
+        if new:
+            logger.info(f"Adding sheet '{gh_name}' to new character {sheet_name}")
+            character.sheets.add(gh_sheet)
+        return gh_name
+    string = macro_hit_replace("has (greensheet|document|yellowsheet|whitesheet|appendix)", string, has_greensheet_callback)
 
     return string
 
@@ -943,24 +1011,24 @@ def all_processing(data: str, fb_sheet_name:str) -> str:
 
     data = mwparserfromhell.parse(data)
     data = resolve_you_macro(data, fb_sheet_name)
-    data = replace_genderized_keywords(data)
+    data = replace_genderized_keywords(data)  # Creates html
     data = character_stats_check(data, fb_sheet_name)
     data = character_stats_show(data, fb_sheet_name)
     data = check_has_greensheets(data, fb_sheet_name)
     data = resolve_var_owner_macro(data)
     data = resolve_ifeq(data)
     data = clear_unused_tags(data)
-    data = resolve_pagebreak_macro(data)
-    data = resolve_chapter_macro(data)
+    data = resolve_pagebreak_macro(data)  # Creates html
+    data = resolve_chapter_macro(data)  # Creates html?
     data = resolve_charname_and_charnicks(data)
     data = resolve_ifcastle_macro(data)
     data = resolve_date1276_macro(data)
     data = resolve_ifiam_macro(data, fb_sheet_name)
-    data = resolve_ooc_macro(data)
-    data = resolve_commentout_macro(data)
-    data = resolve_stnote_macro(data)
-    data = resolve_todo_macro(data)
-    data = resolve_g_macros(data)
+    data = resolve_ooc_macro(data)  # Creates html
+    data = resolve_commentout_macro(data)  # Creates html
+    data = resolve_stnote_macro(data)  # Creates html
+    data = resolve_todo_macro(data)  # Creates html
+    data = resolve_g_macros(data) # Creates html
     data = str(data)
     data = clear_hide_unhide(data)
     data = non_macro_cleanup(data)
@@ -1005,8 +1073,7 @@ def main():
     
     sheet_name = standardize_name(args.sheet_name)
     if sheet_name == "all":
-        BLACKLIST = []#["benkai_garmani", "dogmas_magic_hunts", "dogmas_magic_temesvar"]
-        target_sheets = {k: v for k, v in sheets_mapping_f2g.items() if "magic_sheet" not in k and k not in BLACKLIST}
+        target_sheets = {k: v for k, v in sheets_mapping_f2g.items() if "magic_sheet" not in k and k not in DONT_MIGRATE}
     else:
         target_sheets = {sheet_name: sheets_mapping_f2g[sheet_name]}
 

@@ -10,6 +10,13 @@
     page-break-after: always;
 }
 
+#sheet-content blockquote {
+    /* blockquotes are a different, blockier font */
+    font-family: "Times New Roman", Times, serif;
+    border: 1px solid #CCC;
+    padding: 10px;
+}
+
 .player-inline-aside {
     /* nomral text but highlighted to be obviously slightly different */
     background-color: #EEE;

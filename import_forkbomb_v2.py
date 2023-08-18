@@ -4,6 +4,7 @@ import csv
 import datetime
 import django
 from functools import lru_cache
+import html5lib
 import mwparserfromhell
 import os
 import re
@@ -133,8 +134,21 @@ def cleanup_ps(string: str) -> str:
     string = re.sub(r"<p>\s*</p>", "", string)
     
     # Now replace the rest
-    string = string.replace("</p>", "<br><br>")
+    string = string.replace("</p>", "<br><br>\n\n")
     string = string.replace("<p>", "")
+    return string
+
+def cleanup_code_tags(string: str) -> str:
+    """
+    The parser often puts things like this:
+    <code>&nbsp;&nbsp;This&nbsp;was&nbsp;indented&nbsp;with&nbsp;spaces&nbsp;but&nbsp;the&nbsp;parser&nbsp;doesn't&nbsp;like&nbsp;that</code>
+    We want to return it to:
+        This was indented with spaces but the parser doesn't like that
+    Ideally without removing any other nbsp's that aren't inside a <code> offender
+    """
+    blocks = re.findall(r"<code>.*?</code>", string)
+    for block in blocks:
+        string = string.replace(block, block.replace("\xa0", " ").replace("<code>", "").replace("</code>", ""))
     return string
 
 def mediawiki_to_html(string: str) -> str:
@@ -171,6 +185,8 @@ def mediawiki_to_html(string: str) -> str:
         print(e)
         import pdb; pdb.set_trace()
     clean_output_string = cleanup_ps(output_string).strip()
+    clean_output_string = cleanup_code_tags(clean_output_string)
+    assert '<code>' not in clean_output_string, clean_output_string
     return clean_output_string
 test_result = mediawiki_to_html("""
 List:
@@ -188,6 +204,10 @@ test_result = mediawiki_to_html("{{foobar}}")
 assert "{{foobar}}" in test_result, test_result
 test_result = mediawiki_to_html("{{charname|Antal Yenis}}")
 assert "{{charname|Antal Yenis}}" in test_result, test_result
+test_result = mediawiki_to_html("""
+                                foo
+                                bar
+                                """)
 
 RECURSIVE_INCLUDE_PAGES = ["Kelemen's Message", "timeline", "goals", "contacts", "packet", "AWhile"]
 def resolve_arg_name_to_sheet(arg_name: str) -> str:
@@ -241,6 +261,14 @@ def recursively_include_pages(string:str):
         string = re.sub(r"\{\{\s*" + page_name + r"\s*\}\}", resolved_content, string)
     return string
 
+def escape_spells(string: str) -> str:
+    """
+    Replace <T: ... > with &lt;T: ... &gt;
+    """
+    return re.sub(r"<([TtDd]):([^>]*)>", r"&lt;\1:\2&gt;", string)
+test_result = escape_spells("(heal / <D:infinity> / <T:H> / <T:B> / <T:N> /<T:I> /<T:blood> / (heal / <T:blood>x3))")
+assert test_result == "(heal / &lt;D:infinity&gt; / &lt;T:H&gt; / &lt;T:B&gt; / &lt;T:N&gt; /&lt;T:I&gt; /&lt;T:blood&gt; / (heal / &lt;T:blood&gt;x3))", test_result
+
 def manual_fixes(string, sheet_name):
     TYPOS = {
         "{{charname | Matya Varadi}}": "{{charname | Matyas Varadi}}",  # gizella tzonka
@@ -272,7 +300,8 @@ def manual_fixes(string, sheet_name):
         "{{has greensheet | Kazkan Greensheet}}": "{{has greensheet | Recent History of Kazka}}",  # Many Kazkans
         "{{has greensheet | Tzonkan Greensheet}}": "{{has greensheet | Recent History of Tzonka}}",  # Tiborc
         "{{ has greensheet | Ambran Greensheet}}": "{{has greensheet | Recent History of Ambrus}}",  # Katalin
-        }
+        "Wound <name>": "Wound &lt;name&gt;",  # st guide
+    }
     for typo, fix in TYPOS.items():
         string = string.replace(typo, fix)
     if sheet_name in {"hajdu_rozzu", "patrik_zahunt"}:
@@ -288,6 +317,9 @@ def get_expanded_content(sheet_name, convert_html=False):
     content = recursively_include_pages(content)
     if convert_html:
         content = mediawiki_to_html(content)
+
+    content = escape_spells(content)
+
     content = manual_fixes(content, sheet_name)
     return content
 
@@ -1011,6 +1043,33 @@ def non_macro_cleanup(string):
         string = re.sub(r"\s*<strong>Age:</strong>", "", string)
     return string
 
+def cleanup_excessive_linebreaks(string):
+    """ replace any number of <br>s greater than two, with only two."""
+    string = re.sub(r"<br\s*/?>\s*(<br\s*/?>\s*)+", "<br><br>\n\n", string)
+    return string
+
+def assert_valid_html(string, pdb=True):
+    parser = html5lib.HTMLParser(strict=True)
+    # Encapsulate it in the DOCTYPE stuff that html5lib expects
+    wrapped_string = "<!DOCTYPE html><html><head></head><body>" + string + "</body></html>"
+    try:
+        parser.parse(wrapped_string)
+    except Exception as e:
+        if pdb:
+            import pdb; pdb.set_trace()
+        raise e
+test_result = assert_valid_html("<p>foo</p>", pdb=False)
+assert test_result is None, test_result
+try:
+    test_result = assert_valid_html("<div>foo<p>bar</div> baz </p>", pdb=False)
+    raise ValueError("Should have failed")
+except Exception as e:
+    # Anything other than ValueError is fine
+    if isinstance(e, ValueError):
+        raise e
+    else:
+        pass
+
 def oneshot_processing(data, fb_sheet_name:str):
     braces_count = data.count("{{")
     logger.info(f"  Found {braces_count} templates in {fb_sheet_name}")
@@ -1044,10 +1103,13 @@ def iterated_processing(data, fb_sheet_name:str):
 
 def import_forkbomb_v2(fb_sheet_name:str):
     data_str = get_expanded_content(fb_sheet_name, convert_html=True)
+    assert_valid_html(data_str)
     data = mwparserfromhell.parse(data_str)
     old_data_str = None
 
     data = oneshot_processing(data, fb_sheet_name)
+    data_str = str(data)
+    assert_valid_html(data_str)
 
     iter = 0
     while old_data_str != data_str:
@@ -1055,10 +1117,12 @@ def import_forkbomb_v2(fb_sheet_name:str):
         old_data_str = data_str
         data = iterated_processing(data, fb_sheet_name)
         data_str = str(data)
+        assert_valid_html(data_str)
         iter += 1
     data_str = cleanup_ps(data_str)
     data_str = clear_hide_unhide(data_str)
     data_str = non_macro_cleanup(data_str)
+    data_str = cleanup_excessive_linebreaks(data_str)
     return data_str
 
 def import_forkbomb_v2_sheet(fb_sheet_name: str, garhdony_sheet: Sheet):

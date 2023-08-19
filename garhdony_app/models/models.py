@@ -296,12 +296,14 @@ def embeddedImageUploadTo(embeddedimage, filename=''):
 class EmbeddedImage(models.Model):
     # name = models.CharField(max_length=200)
     # We probably don't need EmbeddedImage.filename and should use EmbeddedImage.file.name instead. Oh well.
-    filename = models.CharField(max_length=210, unique=True)
+    filename = models.CharField(max_length=210)
     game = models.ForeignKey(GameInstance, related_name="EmbeddedImages", on_delete=models.CASCADE)
     file = models.FileField(upload_to=embeddedImageUploadTo)
     # sheets = models.ManyToManyField(Sheet, related_name="EmbeddedImages")
     timestamp = models.DateTimeField(auto_now_add=True, blank=True)
 
+    class Meta:
+        unique_together = ('filename', 'game')
 
     def delete(self, using=None):
         os.remove(self.absolute_path)

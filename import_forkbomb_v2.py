@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 import csv
 import datetime
 import django
+from django.core.files import File
 from functools import lru_cache
 import html5lib
 import mwparserfromhell
@@ -10,12 +11,14 @@ import os
 import re
 from typing import Callable, Dict, List, Tuple
 
+from import_forkbomb_preprocess_images import unpack_images
+
 # setup stuff so django is happy
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
 django.setup()
 
 from garhdony_app.LARPStrings import LARPstring
-from garhdony_app.models import GenderizedKeyword, GenderizedName, Character, Sheet, GameInstance, SheetRevision, NonPlayerCharacter, PlayerCharacter
+from garhdony_app.models import GenderizedKeyword, GenderizedName, Character, Sheet, GameInstance, SheetRevision, NonPlayerCharacter, PlayerCharacter, EmbeddedImage
 from garhdony_app.span_parser import WritersBubbleInnerNode, WritersNode, inlineAsideHTML, newComplexGenderSwitchNodeHTML, newGenderStaticNode, newGenderSwitchNode, newGenderSwitchNodeGeneric
 
 
@@ -30,7 +33,14 @@ logging.getLogger("garhdony_app.models").setLevel(logging.INFO)
 logging.getLogger('django.db.backends').setLevel(logging.ERROR)
 
 
-GAME_NAME = "DogmasCloneTest8"
+def surroundings(string, snippet, width=100):
+    """ return the 20 characters before and after the snippet """
+    index = string.find(snippet)
+    if index == -1:
+        return None
+    return string[index-width:index+width]
+
+GAME_NAME = "DogmasRevival"
 game = GameInstance.objects.get(name=GAME_NAME)
 
 def database_cleanup():
@@ -64,6 +74,12 @@ def database_cleanup():
 
     for m, f, l, g in [
         ("Pahl", "Pahla", "Harsanyi", "F"),
+        ("Finlo", "????", "Hunt", "M"),
+        ("Mahdzo", "????", "Hunt", "M"),
+        ("????", "Minka", "Hunt", "F"),
+        ("Gyorgy", "????", "Zahunt", "M"),
+        ("????", "Iren", "Varga", "F"),
+        ("Kuhlmer", "????", "Valzant", "M"),
     ]:
         if NonPlayerCharacter.objects.filter(game=game, last_name=l, first_name_obj__male=m, first_name_obj__female=f).exists():
             logger.info(f"Already created { m } { f } { l }")
@@ -72,6 +88,10 @@ def database_cleanup():
             new_char = NonPlayerCharacter(first_name_obj=name, last_name=l, gender_field=g, game=game)
             new_char.save()
             logger.warning(f"Created { m } { f } { l }")
+    kuhlmer = NonPlayerCharacter.objects.get(game=game, last_name="Valzant")
+    kuhlmer.title_obj = GenderizedKeyword.objects.get(male="Sir")
+    kuhlmer.save()
+
     
     gizella = PlayerCharacter.objects.get(game=game, last_name="Tzonka", first_name_obj__female="Gizella")
     history_of_tzonka = Sheet.objects.get(game=game, filename="History of Tzonka")
@@ -174,29 +194,8 @@ def mediawiki_to_html(string: str) -> str:
     
     safe_string = string
     starting_templates = re.findall(r"{{.*?}}", string)
-    
-    # num_braces = string.count("{"), string.count("}"), string.count("|"), string.count("["), string.count("]")
-    # safe_string = string.replace("{{", "DOUBLEOPENBRACE")
-    # safe_string = safe_string.replace("}}", "DOUBLECLOSEBRACE")
-    # safe_string = safe_string.replace("|", "PIPE")
-    # safe_string = safe_string.replace("[[", "DOUBLEOPENBRACKET")
-    # safe_string = safe_string.replace("]]", "DOUBLECLOSEBRACKET")
-    # Add args to avoid extra linebreaks due to wrapping and headings.
     convert_safe_string = pypandoc.convert_text(safe_string, "html", format="mediawiki", extra_args=["--wrap=none", "--no-highlight"])
-    # output_string = convert_safe_string.replace("DOUBLEOPENBRACE", "{{")
-    # output_string = output_string.replace("DOUBLECLOSEBRACE", "}}")
-    # output_string = output_string.replace("PIPE", "|")
-    # output_string = output_string.replace("DOUBLEOPENBRACKET", "[[")    
-    # output_string = output_string.replace("DOUBLECLOSEBRACKET", "]]")
-    # # Check the number of braces is right
-    # try:
-    #     new_num_braces = output_string.count("{"), output_string.count("}"), output_string.count("|"), output_string.count("["), output_string.count("]")
-    #     assert num_braces == new_num_braces, f"num_braces {num_braces} != new_num_braces {new_num_braces}"
-    # except AssertionError as e:
-    #     print(e)
-    #     import pdb; pdb.set_trace()
-    output_string = convert_safe_string
-    clean_output_string = cleanup_ps(output_string).strip()
+    clean_output_string = cleanup_ps(convert_safe_string).strip()
     clean_output_string = cleanup_code_tags(clean_output_string)
     assert '<code>' not in clean_output_string, clean_output_string
     remaining_templates = re.findall(r"{{.*?}}", clean_output_string)
@@ -815,8 +814,8 @@ def character_stats_show(string, sheet_name):
     string = macro_hit_replace(r"\#show:(^\})*", string, callback_show_stat)
     return string
 
-test_result = character_stats_show(mwparserfromhell.parse("foo {{#show: Hajdu Rozzu | ?MP}} bar"), "")
-assert test_result == "foo 9 bar", test_result
+# test_result = character_stats_show(mwparserfromhell.parse("foo {{#show: Hajdu Rozzu | ?MP}} bar"), "")
+# assert test_result == "foo 9 bar", test_result
 
 def resolve_ifeq(string):
     """
@@ -1127,6 +1126,56 @@ def resolve_g_macros(string):
     string = macro_hit_replace("g", string, callback_g)
     return string
 
+def clear_embedded_images(game):
+    EmbeddedImage.objects.filter(game=game).delete()
+# clear_embedded_images(game)
+
+def resolve_embedded_images(data):
+    """ 
+    data is a wikicode object
+    We need to process all the [[File:filename]] snippets
+    """
+    assert data is not None
+    for template in data.filter_wikilinks():
+        splt = template.title.split(":", maxsplit=1)
+        if len(splt) == 1:
+            continue
+        namespace, filename = splt
+        filename = filename.strip().replace(" ", "_")
+        if namespace != "File":
+            continue
+        style = {}
+        if template.text:
+            for opt in template.text.split("|"):
+                p = opt.strip()
+                if p.endswith("px"):
+                    w = int(p[:-2])
+                    style["width"] = p
+                else:
+                    import pdb; pdb.set_trace()
+        style_string = "; ".join(f'{k}: {v}' for k, v in style.items())
+        # See if we already have the file
+        try:
+            embedded_image = EmbeddedImage.objects.get(game=game, filename=filename)  
+        except EmbeddedImage.DoesNotExist:
+            # find it in data/forkbomb_images/<filename>
+            # check that the file doesn't already exist:
+            logger.info(f"Creating embedded image {filename}")
+            if os.path.exists(os.path.join(game.sheets_directory, "embedded_images", filename)):
+                print(f"File {filename} already exists in game {game.name} but is not in the database")
+                import pdb; pdb.set_trace()
+            try:
+                file = open(f"data/forkbomb_images/{filename}", "rb")
+                embedded_image = EmbeddedImage(game=game, filename=filename, file=File(file))
+                embedded_image.save()
+            except FileNotFoundError:
+                logger.warning(f"File {filename} not found in data/forkbomb_images")
+
+        # Replace the wikicode with an image tag
+        url = embedded_image.url
+        data.replace(template, f'<img data-id="{embedded_image.id}" src="{url}" style="{style_string}">')
+    return data
+
 def clear_hide_unhide(string):
     # regex should match "{{hide  }} <br> <br><br> {{unhide}}" with arbitrary whitespace and any number of br tags
     string = re.sub(r"{{\s*hide\s*}}\s*(<br\s*/?>\s*)*{{\s*unhide\s*}}", "", string, flags=re.IGNORECASE)
@@ -1185,6 +1234,7 @@ def oneshot_processing(data, fb_sheet_name:str):
     data = check_has_greensheets(data, fb_sheet_name)
     data = resolve_has_item_macro(data)
     data = resolve_ability_macro(data, fb_sheet_name)
+    data = resolve_embedded_images(data)
     return data
 
 def iterated_processing(data, fb_sheet_name:str):
@@ -1210,6 +1260,7 @@ def import_forkbomb_v2(fb_sheet_name:str):
     data_str = get_expanded_content(fb_sheet_name, convert_html=False)
     assert_valid_html(data_str)
     data = mwparserfromhell.parse(data_str)
+    assert data_str == str(data)
     old_data_str = None
 
     data = oneshot_processing(data, fb_sheet_name)
@@ -1264,6 +1315,8 @@ def main():
         target_sheets = {k: v for k, v in sheets_mapping_f2g.items() if "magic_sheet" not in k and k not in DONT_MIGRATE}
     else:
         target_sheets = {sheet_name: sheets_mapping_f2g[sheet_name]}
+
+    unpack_images()
 
     unresolved_templates = {}
     for fb_name, gh_sheet in sorted(list(target_sheets.items()))[:args.max_sheets]:

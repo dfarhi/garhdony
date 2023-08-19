@@ -11,4 +11,4 @@ django-sendfile
 html5lib
 mwparserfromhell
 pypandoc
-
+tarfile

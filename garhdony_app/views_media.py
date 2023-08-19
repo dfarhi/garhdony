@@ -44,7 +44,7 @@ def can_see_image(request, image_name):
 def media_sheet_embedded_image(request, run_name, image_name):
     def render_embedded_image(writer, game):
         if writer or can_see_image(request, image_name):
-            image = EmbeddedImage.objects.get(filename=image_name)
+            image = EmbeddedImage.objects.get(game=game, filename=image_name)
             return sendfile(request, image.absolute_path)
         else:
             raise Http404

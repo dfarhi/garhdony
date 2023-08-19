@@ -17,6 +17,11 @@
     padding: 10px;
 }
 
+#sheet-content table td {
+    /* table cells center their contents */
+    text-align: center;
+}
+
 .player-inline-aside {
     /* nomral text but highlighted to be obviously slightly different */
     background-color: #EEE;

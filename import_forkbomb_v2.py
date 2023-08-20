@@ -179,6 +179,60 @@ def cleanup_code_tags(string: str) -> str:
     string = string.replace("<br />", "")
     return string
 
+
+TABLE_CLASS_MAPPING = {
+    'text-align: left;': None,
+    'text-align: center; width: 85%;': 'runelist',
+}
+def table_style_to_class(attrs_str) -> str:
+    """
+    attrs is e.g. 
+        style="background-color: #ffffff; border-style: none; text-align: center; width:85%;" cellpadding="5" class="wikitable"
+    """
+    attrs_dict = {}  # e.g. 'style': "...", 'class': "wikitable", 'cellpadding': "5"
+    #we later have to process the style attr string further
+    for match in re.findall(r"(\w+)=\"(.*?)\"", attrs_str):
+        attrs_dict[match[0]] = match[1]
+    # wikitable class doesn't exist anymore
+    if 'class' in attrs_dict:
+        if attrs_dict['class'] == "wikitable":
+            attrs_dict.pop('class', None)
+        else:
+            logger.warning(f"Unknown table class {attrs_dict['class']}")
+    # cell padding is always 5, and doesn't do anything.
+    if 'cellpadding' in attrs_dict:
+        attrs_dict.pop('cellpadding', None)
+    # Only key left should be style (or nothing)
+    if len(attrs_dict) > 1 or (len(attrs_dict) == 1 and 'style' not in attrs_dict):
+        logger.warning(f"Unknown table attributes {attrs_dict}")
+    # Now we need to process the style attr string
+    style_dict = {}
+    if 'style' in attrs_dict:
+        for match in re.findall(r"(\S*?)\s*:\s*(.*?)\s*;", attrs_dict['style']):
+            style_dict[match[0]] = match[1]
+    # Clear out things that are explicitly re-set to default
+    if 'background-color' in style_dict and style_dict['background-color'] in {"#ffffff", "#ffffee"}:  # Remove this random yellow background
+        style_dict.pop('background-color')
+    if 'color' in style_dict and style_dict['color'] == "black":
+        style_dict.pop('color')
+    if 'border-style' in style_dict and style_dict['border-style'] == "none":
+        style_dict.pop('border-style')
+        style_dict.pop('border-width', None)
+
+    # Now we need to convert the style dict back to a canonical string
+    style_str = " ".join([f"{key}: {value};" for key, value in sorted(style_dict.items())])
+    attrs_dict['style'] = style_str
+    # Now we need to convert the attrs dict back to a canonical string
+    if style_str in TABLE_CLASS_MAPPING:
+        cls = TABLE_CLASS_MAPPING[style_str]
+        attrs_dict.pop('style', None)
+        if cls is not None:
+            attrs_dict['class'] = cls
+    else:
+        logger.warning(f"Unmapped table style {style_str}")
+    output_attrs_str = " ".join([f'{key}="{value}"' for key, value in sorted(attrs_dict.items())])
+    return output_attrs_str
+
 def mediawiki_to_html(string: str) -> str:
     """
     Replace things like "==foo==" -> "<h2>foo</h2>"
@@ -192,11 +246,25 @@ def mediawiki_to_html(string: str) -> str:
     # Hack this together by escaping the braces marking templates, then unescaping them after
     # We also don't want pandoc screwing with [[...]] links, so we escape those too
     
-    safe_string = string
     starting_templates = re.findall(r"{{.*?}}", string)
-    convert_safe_string = pypandoc.convert_text(safe_string, "html", format="mediawiki", extra_args=["--wrap=none", "--no-highlight"])
+
+    #  pandoc ignores attributes on tables, so we need to remember them and re-add them later
+    table_attributes = re.findall(r"\{\|.*\n", string)
+    # Strip off the {| and \n
+    table_attributes = [attr[2:-1] for attr in table_attributes]
+    convert_safe_string = pypandoc.convert_text(string, "html", format="mediawiki", extra_args=["--wrap=none", "--no-highlight"])
     clean_output_string = cleanup_ps(convert_safe_string).strip()
     clean_output_string = cleanup_code_tags(clean_output_string)
+    if table_attributes:
+        # Now put back the table attributes
+        # making sure the first goes on the first table, next on the second table, etc.
+        table_attributes = [table_style_to_class(l) for l in table_attributes]
+        if len(table_attributes) != clean_output_string.count("<table>"):
+            logger.error(f"""Table attributes len {len(table_attributes)} not {clean_output_string.count("<table>")}: {table_attributes}""")
+            import pdb; pdb.set_trace()
+        splt = clean_output_string.split("<table>")
+        tags = [f"<table {table_attribute}>" for table_attribute in table_attributes]
+        clean_output_string = splt[0] + "".join([tag + splt[i+1] for i, tag in enumerate(tags)])
     assert '<code>' not in clean_output_string, clean_output_string
     remaining_templates = re.findall(r"{{.*?}}", clean_output_string)
     swallowed_templates = set(starting_templates) - set(remaining_templates)
@@ -324,14 +392,12 @@ def pre_html_manual_fixes(string, sheet_name):
     return string
 
 @lru_cache(maxsize=1000)
-def get_expanded_content(sheet_name, convert_html=False):
+def get_expanded_content(sheet_name):
     """
     Get the content of a sheet, with all the includes resolved
     """
     content = page_content(sheet_name)
     content = recursively_include_pages(content)
-    if convert_html:
-        content = mediawiki_to_html(content)
 
     content = escape_spells(content)
 
@@ -1256,8 +1322,16 @@ def iterated_processing(data, fb_sheet_name:str):
     data = resolve_g_macros(data)
     return data
 
+def print_table(str):
+    print("================================================================================================================================================")
+    # need to match shortest possible string, otherwise we get all of them.
+    t = re.search(r"\{\|.*?\|\}", str, flags=re.DOTALL)
+    if t:
+        #just the first hit
+        print(t[0])
+
 def import_forkbomb_v2(fb_sheet_name:str):
-    data_str = get_expanded_content(fb_sheet_name, convert_html=False)
+    data_str = get_expanded_content(fb_sheet_name)
     assert_valid_html(data_str)
     data = mwparserfromhell.parse(data_str)
     assert data_str == str(data)

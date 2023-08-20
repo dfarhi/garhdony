@@ -3,6 +3,8 @@
 }
 
 #sheet-content h3 {
+    padding-top: 18pt;
+    padding-bottom: 6pt;
     font-size: 18pt;
 }
 
@@ -17,9 +19,20 @@
     padding: 10px;
 }
 
-#sheet-content table td {
-    /* table cells center their contents */
+#sheet-content table {
+    table-layout: fixed;
+    text-align: left;
+}
+
+#sheet-content td {
+    padding: 5px;
+}
+
+#sheet-content table.runelist {
     text-align: center;
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .player-inline-aside {

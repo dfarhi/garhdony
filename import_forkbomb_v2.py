@@ -1220,6 +1220,13 @@ def resolve_embedded_images(data):
                 else:
                     import pdb; pdb.set_trace()
         style_string = "; ".join(f'{k}: {v}' for k, v in style.items())
+
+        if not os.path.exists(os.path.join("data", "forkbomb_images", filename)):
+            # check if it's there with different capitalization
+            for f in os.listdir(os.path.join("data", "forkbomb_images")):
+                if f.lower() == filename.lower():
+                    filename = f
+                    break
         # See if we already have the file
         try:
             embedded_image = EmbeddedImage.objects.get(game=game, filename=filename)  
@@ -1230,17 +1237,15 @@ def resolve_embedded_images(data):
             if os.path.exists(os.path.join(game.sheets_directory, "embedded_images", filename)):
                 print(f"File {filename} already exists in game {game.name} but is not in the database")
                 import pdb; pdb.set_trace()
-            if not os.path.exists(os.path.join("data", "forkbomb_images", filename)):
-                # check if it's there with different capitalization
-                for f in os.listdir(os.path.join("data", "forkbomb_images")):
-                    if f.lower() == filename.lower():
-                        os.rename(os.path.join("data", "forkbomb_images", f), os.path.join("data", "forkbomb_images", filename))
             try:
                 file = open(f"data/forkbomb_images/{filename}", "rb")
                 embedded_image = EmbeddedImage(game=game, filename=filename, file=File(file))
                 embedded_image.save()
             except FileNotFoundError:
                 logger.warning(f"File {filename} not found in data/forkbomb_images")
+            except Exception as e:
+                logger.error(f"Error creating embedded image {filename}: {e}")
+                import pdb; pdb.set_trace()
 
         # Replace the wikicode with an image tag
         url = embedded_image.url

@@ -1230,6 +1230,12 @@ def resolve_embedded_images(data):
             if os.path.exists(os.path.join(game.sheets_directory, "embedded_images", filename)):
                 print(f"File {filename} already exists in game {game.name} but is not in the database")
                 import pdb; pdb.set_trace()
+            if not os.path.exists(os.path.join("data", "forkbomb_images", filename)):
+                # check if it's there with different capitalization
+                for f in os.listdir(os.path.join("data", "forkbomb_images")):
+                    if f.lower() == filename.lower():
+                        filename = f
+                        break
             try:
                 file = open(f"data/forkbomb_images/{filename}", "rb")
                 embedded_image = EmbeddedImage(game=game, filename=filename, file=File(file))

@@ -11,7 +11,7 @@ import os
 import re
 from typing import Callable, Dict, List, Tuple
 
-from import_forkbomb_preprocess_images import unpack_images
+from import_forkbomb_preprocess_images import unpack
 
 # setup stuff so django is happy
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
@@ -1390,7 +1390,7 @@ def main():
     else:
         target_sheets = {sheet_name: sheets_mapping_f2g[sheet_name]}
 
-    unpack_images()
+    unpack()
 
     unresolved_templates = {}
     for fb_name, gh_sheet in sorted(list(target_sheets.items()))[:args.max_sheets]:

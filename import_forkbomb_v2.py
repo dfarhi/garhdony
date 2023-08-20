@@ -1207,7 +1207,7 @@ def resolve_embedded_images(data):
         if len(splt) == 1:
             continue
         namespace, filename = splt
-        filename = filename.strip().replace(" ", "_").capialize()
+        filename = filename.strip().replace(" ", "_").capitalize()
         if namespace != "File":
             continue
         style = {}

@@ -1088,14 +1088,13 @@ class ComplexGenderSwitchNode(GenderSwitchNode):
         # Only render the span tht actually has the stuff; that's entry 1 (after the placeholder space).
         # Otherwise it displays extra spaces.
         self.update() # Need to do this like a good GenderNode
-        return self.main_span().render(tagify=False, writer=writer)
+        return self.main_span().render(tagify=False, writer=writer).strip()
 
 def newComplexGenderSwitchNodeHTML(character, m_version, f_version) -> ComplexGenderSwitchNode:
     gender = character.gender()
     cur_version = m_version if gender == "M" else f_version
     alt_version = f_version if gender == "M" else m_version
-    return f"""<span data-larp-action="gender" class="writers-bubble gender" contenteditable="false" data-character="{character.id}" data-default-gender="{gender}">
-            &nbsp;
+    return f"""<span data-larp-action="gender" class="writers-bubble gender" contenteditable="false" data-character="{character.id}" data-default-gender="{gender}">&nbsp;
             <span contenteditable="true">
                 {cur_version} 
             </span>
@@ -1108,6 +1107,5 @@ def newComplexGenderSwitchNodeHTML(character, m_version, f_version) -> ComplexGe
                         </span></td></tr>
                     <tr><th colspan="3" class="complex-gender-character-select">If <select class="character-dropdown"></select> were {"Female" if gender=="M" else "Male"}</th></tr>
                 </table>
-            </span>
-            &nbsp;
+            </span>&nbsp;
         </span>"""

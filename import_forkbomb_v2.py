@@ -252,9 +252,12 @@ def mediawiki_to_html(string: str) -> str:
     table_attributes = re.findall(r"\{\|.*\n", string)
     # Strip off the {| and \n
     table_attributes = [attr[2:-1] for attr in table_attributes]
+
     convert_safe_string = pypandoc.convert_text(string, "html", format="mediawiki", extra_args=["--wrap=none", "--no-highlight"])
+
     clean_output_string = cleanup_ps(convert_safe_string).strip()
     clean_output_string = cleanup_code_tags(clean_output_string)
+
     if table_attributes:
         # Now put back the table attributes
         # making sure the first goes on the first table, next on the second table, etc.
@@ -1187,9 +1190,9 @@ def resolve_g_macros(string):
         else:
             raise ValueError(f"g macro had wrong number of args: {args}")
         character = character_from_name(charname)
-        result = newComplexGenderSwitchNodeHTML(character=character, m_version=m_version, f_version=f_version)
+        result = dedent(newComplexGenderSwitchNodeHTML(character=character, m_version=m_version, f_version=f_version))
         return result
-    string = macro_hit_replace("g", string, callback_g)
+    string = macro_hit_replace("^g$", string, callback_g)
     return string
 
 def clear_embedded_images(game):

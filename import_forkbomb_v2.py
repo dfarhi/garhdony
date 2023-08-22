@@ -975,12 +975,12 @@ def resolve_you_macro(string, sheet_name: str):
     def callback_you(macro, args, cap):
         assert len(args) == 1
         name = args[0].strip()
-        if name == sheet_name:
+        if name == sheet_name or resolve_arg_name_to_sheet(name) == sheet_name:
             return "You" if cap else "you"
         else:
             # Need to escape the right number of braces so we get {{charnick|Bob}}
             return f"{{{{charnick|{name}}}}}"
-    string = macro_hit_replace("you", string, lambda macro, args: callback_you(macro, args, False))
+    string = macro_hit_replace("you$", string, lambda macro, args: callback_you(macro, args, False))
     string = macro_hit_replace("you-cap", string, lambda macro, args: callback_you(macro, args, True))
     return string
 
@@ -1194,7 +1194,6 @@ def resolve_g_macros(string):
 
 def clear_embedded_images(game):
     EmbeddedImage.objects.filter(game=game).delete()
-# clear_embedded_images(game)
 
 def resolve_embedded_images(data):
     """ 
@@ -1391,6 +1390,8 @@ def main():
     parser = argparse.ArgumentParser(description='Import a sheet from the wiki.')
     parser.add_argument('--sheet_name', metavar='sheet_name', type=str, help='The name of the sheet to import')
     parser.add_argument('--max_sheets', metavar='sheet_name', type=int, help='max sheets', required=False)
+    # list of sheets to exclude (possibly several)
+    parser.add_argument('--skip', help='The names of sheets to skip', nargs='*', required=False)
 
     args = parser.parse_args()
     
@@ -1400,7 +1401,14 @@ def main():
     else:
         target_sheets = {sheet_name: sheets_mapping_f2g[sheet_name]}
 
+    if args.skip:
+        for sheet in args.skip:
+            sheet = standardize_name(sheet)
+            del target_sheets[sheet]
+
     unpack()
+    if sheet_name == "all":
+        clear_embedded_images(game)
 
     unresolved_templates = {}
     for fb_name, gh_sheet in sorted(list(target_sheets.items()))[:args.max_sheets]:

@@ -37,6 +37,13 @@
     margin-right: auto;
 }
 
+#sheet-content table.center-bordered {
+    border: 1px solid black;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .player-inline-aside {
     /* nomral text but highlighted to be obviously slightly different */
     background-color: #EEE;

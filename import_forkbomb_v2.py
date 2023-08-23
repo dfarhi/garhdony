@@ -196,6 +196,7 @@ def cleanup_code_tags(string: str) -> str:
 TABLE_CLASS_MAPPING = {
     'text-align: left;': None,
     'text-align: center; width: 85%;': 'runelist',
+    'border-style: solid; border-width: 1px; text-align: center;': 'center-bordered',
 }
 def table_style_to_class(attrs_str) -> str:
     """

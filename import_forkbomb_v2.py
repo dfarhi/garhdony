@@ -148,8 +148,9 @@ def standardize_hlevel(string):
         ===foo=== -> ==foo==
         ====foo==== -> ==foo==
     For any number of =s
+    but only if it's the entire line
     """
-    return re.sub(r"=+(.*?)=+", r"==\1==", string)
+    return re.sub(r"^=+(.*?)=+$", r"==\1==", string, flags=re.MULTILINE)
 
 
 def load_forkbomb_v2_csv():

@@ -140,6 +140,18 @@ csv.field_size_limit(10000000)
 def standardize_name(name):
     return name.lower().replace(' ', '_').replace('(', '').replace(')', '')
 
+def standardize_hlevel(string):
+    """
+    Consistently use h2 for sections.
+    Meant to be applied to the markup version
+    So we replace:
+        ===foo=== -> ==foo==
+        ====foo==== -> ==foo==
+    For any number of =s
+    """
+    return re.sub(r"=+(.*?)=+", r"==\1==", string)
+
+
 def load_forkbomb_v2_csv():
     with open(forkbomb_v2_csv_path, encoding='utf-8') as f:
         reader = csv.reader(f)
@@ -395,11 +407,13 @@ def pre_html_manual_fixes(string, sheet_name):
     return string
 
 @lru_cache(maxsize=1000)
-def get_expanded_content(sheet_name):
+def get_expanded_content(sheet_name, do_standardize_hlevel=False):
     """
     Get the content of a sheet, with all the includes resolved
     """
     content = page_content(sheet_name)
+    if do_standardize_hlevel:
+        content = standardize_hlevel(content)
     content = recursively_include_pages(content)
 
     content = escape_spells(content)
@@ -1265,6 +1279,25 @@ def non_macro_cleanup(string):
         string = re.sub(r"\s*<strong>Age:</strong>", "", string)
     return string
 
+def whitespace_around_center(string):
+    """
+    Replace:
+        blah blah blah.
+        <center>
+        * * * 
+        </center>
+        Blah blah bal
+    with:
+        blah blah blah.
+        <br><br><center>
+        * * * 
+        </center><br>
+        Blah blah bal
+    """
+    string = re.sub(r"<center>", "<br><br><center>", string)
+    string = re.sub(r"</center>", "</center><br>", string)
+    return string
+
 def cleanup_excessive_linebreaks(string):
     """ replace any number of <br>s greater than two, with only two."""
     string = re.sub(r"<br\s*/?>\s*(<br\s*/?>\s*)+", "<br><br>\n\n", string)
@@ -1343,7 +1376,7 @@ def print_table(str):
         print(t[0])
 
 def import_forkbomb_v2(fb_sheet_name:str):
-    data_str = get_expanded_content(fb_sheet_name)
+    data_str = get_expanded_content(fb_sheet_name, do_standardize_hlevel=True)
     assert_valid_html(data_str)
     data = mwparserfromhell.parse(data_str)
     assert data_str == str(data)
@@ -1368,6 +1401,7 @@ def import_forkbomb_v2(fb_sheet_name:str):
     data_str = cleanup_ps(data_str)
 
     data_str = non_macro_cleanup(data_str)
+    data_str = whitespace_around_center(data_str)
     data_str = cleanup_excessive_linebreaks(data_str)
     return data_str
 

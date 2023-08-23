@@ -1,12 +1,12 @@
 #sheet-content h2 {
     font-size: 24pt;
-    padding-top: 18pt;
-    padding-bottom: 6pt;
+    margin-top: 2em;
+    margin-bottom: 1em;
 }
 
 #sheet-content h3 {
-    padding-top: 18pt;
-    padding-bottom: 6pt;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
     font-size: 18pt;
 }
 

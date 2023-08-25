@@ -77,8 +77,8 @@ def database_cleanup():
         ("Finlo", "????", "Hunt", "M"),
         ("Mahdzo", "????", "Hunt", "M"),
         ("????", "Minka", "Hunt", "F"),
-        ("Gyorgy", "????", "Zahunt", "M"),
-        ("????", "Iren", "Varga", "F"),
+        ("Gyorgy", "????", "ZaHunt", "M"),
+        ("????", "Iren", "Hunt", "F"),
         ("Kuhlmer", "????", "Valzant", "M"),
     ]:
         if NonPlayerCharacter.objects.filter(game=game, last_name=l, first_name_obj__male=m, first_name_obj__female=f).exists():

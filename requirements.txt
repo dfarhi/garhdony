@@ -10,5 +10,5 @@ django-sendfile
 # For importing forkbomb
 html5lib
 mwparserfromhell
-pypandoc
+pypandoc_binary
 tarfile

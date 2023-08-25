@@ -504,6 +504,11 @@ MANUAL_MAP_NONSHEET_FORKBOMB_PAGE = {
     'storyteller_quick_reference': 'storyteller_quick_reference',
     'npc_guide': 'storyteller_guide',
 }
+MANUAL_MAP_NPCS = {
+    'iren_varga': 'iren_hunt',
+    'almos': None,
+    'kelemen': None
+}
 def construct_sheet_mapping():
     unmatched_forkbomb = set([s for s in forkbomb_sheets.keys() if not get_forkbomb_v2_csv(s).startswith("#REDIRECT") and s not in FORKBOMB_OBSOLETE_SHEETS])
     unmatched_garhdony = {standardize_name(sheet.filename): sheet for sheet in Sheet.objects.filter(game=game)}
@@ -535,6 +540,12 @@ def construct_sheet_mapping():
     # Match NPCs
     garhdony_npcs = {standardize_name(npc.name()): npc for npc in NonPlayerCharacter.objects.filter(game=game)}
     garhdony_npcs.update({standardize_name(npc.full_name()): npc for npc in NonPlayerCharacter.objects.filter(game=game)})
+    for fb_name, npc in MANUAL_MAP_NPCS.items():
+        unmatched_forkbomb.remove(fb_name)
+        if npc is not None:
+            # print(f"NPC matching {fb_name} to {npc}")
+            forkbomb_to_npcs[fb_name] = npc
+            
     for sheet_name in list(unmatched_forkbomb):
         if sheet_name in garhdony_npcs:
             # print(f"NPC NAME matching {sheet_name} to {garhdony_npcs[sheet_name]}")

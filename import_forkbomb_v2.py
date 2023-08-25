@@ -654,6 +654,10 @@ def keyword_from_name(string:str) -> Tuple[str, bool]:
     else:
         male, female = string.strip().split("-")
         cap=False
+    # If both words are capitalized, then capitalize the result anyway, e.g. He-She
+    if male.capitalize() == male and female.capitalize() == female:
+        cap = True
+
     # If a matching keyword exists, get it out of the database
     result = try_get_keyword(male=male, female=female)
     if result is not None:
